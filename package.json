@@ -3,8 +3,9 @@
   "private": true,
   "workspaces": ["frontend"],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "pnpm --dir frontend dev",
+    "build": "pnpm --dir frontend build",
+    "start": "pnpm --dir frontend start",
     "frontend:dev": "pnpm --dir frontend dev",
     "frontend:build": "pnpm --dir frontend build",
     "backend": "cd backend && uvicorn app.main:app --reload"

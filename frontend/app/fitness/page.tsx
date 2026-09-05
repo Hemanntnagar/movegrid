@@ -10,9 +10,11 @@ import {
   Check,
   Clock3,
   Flame,
+  Info,
   LoaderCircle,
   Sparkles,
   Timer,
+  X,
   Zap,
 } from 'lucide-react'
 import {
@@ -59,16 +61,85 @@ function taskTitle(assignment: ApiDailyAssignment) {
   return exercise.name
 }
 
+function ExerciseGuideModal({
+  assignment,
+  onClose,
+  onComplete,
+  completing,
+}: {
+  assignment: ApiDailyAssignment
+  onClose: () => void
+  onComplete: (id: number) => void
+  completing: boolean
+}) {
+  const exercise = assignment.exercise
+  return (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <button className="close-button" onClick={onClose} aria-label="Close">
+          <X size={18} />
+        </button>
+        <div className="modal-kicker">
+          <Activity size={15} /> EXERCISE GUIDE
+        </div>
+        <h2>{taskTitle(assignment)}</h2>
+        <p>{exercise.description}</p>
+        <div className="modal-panel" style={{ flexDirection: 'column', gap: '0.6rem', alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+            <span style={{ opacity: 0.7 }}>Category:</span>
+            <strong>{exercise.category}</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+            <span style={{ opacity: 0.7 }}>Difficulty:</span>
+            <strong>{exercise.difficulty}</strong>
+          </div>
+          {exercise.target_reps > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+              <span style={{ opacity: 0.7 }}>Target Reps / Seconds:</span>
+              <strong>{exercise.target_reps}</strong>
+            </div>
+          )}
+          {exercise.instructions && (
+            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Technique Instructions:</span>
+              <p style={{ fontSize: '0.85rem', marginTop: '0.25rem', lineHeight: '1.4' }}>{exercise.instructions}</p>
+            </div>
+          )}
+        </div>
+        {assignment.status === 'ASSIGNED' ? (
+          <button
+            className="primary-button full"
+            disabled={completing}
+            onClick={() => {
+              onComplete(assignment.id)
+              onClose()
+            }}
+          >
+            {completing ? <LoaderCircle size={15} className="spin" /> : <Sparkles size={15} />}
+            {completing ? 'Logging…' : 'Complete & Claim MOVE'}
+          </button>
+        ) : (
+          <button className="outline-button full" onClick={onClose}>
+            Close guide
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function AssignmentCard({
   assignment,
   secondsRemaining,
   onComplete,
+  onInspect,
   completing,
   justCompleted,
 }: {
   assignment: ApiDailyAssignment
   secondsRemaining: number
   onComplete: (id: number) => void
+  onInspect: (assignment: ApiDailyAssignment) => void
   completing: boolean
   justCompleted: boolean
 }) {
@@ -79,9 +150,20 @@ function AssignmentCard({
     <article className={`fitness-card ${done ? 'done' : ''} ${expired ? 'expired' : ''} ${justCompleted ? 'pop' : ''}`}>
       <div className="fitness-card-top">
         <span className="pill lime">{assignment.exercise.category}</span>
-        <span className="move-value">
-          <Zap size={14} fill="currentColor" /> +{assignment.points} MOVE
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => onInspect(assignment)}
+            title="View Exercise Guide"
+            style={{ width: '26px', height: '26px' }}
+          >
+            <Info size={14} />
+          </button>
+          <span className="move-value">
+            <Zap size={14} fill="currentColor" /> +{assignment.points} MOVE
+          </span>
+        </div>
       </div>
       <h3>{taskTitle(assignment)}</h3>
       <p>{assignment.exercise.description}</p>
@@ -131,6 +213,7 @@ export default function FitnessPage() {
   const [completingId, setCompletingId] = useState<number | null>(null)
   const [toast, setToast] = useState('')
   const [justCompletedId, setJustCompletedId] = useState<number | null>(null)
+  const [inspectAssignment, setInspectAssignment] = useState<ApiDailyAssignment | null>(null)
   const [tick, setTick] = useState(0)
 
   const load = useCallback(async (authToken: string) => {
@@ -252,9 +335,9 @@ export default function FitnessPage() {
           </div>
         </div>
 
-        <section className="fitness-progress-panel">
-          <div className="fitness-progress-copy">
-            <p className="eyebrow">PROGRESS</p>
+        <section className="fitness-progress-card">
+          <div>
+            <p className="eyebrow">DAILY COMPLETION</p>
             <h2>
               {today.progress.completed}/{today.progress.total} complete
             </h2>
@@ -291,6 +374,7 @@ export default function FitnessPage() {
                   : 0
               }
               onComplete={handleComplete}
+              onInspect={setInspectAssignment}
               completing={completingId === assignment.id}
               justCompleted={justCompletedId === assignment.id}
             />
@@ -319,6 +403,7 @@ export default function FitnessPage() {
                   assignment={assignment}
                   secondsRemaining={0}
                   onComplete={handleComplete}
+                  onInspect={setInspectAssignment}
                   completing={false}
                   justCompleted={false}
                 />
@@ -342,6 +427,7 @@ export default function FitnessPage() {
                   assignment={assignment}
                   secondsRemaining={0}
                   onComplete={handleComplete}
+                  onInspect={setInspectAssignment}
                   completing={false}
                   justCompleted={false}
                 />
@@ -350,6 +436,15 @@ export default function FitnessPage() {
           </>
         )}
       </main>
+
+      {inspectAssignment && (
+        <ExerciseGuideModal
+          assignment={inspectAssignment}
+          onClose={() => setInspectAssignment(null)}
+          onComplete={handleComplete}
+          completing={completingId === inspectAssignment.id}
+        />
+      )}
 
       {toast && (
         <div className="toast">

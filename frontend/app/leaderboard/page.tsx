@@ -8,9 +8,11 @@ import {
   ArrowLeft,
   ArrowUp,
   Bolt,
+  Crown,
   Flame,
   LoaderCircle,
   Minus,
+  Search,
   Trophy,
   Users,
   Zap,
@@ -98,8 +100,7 @@ function LeaderRow({
       </div>
       <div className="lb-identity">
         <strong>
-          {entry.name}
-          {entry.is_current_user && <span className="pill lime">you</span>}
+          {entry.name} {entry.is_current_user && <span className="pill lime">you</span>}
         </strong>
         <small>
           {typeof entry.meta?.streak === 'number' ? `${entry.meta.streak}-day streak` : null}
@@ -127,6 +128,7 @@ export default function LeaderboardPage() {
   const [user, setUser] = useState<ApiUser | null>(null)
   const [tab, setTab] = useState<BoardTab>('move')
   const [board, setBoard] = useState<ApiLeaderboard | null>(null)
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -161,6 +163,17 @@ export default function LeaderboardPage() {
       })
       .finally(() => setLoading(false))
   }, [loadBoard, router, tab])
+
+  const filteredEntries = useMemo(() => {
+    if (!board) return []
+    if (!search.trim()) return board.entries
+    return board.entries.filter((e) => e.name.toLowerCase().includes(search.toLowerCase()))
+  }, [board, search])
+
+  const top3 = useMemo(() => {
+    if (!board) return []
+    return board.entries.slice(0, 3)
+  }, [board])
 
   const showPinnedMe = useMemo(() => {
     if (!board?.me) return false
@@ -218,7 +231,7 @@ export default function LeaderboardPage() {
               See who&apos;s moving, <span>{user.name.split(' ')[0]}.</span>
             </h1>
             <p className="subhead">
-              Rankings are calculated on the server after every completed activity.
+              Rankings update automatically after every completed campus mission and daily fitness assignment.
             </p>
           </div>
           <div className="streak-badge">
@@ -248,6 +261,58 @@ export default function LeaderboardPage() {
           })}
         </div>
 
+        {top3.length >= 3 && !search && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            {top3.map((entry, idx) => (
+              <div
+                key={`podium-${entry.id}`}
+                className="stat-card"
+                style={{
+                  background: idx === 0 ? 'rgba(255, 212, 71, 0.12)' : idx === 1 ? 'rgba(190, 200, 210, 0.12)' : 'rgba(230, 150, 100, 0.12)',
+                  border: idx === 0 ? '1px solid rgba(255, 212, 71, 0.4)' : '1px solid rgba(255, 255, 255, 0.15)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div
+                    className="avatar"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      fontSize: '1rem',
+                      background: idx === 0 ? '#ffd447' : idx === 1 ? '#cbd5e1' : '#f97316',
+                      color: '#0f172a',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {initialsFromAvatar(entry.avatar, entry.name)}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Crown size={14} color={idx === 0 ? '#ffd447' : idx === 1 ? '#cbd5e1' : '#f97316'} />
+                      <span className="eyebrow" style={{ color: '#fff', fontSize: '0.75rem' }}>
+                        RANK #{entry.rank}
+                      </span>
+                    </div>
+                    <strong style={{ fontSize: '1.05rem', color: '#fff' }}>{entry.name}</strong>
+                    <div style={{ fontSize: '0.8rem', color: '#38bdf8', marginTop: '0.1rem', fontWeight: '600' }}>
+                      {entry.points.toLocaleString()} {board.metric_label}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {error && <p className="form-error">{error}</p>}
 
         <section className="lb-panel">
@@ -256,18 +321,37 @@ export default function LeaderboardPage() {
               <p className="eyebrow">{board.metric_label}</p>
               <h2>{board.title}</h2>
             </div>
-            <span className="pill lime">Top {board.limit}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ position: 'relative' }}>
+                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                <input
+                  type="text"
+                  placeholder="Search movers…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
+                    padding: '0.35rem 0.6rem 0.35rem 2rem',
+                    borderRadius: '20px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    fontSize: '0.8rem',
+                  }}
+                />
+              </div>
+              <span className="pill lime">Top {board.limit}</span>
+            </div>
           </div>
 
           <div className="lb-list">
-            {board.entries.map((entry) => (
+            {filteredEntries.map((entry) => (
               <LeaderRow key={`${board.board}-${entry.id}`} entry={entry} metric={board.metric_label} tone={activeTab.tone} />
             ))}
-            {board.entries.length === 0 && (
+            {filteredEntries.length === 0 && (
               <div className="fitness-empty">
                 <Trophy size={22} />
-                <strong>No rankings yet</strong>
-                <span>Complete a mission or fitness task to appear here.</span>
+                <strong>No movers found</strong>
+                <span>Try searching another name or reset the filter.</span>
               </div>
             )}
           </div>
@@ -285,15 +369,6 @@ export default function LeaderboardPage() {
             <div className="lb-points">
               <strong>{board.me.points.toLocaleString()}</strong>
               <span>{board.metric_label}</span>
-            </div>
-          </section>
-        )}
-
-        {!board.me && tab === 'competition' && (
-          <section className="lb-you-bar empty">
-            <div>
-              <p className="eyebrow">YOUR TEAM</p>
-              <h3>You are not on a competition team yet</h3>
             </div>
           </section>
         )}

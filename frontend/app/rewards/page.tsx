@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Gift,
   LoaderCircle,
   Package,
+  QrCode,
   ShoppingBag,
   Sparkles,
   Ticket,
@@ -43,16 +44,16 @@ function Brand() {
 
 function rewardTone(category: string) {
   const key = category.toLowerCase()
-  if (key.includes('food') || key.includes('canteen')) return 'mint'
+  if (key.includes('food') || key.includes('canteen') || key.includes('dining')) return 'mint'
   if (key.includes('event')) return 'orange'
   if (key.includes('sport')) return 'blue'
-  if (key.includes('sponsor')) return 'purple'
+  if (key.includes('sponsor') || key.includes('merch')) return 'purple'
   return 'mint'
 }
 
 function RewardIcon({ category }: { category: string }) {
   const key = category.toLowerCase()
-  if (key.includes('food') || key.includes('canteen')) return <Utensils size={28} />
+  if (key.includes('food') || key.includes('canteen') || key.includes('dining')) return <Utensils size={28} />
   if (key.includes('event')) return <Ticket size={28} />
   if (key.includes('sport')) return <Trophy size={28} />
   if (key.includes('sponsor')) return <Gift size={28} />
@@ -107,7 +108,7 @@ function RewardCard({
           {!canAfford && available && <span>Need {(reward.points_required - balance).toLocaleString()} more MOVE</span>}
         </div>
         <button className="primary-button full" disabled={disabled} onClick={() => onRedeem(reward)}>
-          {!available ? 'Unavailable' : !canAfford ? 'Not enough MOVE' : 'Redeem'}
+          {!available ? 'Unavailable' : !canAfford ? 'Not enough MOVE' : 'Redeem reward'}
         </button>
       </div>
     </article>
@@ -120,6 +121,7 @@ export default function RewardsPage() {
   const [user, setUser] = useState<ApiUser | null>(null)
   const [rewards, setRewards] = useState<ApiReward[]>([])
   const [history, setHistory] = useState<ApiRewardRedemption[]>([])
+  const [categoryFilter, setCategoryFilter] = useState('All')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [confirmReward, setConfirmReward] = useState<ApiReward | null>(null)
@@ -153,6 +155,11 @@ export default function RewardsPage() {
       .finally(() => setLoading(false))
   }, [load, router])
 
+  const filteredRewards = useMemo(() => {
+    if (categoryFilter === 'All') return rewards
+    return rewards.filter((r) => r.category.toLowerCase().includes(categoryFilter.toLowerCase()))
+  }, [rewards, categoryFilter])
+
   async function confirmRedeem() {
     if (!token || !confirmReward) return
     setRedeeming(true)
@@ -162,7 +169,6 @@ export default function RewardsPage() {
       setConfirmReward(null)
       setSuccess(result)
       await load(token)
-      window.setTimeout(() => setSuccess(null), 3200)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not redeem reward')
       setConfirmReward(null)
@@ -237,9 +243,23 @@ export default function RewardsPage() {
             <p className="eyebrow">CATALOG</p>
             <h2>Pick a reward</h2>
           </div>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            {['All', 'Food', 'Events', 'Sports', 'Merch'].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className={`pill ${categoryFilter === cat ? 'lime' : 'neutral'}`}
+                style={{ cursor: 'pointer', border: 'none', padding: '0.3rem 0.75rem' }}
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </section>
+
         <div className="rewards-grid">
-          {rewards.map((reward) => (
+          {filteredRewards.map((reward) => (
             <RewardCard
               key={reward.id}
               reward={reward}
@@ -248,16 +268,16 @@ export default function RewardsPage() {
               busy={redeeming}
             />
           ))}
-          {rewards.length === 0 && (
+          {filteredRewards.length === 0 && (
             <div className="fitness-empty">
               <Gift size={22} />
-              <strong>No rewards listed yet</strong>
-              <span>Check back after the next campus drop.</span>
+              <strong>No rewards found in this category</strong>
+              <span>Try selecting another category or check back later.</span>
             </div>
           )}
         </div>
 
-        <section className="section-heading compact">
+        <section className="section-heading compact" style={{ marginTop: '2rem' }}>
           <div>
             <p className="eyebrow">HISTORY</p>
             <h2>Your redemptions</h2>
@@ -317,16 +337,27 @@ export default function RewardsPage() {
       )}
 
       {success && (
-        <div className="toast rewards-success-toast">
-          <div>
-            <Check size={18} />
+        <div className="modal-backdrop">
+          <div className="modal" style={{ textAlign: 'center' }}>
+            <button className="close-button" onClick={() => setSuccess(null)} aria-label="Close">
+              <X size={18} />
+            </button>
+            <div className="modal-kicker" style={{ justifyContent: 'center' }}>
+              <Sparkles size={15} /> VOUCHER UNLOCKED
+            </div>
+            <h2>{success.reward_title}</h2>
+            <p>Show this digital voucher code at the campus checkpoint or canteen.</p>
+            <div className="qr-panel" style={{ margin: '1rem 0' }}>
+              <div className="qr-art">
+                <QrCode size={110} />
+              </div>
+              <strong>VOUCHER #{success.redemption_id}-MOVEGRID</strong>
+              <span>Redeemed for {success.points_spent} MOVE</span>
+            </div>
+            <button className="primary-button full" onClick={() => setSuccess(null)}>
+              Done
+            </button>
           </div>
-          <span>
-            <strong>Redeemed!</strong>
-            <small>
-              {success.reward_title} · −{success.points_spent} MOVE · balance {success.total_points.toLocaleString()}
-            </small>
-          </span>
         </div>
       )}
     </div>
