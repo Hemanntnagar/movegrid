@@ -45,7 +45,7 @@ export default function MapPage() {
         <div className="welcome map-welcome">
           <div>
             <p className="eyebrow">
-              <MapPinned size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> CAMPUS LIVE MAP
+              <MapPinned size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> NEARBY LIVE MAP
             </p>
             <h1>
               See movers <span>around you.</span>

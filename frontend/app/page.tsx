@@ -132,100 +132,6 @@ function ClockIcon() {
   return <span className="clock-icon">◷</span>
 }
 
-function AreaMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: Mission) => void }) {
-  const [filter, setFilter] = useState<'All' | 'Walk' | 'Run' | 'Hydration' | 'Bike'>('All')
-  const filteredMissions = useMemo(() => {
-    if (filter === 'All') return missions
-    return missions.filter((m) => m.kind.toLowerCase() === filter.toLowerCase())
-  }, [missions, filter])
-
-  const mapCoordinates = [
-    [175, 142],
-    [510, 178],
-    [340, 145],
-    [230, 240],
-    [420, 260],
-  ]
-
-  return (
-    <div className="map-wrap">
-      <div className="map-label">
-        CITY WORKOUT MAP{' '}
-        <span>
-          <span className="live-dot" /> {filteredMissions.length} active routes nearby
-        </span>
-      </div>
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-        {(['All', 'Walk', 'Run', 'Hydration', 'Bike'] as const).map((k) => (
-          <button
-            key={k}
-            type="button"
-            className={`pill ${filter === k ? 'lime' : 'neutral'}`}
-            style={{ border: 'none', cursor: 'pointer', padding: '0.25rem 0.65rem', fontSize: '0.75rem' }}
-            onClick={() => setFilter(k)}
-          >
-            {k}
-          </button>
-        ))}
-      </div>
-      <svg className="campus-map" viewBox="0 0 760 360" role="img" aria-label="Illustrated city map with workout locations">
-        <path className="road" d="M0 85 C150 40 200 130 330 84 S570 50 760 110 M0 285 C160 240 230 320 390 270 S620 230 760 300 M120 0 C150 90 105 180 160 360 M570 0 C520 100 600 210 550 360" />
-        <path className="river" d="M660 0 C580 70 690 150 610 220 C550 274 650 320 610 380 L760 380 L760 0Z" />
-        <g className="buildings">
-          <rect x="70" y="58" width="92" height="55" rx="5" />
-          <rect x="210" y="35" width="110" height="62" rx="5" />
-          <rect x="360" y="62" width="100" height="54" rx="5" />
-          <rect x="195" y="190" width="120" height="60" rx="5" />
-          <rect x="365" y="210" width="95" height="58" rx="5" />
-          <rect x="500" y="110" width="90" height="58" rx="5" />
-        </g>
-        <g className="labels">
-          <text x="86" y="90">CENTRAL PARK</text>
-          <text x="238" y="72">DOWNTOWN</text>
-          <text x="383" y="94">CITY SQUARE</text>
-          <text x="220" y="226">RIVERSIDE</text>
-          <text x="385" y="245">FITNESS CLUB</text>
-          <text x="514" y="144">BIKE HUB</text>
-        </g>
-        {filteredMissions.map((m, i) => {
-          const coords = mapCoordinates[i % mapCoordinates.length]
-          return (
-            <g
-              key={m.id}
-              className="map-pin"
-              onClick={() => onSelect(m)}
-              transform={`translate(${coords[0]},${coords[1]})`}
-              style={{ cursor: 'pointer' }}
-            >
-              <circle r="18" className="pin-pulse" />
-              <circle r="18" />
-              <circle r="6" />
-              <text y="-28" textAnchor="middle">
-                +{m.move} MOVE
-              </text>
-            </g>
-          )
-        })}
-        <g className="you-pin" transform="translate(300,280)">
-          <circle r="15" />
-          <circle r="5" />
-        </g>
-        <text className="you-label" x="300" y="315">
-          YOU ARE HERE
-        </text>
-      </svg>
-      <div className="map-footer">
-        <span>
-          <MapPin size={14} /> Live GPS Workout Grid
-        </span>
-        <button type="button" className="text-button" onClick={() => filteredMissions[0] && onSelect(filteredMissions[0])}>
-          Select route <ArrowRight size={14} />
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function MissionCard({ mission, onStart }: { mission: Mission; onStart: (m: Mission) => void }) {
   return (
     <article className={`mission-card ${mission.color}`}>
@@ -668,7 +574,7 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
           </div>
 
           <aside className="side-col">
-            <AreaMap missions={apiMissions} onSelect={start} />
+            <NearbyLiveMap token={token} />
 
             <div className="side-card squad-card" style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(15, 23, 42, 0.6))', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
