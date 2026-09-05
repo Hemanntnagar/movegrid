@@ -39,6 +39,37 @@ function Brand() {
   )
 }
 
+function PenguinMascot({ message = "Great form! Keep waddling toward your goals!" }: { message?: string }) {
+  return (
+    <div className="penguin-mascot-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '0.6rem 0.9rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <svg className="penguin-svg" width="38" height="42" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+        <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+        <circle cx="50" cy="32" r="24" fill="#0f172a" />
+        <circle cx="42" cy="28" r="4" fill="#ffffff" />
+        <circle cx="43" cy="28" r="2" fill="#000000" />
+        <circle cx="58" cy="28" r="4" fill="#ffffff" />
+        <circle cx="57" cy="28" r="2" fill="#000000" />
+        <polygon points="50,32 44,38 56,38" fill="#f97316" />
+        <circle cx="36" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <circle cx="64" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <rect x="30" y="48" width="40" height="8" rx="4" fill="#38bdf8" />
+        <rect x="58" y="52" width="10" height="20" rx="3" fill="#0284c7" />
+        <ellipse cx="14" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(20 14 65)" />
+        <ellipse cx="86" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(-20 86 65)" />
+        <ellipse cx="38" cy="102" rx="10" ry="5" fill="#f97316" />
+        <ellipse cx="62" cy="102" rx="10" ry="5" fill="#f97316" />
+      </svg>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          <span>🐧 Pebble the Mascot</span>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', fontStyle: 'italic' }}>&quot;{message}&quot;</p>
+      </div>
+    </div>
+  )
+}
+
 function formatCountdown(totalSeconds: number) {
   const safe = Math.max(0, totalSeconds)
   const hours = Math.floor(safe / 3600)
@@ -313,26 +344,20 @@ export default function FitnessPage() {
       </header>
 
       <main className="main-content fitness-page">
-        <div className="welcome">
+        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <Link className="text-button" href="/">
-              <ArrowLeft size={14} /> Back to campus
+              <ArrowLeft size={14} /> Back to dashboard
             </Link>
             <p className="eyebrow">TODAY&apos;S FITNESS</p>
             <h1>
-              Your daily move, <span>{user.name.split(' ')[0]}.</span>
+              Your daily workouts, <span>{user.name.split(' ')[0]}.</span>
             </h1>
             <p className="subhead">
               Personalized for {today.fitness_level} · each task expires in 24 hours.
             </p>
           </div>
-          <div className="streak-badge">
-            <Flame size={20} fill="currentColor" />
-            <div>
-              <strong>{formatCountdown(secondsRemaining)}</strong>
-              <span>Time remaining today</span>
-            </div>
-          </div>
+          <PenguinMascot message="Finish today's exercises before the timer expires!" />
         </div>
 
         <section className="fitness-progress-card">
