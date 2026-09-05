@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.entities import Activity, Challenge, User, Zone
 
 async def list_missions(db: AsyncSession) -> list[dict]:
-    rows = (await db.execute(select(Challenge, Zone).join(Zone, Challenge.zone_id == Zone.id).where(Challenge.active.is_(True)))).all()
+    rows = (await db.execute(select(Challenge, Zone).join(Zone, Challenge.zone_id == Zone.id).where(Challenge.is_active.is_(True)))).all()
     return [{"id": c.id, "title": c.title, "description": c.description, "zone": z.name, "move_reward": c.move_reward, "minutes": c.minutes, "kind": c.kind} for c, z in rows]
 
 async def verify_and_complete(db: AsyncSession, user: User, challenge_id: int, code: str) -> dict:
