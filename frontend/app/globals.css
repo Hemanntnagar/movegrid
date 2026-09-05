@@ -297,6 +297,180 @@ h1 { font-size:clamp(32px,5vw,58px); text-shadow:3px 3px 0 #fffdf0; }
   }
 }
 
+/* MOVE reward store */
+.rewards-balance-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #183d59;
+  color: #ffd447;
+  border: 4px solid var(--border);
+  border-radius: 22px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+}
+.rewards-balance-badge strong,
+.rewards-balance-badge span {
+  display: block;
+}
+.rewards-balance-badge strong {
+  font-size: 24px;
+  letter-spacing: -1px;
+  color: #fffdf0;
+}
+.rewards-balance-badge span {
+  font-size: 11px;
+  color: #d8f0f6;
+  margin-top: 2px;
+  font-weight: 700;
+}
+.rewards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.reward-store-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #fffdf0;
+  border: 4px solid var(--border);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.reward-store-card:hover {
+  transform: translateY(-3px);
+}
+.reward-store-card.sold-out {
+  opacity: 0.72;
+}
+.reward-store-card.mint .reward-store-visual { background: #b7e88f; }
+.reward-store-card.orange .reward-store-visual { background: #ffb36f; }
+.reward-store-card.blue .reward-store-visual { background: #8bd4f4; }
+.reward-store-card.purple .reward-store-visual { background: #f3a8c7; }
+.reward-store-visual {
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  border-bottom: 4px solid var(--border);
+}
+.reward-store-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.reward-store-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.reward-store-card h3 {
+  font-size: 22px;
+  margin-bottom: 6px;
+  color: #000;
+}
+.reward-store-card p {
+  color: #183d59;
+  font-size: 12px;
+  line-height: 1.5;
+  min-height: 36px;
+  margin-bottom: 0;
+}
+.reward-store-card .mission-meta {
+  color: #2e6177;
+  margin: 12px 0 14px;
+}
+.reward-store-card .primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 3px 0 var(--border);
+}
+.rewards-history {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+.rewards-history-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  background: #fffdf0;
+  border: 4px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--soft-ink);
+}
+.rewards-history-row {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background: #fffdf0;
+  border: 4px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  animation: rewardsRowIn 0.35s ease;
+}
+.rewards-history-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #ffd447;
+  border: 3px solid var(--border);
+  color: var(--ink);
+}
+.rewards-history-row strong,
+.rewards-history-row span {
+  display: block;
+}
+.rewards-history-row strong {
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+.rewards-history-row span {
+  font-size: 11px;
+  color: var(--soft-ink);
+}
+.rewards-history-row > b {
+  font-size: 13px;
+  color: #ff633d;
+}
+.rewards-success-toast {
+  animation: rewardsSuccessPop 0.55s ease, slideIn 0.3s ease;
+}
+@keyframes rewardsRowIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes rewardsSuccessPop {
+  0% { transform: translateY(20px) scale(0.92); }
+  45% { transform: translateY(0) scale(1.05); }
+  100% { transform: none; }
+}
+@media (max-width: 560px) {
+  .rewards-balance-badge {
+    align-self: stretch;
+  }
+  .rewards-history-row {
+    grid-template-columns: 42px 1fr;
+  }
+  .rewards-history-row > b {
+    grid-column: 2;
+  }
+}
+
 /* Leaderboard page */
 .leaderboard-page .welcome {
   margin-bottom: 22px;
