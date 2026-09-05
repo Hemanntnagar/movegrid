@@ -1,1 +1,29 @@
-from app.models.entities import Activity, Challenge, Reward, Squad, User, Zone
+from app.models.entities import (
+    Activity,
+    Challenge,
+    Competition,
+    DailyAssignment,
+    Exercise,
+    LeaderboardRank,
+    Reward,
+    RewardRedemption,
+    Squad,
+    Team,
+    User,
+    Zone,
+)
+
+__all__ = [
+    "Activity",
+    "Challenge",
+    "Competition",
+    "DailyAssignment",
+    "Exercise",
+    "LeaderboardRank",
+    "Reward",
+    "RewardRedemption",
+    "Squad",
+    "Team",
+    "User",
+    "Zone",
+]
