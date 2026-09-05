@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'MOVEGRID — Create Movement',
-  description: 'A gamified campus fitness platform that turns movement into a playable environment.',
+  title: 'MOVEGRID — Move & Play',
+  description: 'A playful cartoon campus where every walk, challenge, and checkpoint becomes a game.',
   generator: 'MOVEGRID',
 }
 
