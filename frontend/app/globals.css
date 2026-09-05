@@ -47,7 +47,7 @@ h1 { font-size:clamp(32px,5vw,58px); text-shadow:3px 3px 0 #fffdf0; }
 
 /* Floating cartoon mobile chrome */
 .topbar { position:relative; z-index:5; background:transparent; border-bottom:0; }
-.brand, .top-actions { background:#fffdf0; border:3px solid var(--border); border-radius:22px; box-shadow:0 5px 0 var(--border); padding:8px 12px; }
+.brand, .top-actions { background:transparent; border:0; border-radius:0; box-shadow:none; padding:8px 0; }
 .top-actions { gap:8px; }
 .top-actions .admin-switch { display:none; }
 .mobile-nav { gap:8px; padding:8px 10px 12px; background:transparent; border:0; }
