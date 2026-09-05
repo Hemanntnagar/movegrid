@@ -37,6 +37,17 @@ Rankings are computed on the backend with SQL ordering. Completing a mission or 
 
 Authenticated requests include a `me` entry so the current user (or their team) stays highlighted even outside the top N. Student UI: `/leaderboard`.
 
+## MOVE Reward Store
+
+- `GET /api/v1/rewards` — active rewards catalog
+- `GET /api/v1/rewards/{id}` — reward detail
+- `POST /api/v1/rewards/{id}/redeem` — spend MOVE (authenticated; cost/stock verified server-side)
+- `GET /api/v1/rewards/history` — redemption history for the current user
+
+Redemption deducts MOVE and stock in one transaction. The client never supplies the cost. MOVE is an internal campus currency — no payment processing.
+
+Student UI: `/rewards`
+
 ## API surface
 
-`/health`, `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`, `/api/v1/missions`, `/api/v1/missions/{id}/complete`, `/api/v1/daily-fitness/*`, `/api/v1/leaderboard/move`, `/api/v1/leaderboard/streak`, `/api/v1/leaderboard/competition`, `/api/v1/rewards`, and `/api/v1/admin/analytics`.
+`/health`, `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`, `/api/v1/missions`, `/api/v1/missions/{id}/complete`, `/api/v1/daily-fitness/*`, `/api/v1/leaderboard/move`, `/api/v1/leaderboard/streak`, `/api/v1/leaderboard/competition`, `/api/v1/rewards`, `/api/v1/rewards/{id}/redeem`, `/api/v1/rewards/history`, and `/api/v1/admin/analytics`.

@@ -215,6 +215,7 @@ export default function FitnessPage() {
             Fitness
           </Link>
           <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/rewards">Rewards</Link>
         </nav>
         <div className="top-actions">
           <div className="move-chip">

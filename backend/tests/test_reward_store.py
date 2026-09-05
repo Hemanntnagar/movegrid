@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.database import Base, get_db
@@ -149,9 +150,7 @@ async def test_redeem_rejects_insufficient_move_and_out_of_stock(client):
 
     async with session_factory() as session:
         user = (
-            await session.execute(
-                __import__("sqlalchemy").select(User).where(User.email == "student@movegrid.demo")
-            )
+            await session.execute(select(User).where(User.email == "student@movegrid.demo"))
         ).scalar_one()
         user.total_points = 50
         await session.commit()

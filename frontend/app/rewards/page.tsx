@@ -192,6 +192,7 @@ export default function RewardsPage() {
         <nav className="desktop-nav">
           <Link href="/">Home</Link>
           <Link href="/fitness">Fitness</Link>
+          <Link href="/leaderboard">Leaderboard</Link>
           <Link href="/rewards" className="nav-active">
             Rewards
           </Link>

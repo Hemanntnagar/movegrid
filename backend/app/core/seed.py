@@ -189,57 +189,61 @@ async def seed_demo_data(db: AsyncSession) -> None:
             ]
         )
 
-    reward = (await db.execute(select(Reward).limit(1))).scalar_one_or_none()
-    if not reward:
-        db.add_all(
-            [
-                Reward(
-                    title="Canteen Voucher",
-                    description="Redeem for snacks or a meal at the campus canteen.",
-                    category="Food",
-                    points_required=400,
-                    stock=40,
-                    image="/rewards/canteen.png",
-                    active=True,
-                ),
-                Reward(
-                    title="College Merchandise",
-                    description="Pick a MOVEGRID tee, tote, or sticker pack from the college store.",
-                    category="Merch",
-                    points_required=1200,
-                    stock=18,
-                    image="/rewards/college-merch.png",
-                    active=True,
-                ),
-                Reward(
-                    title="Event Pass",
-                    description="Priority entry to the next campus fitness or culture night.",
-                    category="Events",
-                    points_required=800,
-                    stock=25,
-                    image="/rewards/event-pass.png",
-                    active=True,
-                ),
-                Reward(
-                    title="Sports Merchandise",
-                    description="Training socks, water bottle, or gym towel from athletics.",
-                    category="Sports",
-                    points_required=950,
-                    stock=15,
-                    image="/rewards/sports-merch.png",
-                    active=True,
-                ),
-                Reward(
-                    title="Sponsor Gift",
-                    description="A surprise gift bag from a MOVEGRID campus partner.",
-                    category="Sponsors",
-                    points_required=1500,
-                    stock=10,
-                    image="/rewards/sponsor-gift.png",
-                    active=True,
-                ),
-            ]
-        )
+    desired_rewards = [
+        {
+            "title": "Canteen Voucher",
+            "description": "Redeem for snacks or a meal at the campus canteen.",
+            "category": "Food",
+            "points_required": 400,
+            "stock": 40,
+            "image": "/rewards/canteen.png",
+        },
+        {
+            "title": "College Merchandise",
+            "description": "Pick a MOVEGRID tee, tote, or sticker pack from the college store.",
+            "category": "Merch",
+            "points_required": 1200,
+            "stock": 18,
+            "image": "/rewards/college-merch.png",
+        },
+        {
+            "title": "Event Pass",
+            "description": "Priority entry to the next campus fitness or culture night.",
+            "category": "Events",
+            "points_required": 800,
+            "stock": 25,
+            "image": "/rewards/event-pass.png",
+        },
+        {
+            "title": "Sports Merchandise",
+            "description": "Training socks, water bottle, or gym towel from athletics.",
+            "category": "Sports",
+            "points_required": 950,
+            "stock": 15,
+            "image": "/rewards/sports-merch.png",
+        },
+        {
+            "title": "Sponsor Gift",
+            "description": "A surprise gift bag from a MOVEGRID campus partner.",
+            "category": "Sponsors",
+            "points_required": 1500,
+            "stock": 10,
+            "image": "/rewards/sponsor-gift.png",
+        },
+    ]
+    existing_titles = {
+        title
+        for title in (
+            await db.execute(select(Reward.title))
+        ).scalars().all()
+    }
+    db.add_all(
+        [
+            Reward(**item, active=True)
+            for item in desired_rewards
+            if item["title"] not in existing_titles
+        ]
+    )
 
     exercise_count = (await db.execute(select(Exercise.id).limit(1))).scalar_one_or_none()
     if exercise_count is None:

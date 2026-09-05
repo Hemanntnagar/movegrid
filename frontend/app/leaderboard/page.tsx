@@ -193,6 +193,7 @@ export default function LeaderboardPage() {
           <Link href="/leaderboard" className="nav-active">
             Leaderboard
           </Link>
+          <Link href="/rewards">Rewards</Link>
         </nav>
         <div className="top-actions">
           <div className="move-chip">
