@@ -1,47 +1,55 @@
-export default function Page() {
-  return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
-    </main>
-  )
+'use client'
+
+import { useMemo, useState } from 'react'
+import {
+  Activity, ArrowRight, BarChart3, Bell, Bike, Bolt, Check, ChevronRight, CircleHelp, Compass,
+  Crown, Flame, Footprints, Gift, Grid3X3, LayoutDashboard, MapPin, Menu, Play, QrCode,
+  ScanLine, Search, ShieldCheck, Sparkles, Star, Target, Trophy, Users, X, Zap
+} from 'lucide-react'
+
+type Mission = { id: number; title: string; zone: string; distance: string; minutes: number; move: number; kind: string; color: string; description: string }
+
+const missions: Mission[] = [
+  { id: 1, title: 'Library Loop', zone: 'North Quad', distance: '0.2 mi', minutes: 12, move: 120, kind: 'Walk', color: 'mint', description: 'A brisk loop around the library and fountain.' },
+  { id: 2, title: 'Stadium Stairs', zone: 'Athletics District', distance: '0.6 mi', minutes: 18, move: 180, kind: 'Climb', color: 'orange', description: 'Take the long way up the stadium steps.' },
+  { id: 3, title: 'Quad Dash', zone: 'Central Quad', distance: '0.4 mi', minutes: 15, move: 150, kind: 'Run', color: 'blue', description: 'Sprint between the campus landmarks.' },
+]
+
+const leaderboard = [
+  ['Maya Chen', '2,840', 'MC', true], ['Jordan Lee', '2,690', 'JL', false], ['You', '2,480', 'YO', false], ['Sam Rivera', '2,210', 'SR', false]
+]
+
+function Brand() { return <div className="brand"><div className="brand-mark"><Bolt size={18} fill="currentColor" /></div><span>MOVE<span>GRID</span></span></div> }
+function Pill({ children, tone = 'lime' }: { children: React.ReactNode; tone?: string }) { return <span className={`pill ${tone}`}>{children}</span> }
+function StatCard({ icon, label, value, detail, tone }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string }) { return <div className={`stat-card ${tone}`}><div className="stat-icon">{icon}</div><div><p>{label}</p><strong>{value}</strong><small>{detail}</small></div></div> }
+
+function CampusMap({ onSelect }: { onSelect: (m: Mission) => void }) {
+  return <div className="map-wrap"><div className="map-label">CAMPUS LIVE MAP <span><span className="live-dot" /> 12 missions nearby</span></div><svg className="campus-map" viewBox="0 0 760 360" role="img" aria-label="Illustrated campus map with mission locations">
+    <path className="road" d="M0 85 C150 40 200 130 330 84 S570 50 760 110 M0 285 C160 240 230 320 390 270 S620 230 760 300 M120 0 C150 90 105 180 160 360 M570 0 C520 100 600 210 550 360" />
+    <path className="river" d="M660 0 C580 70 690 150 610 220 C550 274 650 320 610 380 L760 380 L760 0Z" />
+    <g className="buildings"><rect x="70" y="58" width="92" height="55" rx="5"/><rect x="210" y="35" width="110" height="62" rx="5"/><rect x="360" y="62" width="100" height="54" rx="5"/><rect x="195" y="190" width="120" height="60" rx="5"/><rect x="365" y="210" width="95" height="58" rx="5"/><rect x="500" y="110" width="90" height="58" rx="5"/></g>
+    <g className="labels"><text x="86" y="90">LIBRARY</text><text x="238" y="72">SCIENCE HALL</text><text x="383" y="94">STUDENT UNION</text><text x="220" y="226">ARTS CENTER</text><text x="385" y="245">GYMNASIUM</text><text x="514" y="144">CAFÉ ROW</text></g>
+    {missions.map((m, i) => <g key={m.id} className="map-pin" onClick={() => onSelect(m)} transform={`translate(${[175, 510, 340][i]},${[142, 178, 145][i]})`}><circle r="18" /><circle r="6" /><text y="-28" textAnchor="middle">{m.move} MOVE</text></g>)}
+    <g className="you-pin" transform="translate(300,280)"><circle r="15"/><circle r="5"/></g><text className="you-label" x="300" y="315">YOU ARE HERE</text>
+  </svg><div className="map-footer"><span><MapPin size={14}/> Your campus, live</span><button className="text-button">Open full map <ArrowRight size={14}/></button></div></div>
 }
+
+function MissionCard({ mission, onStart }: { mission: Mission; onStart: (m: Mission) => void }) { return <article className={`mission-card ${mission.color}`}><div className="mission-top"><Pill tone={mission.color}>{mission.kind}</Pill><span className="move-value"><Zap size={14} fill="currentColor"/> +{mission.move}</span></div><h3>{mission.title}</h3><p>{mission.description}</p><div className="mission-meta"><span><MapPin size={14}/> {mission.zone}</span><span><Activity size={14}/> {mission.minutes} min</span><span><Footprints size={14}/> {mission.distance}</span></div><button className="primary-button" onClick={() => onStart(mission)}><Play size={15} fill="currentColor"/> Start mission</button></article> }
+
+function MissionModal({ mission, onClose, onComplete }: { mission: Mission; onClose: () => void; onComplete: () => void }) {
+  const [step, setStep] = useState(0)
+  const steps = ['Start mission', 'Reach zone', 'Verify QR', 'Complete']
+  return <div className="modal-backdrop"><div className="modal"><button className="close-button" onClick={onClose}><X size={18}/></button><div className="modal-kicker"><Target size={15}/> MISSION BRIEF</div><h2>{mission.title}</h2><p>{mission.description} Make your way to {mission.zone} and check in at the mission marker.</p><div className="stepper">{steps.map((s, i) => <div className={`step ${i <= step ? 'active' : ''}`} key={s}><span>{i < step ? <Check size={13}/> : i + 1}</span><small>{s}</small></div>)}</div>{step === 0 && <div className="modal-panel"><MapPin size={22}/><div><strong>Head to {mission.zone}</strong><span>{mission.distance} away · GPS zone active</span></div></div>}{step === 1 && <div className="qr-panel"><div className="qr-art"><QrCode size={92}/><div className="scan-line"/></div><strong>Scan the demo checkpoint</strong><span>In a real mission, this QR lives at the zone marker.</span></div>}{step === 2 && <div className="verified"><div className="verified-icon"><ShieldCheck size={30}/></div><strong>Checkpoint verified</strong><span>Zone confirmed. Finish the challenge to earn your MOVE.</span></div>}{step === 3 && <div className="verified success"><div className="verified-icon"><Sparkles size={30}/></div><strong>Mission complete</strong><span>+{mission.move} MOVE · +{mission.minutes} active minutes</span></div>}<button className="primary-button full" onClick={() => step < 3 ? setStep(step + 1) : onComplete()}>{step === 0 ? 'I’m on my way' : step === 1 ? 'Verify demo QR' : step === 2 ? 'Complete challenge' : 'Claim reward'} <ArrowRight size={16}/></button></div></div>
+}
+
+function StudentView({ onAdmin }: { onAdmin: () => void }) {
+  const [activeTab, setActiveTab] = useState('Home'); const [selected, setSelected] = useState<Mission | null>(null); const [move, setMove] = useState(2480); const [complete, setComplete] = useState(false); const [redeemed, setRedeemed] = useState(false)
+  const start = (m: Mission) => setSelected(m)
+  const finish = () => { setMove(v => v + (selected?.move || 0)); setSelected(null); setComplete(true); setTimeout(() => setComplete(false), 3000) }
+  return <div className="app-shell"><header className="topbar"><Brand/><nav className="desktop-nav">{['Home','Missions','Leaderboard','Squads','Rewards'].map(t => <button className={activeTab === t ? 'nav-active' : ''} onClick={() => setActiveTab(t)} key={t}>{t}</button>)}</nav><div className="top-actions"><button className="icon-button"><Bell size={18}/><i/></button><div className="avatar">AM</div><button className="admin-switch" onClick={onAdmin}>Admin view <ArrowRight size={14}/></button><button className="mobile-menu"><Menu size={20}/></button></div></header><main className="main-content"><div className="welcome"><div><p className="eyebrow">THURSDAY, OCTOBER 24, 2024</p><h1>Keep the grid moving, <span>Alex.</span></h1><p className="subhead">You&apos;re on a roll. There are fresh missions waiting nearby.</p></div><div className="streak-badge"><Flame size={20} fill="currentColor"/><div><strong>7 day streak</strong><span>Best: 14 days</span></div></div></div><section className="stats-grid"><StatCard icon={<Zap size={19}/>} label="MOVE points" value={move.toLocaleString()} detail="+120 today" tone="lime"/><StatCard icon={<Flame size={19}/>} label="Current streak" value="7 days" detail="2 days to badge" tone="orange"/><StatCard icon={<Activity size={19}/>} label="Active minutes" value="86" detail="of 150 weekly" tone="blue"/><StatCard icon={<Trophy size={19}/>} label="Campus rank" value="#24" detail="↑ 6 places" tone="purple"/></section><div className="dashboard-grid"><div className="content-col"><div className="section-heading"><div><p className="eyebrow">RECOMMENDED FOR YOU</p><h2>Make your next move</h2></div><button className="text-button">View all <ArrowRight size={14}/></button></div><div className="recommendation"><div className="rec-copy"><Pill tone="lime"><Sparkles size={12}/> Perfect match</Pill><h2>Library Loop</h2><p>A quick reset between classes. Walk the north quad, hit three checkpoints, and stack your streak.</p><div className="rec-meta"><span><ClockIcon/> 12 min</span><span><Zap size={14}/> +120 MOVE</span><span><MapPin size={14}/> 0.2 mi</span></div><button className="primary-button" onClick={() => start(missions[0])}>Start mission <ArrowRight size={16}/></button></div><div className="rec-visual"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="rec-icon"><Footprints size={38}/></div><span>01</span></div></div><div className="section-heading compact"><div><p className="eyebrow">NEARBY NOW</p><h2>Pick a mission</h2></div><button className="filter-button"><Compass size={15}/> Nearby <ChevronRight size={14}/></button></div><div className="mission-list">{missions.slice(1).map(m => <MissionCard mission={m} onStart={start} key={m.id}/>)}</div><div className="section-heading compact"><div><p className="eyebrow">YOUR PROGRESS</p><h2>Keep showing up</h2></div></div><div className="progress-card"><div className="progress-ring"><strong>57%</strong><span>weekly goal</span></div><div><h3>150 active minutes</h3><p>You&apos;re 64 minutes in. Two more missions gets you there.</p><div className="progress-bar"><span style={{width: '43%'}}/></div></div><button className="circle-button"><ArrowRight size={17}/></button></div></div><aside className="side-col"><CampusMap onSelect={start}/><div className="side-card leaderboard-card"><div className="section-heading compact"><div><p className="eyebrow">CAMPUS LEADERBOARD</p><h2>Top movers</h2></div><Trophy size={20} className="gold-icon"/></div><div className="leaderboard-list">{leaderboard.map((row, i) => <div className={`leader-row ${row[3] ? 'highlight' : ''}`} key={row[0] as string}><b>{i + 1}</b><div className="mini-avatar">{row[2] as string}</div><span>{row[0] as string}{row[3] && <Pill tone="blue">you</Pill>}</span><strong>{row[1] as string}</strong></div>)}</div><button className="outline-button full">See full leaderboard <ArrowRight size={15}/></button></div><div className="side-card squad-card"><div className="squad-avatars"><div>JD</div><div>SR</div><div>+4</div></div><p className="eyebrow">ACTIVE SQUAD</p><h3>Late Night Legends</h3><p>6 movers · 4,280 MOVE this week</p><button className="outline-button">Open squad <ArrowRight size={15}/></button></div></aside></div></main>{complete && <div className="toast"><div><Check size={18}/></div><span><strong>Mission complete!</strong><small>+120 MOVE added to your account</small></span></div>}{selected && <MissionModal mission={selected} onClose={() => setSelected(null)} onComplete={finish}/>}<footer className="mobile-nav">{[['Home', LayoutDashboard], ['Missions', Target], ['Leaderboard', Trophy], ['Rewards', Gift]].map(([label, Icon]: any) => <button className={activeTab === label ? 'active' : ''} onClick={() => setActiveTab(label)} key={label}><Icon size={19}/><span>{label}</span></button>)}</footer><div className="demo-note">DEMO PROTOTYPE · <button onClick={onAdmin}>Switch to admin</button></div></div>
+}
+function ClockIcon() { return <span className="clock-icon">◷</span> }
+
+function AdminView({ onStudent }: { onStudent: () => void }) { const [tab, setTab] = useState('Overview'); return <div className="admin-shell"><aside className="admin-sidebar"><Brand/><div className="admin-label">WORKSPACE</div>{[['Overview', LayoutDashboard], ['Challenges', Target], ['Campus zones', MapPin], ['Rewards', Gift], ['Students', Users], ['Analytics', BarChart3]].map(([n, I]: any) => <button className={tab === n ? 'selected' : ''} onClick={() => setTab(n)} key={n}><I size={17}/>{n}{n === 'Challenges' && <span className="sidebar-count">12</span>}</button>)}<div className="sidebar-spacer"/><button><CircleHelp size={17}/>Help center</button><div className="admin-user"><div className="avatar">AD</div><div><strong>Admin Demo</strong><span>Campus ops</span></div><ChevronRight size={15}/></div></aside><main className="admin-main"><header className="admin-header"><div><p className="eyebrow">CAMPUS OPERATIONS / OVERVIEW</p><h1>Good morning, Admin.</h1><p className="subhead">Here&apos;s what&apos;s moving across campus today.</p></div><div className="admin-header-actions"><button className="date-button">Oct 21 – Oct 27, 2024 <ChevronRight size={15}/></button><button className="primary-button" onClick={() => setTab('Challenges')}><Target size={15}/> Create challenge</button><button className="icon-button"><Bell size={18}/></button><button className="admin-switch" onClick={onStudent}>Student view <ArrowRight size={14}/></button></div></header><div className="admin-kpi"><div><p className="eyebrow">PRIMARY KPI</p><h2>Movement Generated</h2><div className="big-kpi">38,492 <small>MOVE</small></div><span className="positive"><ArrowRight size={13}/> 18.6% vs last week</span></div><div className="kpi-chart"><div className="chart-bars">{[40,62,47,72,55,84,68,92,74,88,80,100].map((h, i) => <i key={i} style={{height: `${h}%`}} className={i > 9 ? 'current' : ''}/>)}</div><div className="chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div></div><div className="admin-stat-grid"><StatCard icon={<Users size={18}/>} label="Total students" value="4,286" detail="↑ 8.2% this month" tone="blue"/><StatCard icon={<Activity size={18}/>} label="Active students" value="1,842" detail="43% of total" tone="lime"/><StatCard icon={<Target size={18}/>} label="Missions completed" value="12,648" detail="↑ 24.5% this week" tone="orange"/><StatCard icon={<BarChart3 size={18}/>} label="Participation rate" value="68.4%" detail="↑ 4.1% vs last week" tone="purple"/></div><div className="admin-grid"><div className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">ENGAGEMENT TREND</p><h2>Active minutes</h2></div><Pill tone="blue">This week</Pill></div><div className="line-chart"><svg viewBox="0 0 700 220" preserveAspectRatio="none"><path d="M0 190 C80 175 90 145 155 160 S230 120 280 140 S345 85 405 118 S470 80 520 95 S610 35 700 54"/><path className="chart-fill" d="M0 190 C80 175 90 145 155 160 S230 120 280 140 S345 85 405 118 S470 80 520 95 S610 35 700 54 L700 220 L0 220Z"/></svg><div className="axis"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div></div><div className="admin-panel zones-panel"><div className="panel-heading"><div><p className="eyebrow">CAMPUS HEATMAP</p><h2>Most active zones</h2></div><MapPin size={18}/></div>{[['Central Quad','2,840 min','92%'],['Athletics District','2,120 min','74%'],['North Quad','1,680 min','58%'],['Arts Center','1,240 min','43%']].map(([a,b,c], i) => <div className="zone-row" key={a}><span className={`zone-dot z${i}`}/><div><strong>{a}</strong><small>{b}</small></div><div className="zone-progress"><span style={{width: c}}/></div><b>{c}</b></div>)}</div></div><div className="admin-panel table-panel"><div className="panel-heading"><div><p className="eyebrow">LIVE MANAGEMENT</p><h2>{tab === 'Overview' ? 'Active challenges' : tab}</h2></div><button className="outline-button">View all <ArrowRight size={14}/></button></div><div className="challenge-table"><div className="table-head"><span>CHALLENGE</span><span>ZONE</span><span>COMPLETIONS</span><span>STATUS</span><span/></div>{missions.map(m => <div className="table-row" key={m.id}><div><div className={`table-icon ${m.color}`}><Target size={16}/></div><strong>{m.title}</strong></div><span>{m.zone}</span><span>{[482, 318, 264][m.id - 1]}</span><Pill tone="lime">Live</Pill><button className="kebab">•••</button></div>)}</div></div></main></div> }
+
+export default function Page() { const [mode, setMode] = useState<'student' | 'admin'>('student'); return mode === 'student' ? <StudentView onAdmin={() => setMode('admin')}/> : <AdminView onStudent={() => setMode('student')}/> }
