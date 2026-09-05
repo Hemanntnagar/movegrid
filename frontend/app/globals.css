@@ -45,3 +45,14 @@ h1 { font-size:clamp(32px,5vw,58px); text-shadow:3px 3px 0 #fffdf0; }
 .modal-backdrop { background:rgba(24,61,89,.45); }.modal { background:#fffdf0; border:4px solid var(--border); border-radius:30px; box-shadow:10px 10px 0 rgba(24,61,89,.32); }.close-button { background:#f3a8c7; border:3px solid var(--border); }
 @media (max-width:560px) { .topbar { height:72px; }.main-content { padding-top:28px; }.stats-grid { grid-template-columns:repeat(2,1fr); }.stat-card { border-width:3px; border-radius:18px; }.mobile-nav { background:#fffdf0; border-top:4px solid var(--border); }.mobile-nav button { border:0; box-shadow:none; } }
 
+/* Floating cartoon mobile chrome */
+.topbar { position:relative; z-index:5; background:transparent; border-bottom:0; }
+.brand, .top-actions { background:#fffdf0; border:3px solid var(--border); border-radius:22px; box-shadow:0 5px 0 var(--border); padding:8px 12px; }
+.top-actions { gap:8px; }
+.top-actions .admin-switch { display:none; }
+.mobile-nav { gap:8px; padding:8px 10px 12px; background:transparent; border:0; }
+.mobile-nav button { min-width:58px; padding:8px 7px; background:#fffdf0; color:var(--ink); border:3px solid var(--border); border-radius:18px; box-shadow:0 4px 0 var(--border); font-weight:900; }
+.mobile-nav button:nth-child(1) { background:#ffd447; }.mobile-nav button:nth-child(2) { background:#b7e88f; }.mobile-nav button:nth-child(3) { background:#f3a8c7; }.mobile-nav button:nth-child(4) { background:#8bd4f4; }
+.mobile-nav button.active { color:var(--ink); border-color:var(--border); }
+.recommendation h2, .recommendation p, .mission-card h3, .mission-card p { color:#000; }
+
