@@ -42,22 +42,53 @@ function Brand() {
   )
 }
 
+function PenguinMascot({ message = "Treat yourself! You earned these MOVE rewards!" }: { message?: string }) {
+  return (
+    <div className="penguin-mascot-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '0.6rem 0.9rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <svg className="penguin-svg" width="38" height="42" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+        <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+        <circle cx="50" cy="32" r="24" fill="#0f172a" />
+        <circle cx="42" cy="28" r="4" fill="#ffffff" />
+        <circle cx="43" cy="28" r="2" fill="#000000" />
+        <circle cx="58" cy="28" r="4" fill="#ffffff" />
+        <circle cx="57" cy="28" r="2" fill="#000000" />
+        <polygon points="50,32 44,38 56,38" fill="#f97316" />
+        <circle cx="36" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <circle cx="64" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <rect x="30" y="48" width="40" height="8" rx="4" fill="#38bdf8" />
+        <rect x="58" y="52" width="10" height="20" rx="3" fill="#0284c7" />
+        <ellipse cx="14" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(20 14 65)" />
+        <ellipse cx="86" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(-20 86 65)" />
+        <ellipse cx="38" cy="102" rx="10" ry="5" fill="#f97316" />
+        <ellipse cx="62" cy="102" rx="10" ry="5" fill="#f97316" />
+      </svg>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          <span>🐧 Pebble the Mascot</span>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', fontStyle: 'italic' }}>&quot;{message}&quot;</p>
+      </div>
+    </div>
+  )
+}
+
 function rewardTone(category: string) {
   const key = category.toLowerCase()
-  if (key.includes('food') || key.includes('canteen') || key.includes('dining')) return 'mint'
+  if (key.includes('food') || key.includes('canteen') || key.includes('dining') || key.includes('smoothie')) return 'mint'
   if (key.includes('event')) return 'orange'
-  if (key.includes('sport')) return 'blue'
-  if (key.includes('sponsor') || key.includes('merch')) return 'purple'
+  if (key.includes('sport') || key.includes('gym')) return 'blue'
+  if (key.includes('sponsor') || key.includes('merch') || key.includes('gear')) return 'purple'
   return 'mint'
 }
 
 function RewardIcon({ category }: { category: string }) {
   const key = category.toLowerCase()
-  if (key.includes('food') || key.includes('canteen') || key.includes('dining')) return <Utensils size={28} />
+  if (key.includes('food') || key.includes('canteen') || key.includes('dining') || key.includes('smoothie')) return <Utensils size={28} />
   if (key.includes('event')) return <Ticket size={28} />
-  if (key.includes('sport')) return <Trophy size={28} />
+  if (key.includes('sport') || key.includes('gym')) return <Trophy size={28} />
   if (key.includes('sponsor')) return <Gift size={28} />
-  if (key.includes('merch')) return <ShoppingBag size={28} />
+  if (key.includes('merch') || key.includes('gear')) return <ShoppingBag size={28} />
   return <Package size={28} />
 }
 
@@ -216,32 +247,26 @@ export default function RewardsPage() {
       </header>
 
       <main className="main-content rewards-page">
-        <div className="welcome">
+        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <Link className="text-button" href="/">
-              <ArrowLeft size={14} /> Back to campus
+              <ArrowLeft size={14} /> Back to dashboard
             </Link>
-            <p className="eyebrow">MOVE STORE</p>
+            <p className="eyebrow">MOVE REWARD STORE</p>
             <h1>
               Spend your MOVE, <span>{user.name.split(' ')[0]}.</span>
             </h1>
-            <p className="subhead">Campus rewards only — no real payment. Earn MOVE from fitness, spend it here.</p>
+            <p className="subhead">Trade your movement and fitness points for healthy drinks, gear, and passes.</p>
           </div>
-          <div className="rewards-balance-badge">
-            <Zap size={22} fill="currentColor" />
-            <div>
-              <strong>{user.total_points.toLocaleString()}</strong>
-              <span>Current MOVE balance</span>
-            </div>
-          </div>
+          <PenguinMascot message="Spend your hard-earned MOVE on awesome rewards!" />
         </div>
 
         {error && <p className="form-error">{error}</p>}
 
         <section className="section-heading compact">
           <div>
-            <p className="eyebrow">CATALOG</p>
-            <h2>Pick a reward</h2>
+            <p className="eyebrow">REWARD CATALOG</p>
+            <h2>Pick your perk</h2>
           </div>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
             {['All', 'Food', 'Events', 'Sports', 'Merch'].map((cat) => (
@@ -279,7 +304,7 @@ export default function RewardsPage() {
 
         <section className="section-heading compact" style={{ marginTop: '2rem' }}>
           <div>
-            <p className="eyebrow">HISTORY</p>
+            <p className="eyebrow">RETIRED & REDEEMED</p>
             <h2>Your redemptions</h2>
           </div>
         </section>
@@ -317,7 +342,7 @@ export default function RewardsPage() {
             <h2>{confirmReward.title}</h2>
             <p>
               Spend {confirmReward.points_required.toLocaleString()} MOVE from your balance of{' '}
-              {user.total_points.toLocaleString()}. This is an internal campus reward — no payment is charged.
+              {user.total_points.toLocaleString()}.
             </p>
             <div className="modal-panel">
               <Zap size={22} />
@@ -346,7 +371,7 @@ export default function RewardsPage() {
               <Sparkles size={15} /> VOUCHER UNLOCKED
             </div>
             <h2>{success.reward_title}</h2>
-            <p>Show this digital voucher code at the campus checkpoint or canteen.</p>
+            <p>Show this digital voucher code at the partner store or venue.</p>
             <div className="qr-panel" style={{ margin: '1rem 0' }}>
               <div className="qr-art">
                 <QrCode size={110} />

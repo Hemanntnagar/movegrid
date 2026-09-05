@@ -41,6 +41,37 @@ function Brand() {
   )
 }
 
+function PenguinMascot({ message = "See who's leading the pack!" }: { message?: string }) {
+  return (
+    <div className="penguin-mascot-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '0.6rem 0.9rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <svg className="penguin-svg" width="38" height="42" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+        <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+        <circle cx="50" cy="32" r="24" fill="#0f172a" />
+        <circle cx="42" cy="28" r="4" fill="#ffffff" />
+        <circle cx="43" cy="28" r="2" fill="#000000" />
+        <circle cx="58" cy="28" r="4" fill="#ffffff" />
+        <circle cx="57" cy="28" r="2" fill="#000000" />
+        <polygon points="50,32 44,38 56,38" fill="#f97316" />
+        <circle cx="36" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <circle cx="64" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <rect x="30" y="48" width="40" height="8" rx="4" fill="#38bdf8" />
+        <rect x="58" y="52" width="10" height="20" rx="3" fill="#0284c7" />
+        <ellipse cx="14" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(20 14 65)" />
+        <ellipse cx="86" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(-20 86 65)" />
+        <ellipse cx="38" cy="102" rx="10" ry="5" fill="#f97316" />
+        <ellipse cx="62" cy="102" rx="10" ry="5" fill="#f97316" />
+      </svg>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          <span>🐧 Pebble the Mascot</span>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', fontStyle: 'italic' }}>&quot;{message}&quot;</p>
+      </div>
+    </div>
+  )
+}
+
 function initialsFromAvatar(avatar: string, name: string) {
   if (avatar.startsWith('initials:')) {
     return avatar.split(':')[1] || name.slice(0, 2).toUpperCase()
@@ -221,26 +252,20 @@ export default function LeaderboardPage() {
       </header>
 
       <main className="main-content leaderboard-page">
-        <div className="welcome">
+        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <Link className="text-button" href="/">
-              <ArrowLeft size={14} /> Back to campus
+              <ArrowLeft size={14} /> Back to dashboard
             </Link>
-            <p className="eyebrow">CAMPUS LEADERBOARDS</p>
+            <p className="eyebrow">GLOBAL LEADERBOARDS</p>
             <h1>
               See who&apos;s moving, <span>{user.name.split(' ')[0]}.</span>
             </h1>
             <p className="subhead">
-              Rankings update automatically after every completed campus mission and daily fitness assignment.
+              Rankings update automatically after every completed 10k step challenge or workout.
             </p>
           </div>
-          <div className="streak-badge">
-            <Trophy size={20} fill="currentColor" />
-            <div>
-              <strong>{board.total_participants} ranked</strong>
-              <span>{board.title}</span>
-            </div>
-          </div>
+          <PenguinMascot message="Climb the ranks! Every step gets you higher on the leaderboard!" />
         </div>
 
         <div className="lb-tabs" role="tablist" aria-label="Leaderboard type">

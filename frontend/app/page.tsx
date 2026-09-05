@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   Activity, ArrowRight, BarChart3, Bell, Bike, Bolt, Check, ChevronRight, CircleHelp, Compass,
-  Crown, Flame, Footprints, Gift, Grid3X3, LayoutDashboard, LoaderCircle, LogIn, LogOut, MapPin, Menu, Plus, Play, QrCode,
-  ScanLine, Search, ShieldCheck, Sparkles, Star, Target, Trash2, Trophy, Users, X, Zap
+  Crown, Droplets, Flame, Footprints, Gift, Grid3X3, HeartHandshake, LayoutDashboard, LoaderCircle, LogIn, LogOut, MapPin, Menu, Plus, Play, QrCode,
+  ScanLine, Search, ShieldCheck, Sparkles, Star, Target, Trash2, Trophy, UserPlus, Users, X, Zap
 } from 'lucide-react'
 import {
   ApiMission, ApiLeaderboardEntry, ApiUser, clearToken, getStoredToken, movegridApi
 } from '../lib/api'
 
-type UIKind = 'Walk' | 'Climb' | 'Run' | 'Bike' | string
+type UIKind = 'Walk' | 'Climb' | 'Run' | 'Bike' | 'Hydration' | string
 
 type Mission = {
   id: number
@@ -25,11 +25,30 @@ type Mission = {
   description: string
 }
 
+type Buddy = {
+  id: number
+  name: string
+  distance: string
+  activity: string
+  level: string
+  status: string
+  avatar: string
+  color: string
+}
+
 const DEFAULT_MISSIONS: Mission[] = [
-  { id: 1, title: 'Library Loop', zone: 'North Quad', distance: '0.2 mi', minutes: 12, move: 120, kind: 'Walk', color: 'mint', description: 'A brisk loop around the library and fountain.' },
-  { id: 2, title: 'Stadium Stairs', zone: 'Athletics District', distance: '0.6 mi', minutes: 18, move: 180, kind: 'Climb', color: 'orange', description: 'Take the long way up the stadium steps.' },
-  { id: 3, title: 'Quad Dash', zone: 'Central Quad', distance: '0.4 mi', minutes: 15, move: 150, kind: 'Run', color: 'blue', description: 'Sprint between the campus landmarks.' },
-  { id: 4, title: 'Arts Center Circuit', zone: 'Arts District', distance: '0.5 mi', minutes: 14, move: 140, kind: 'Walk', color: 'purple', description: 'Explore the outdoor sculpture garden.' },
+  { id: 1, title: '10,000 Daily Steps Goal', zone: 'Downtown Loop', distance: '4.8 mi', minutes: 45, move: 150, kind: 'Walk', color: 'mint', description: 'Hit 10,000 steps today to keep your daily movement streak alive.' },
+  { id: 2, title: 'Hydration Hero: Drink 2L Water', zone: 'Hydration Goal', distance: '0.0 mi', minutes: 5, move: 100, kind: 'Hydration', color: 'blue', description: 'Track and drink 2 Liters of fresh water throughout the day for optimal energy.' },
+  { id: 3, title: 'City Park 5K Trail Run', zone: 'Central Park', distance: '3.1 mi', minutes: 28, move: 200, kind: 'Run', color: 'orange', description: 'Sprint or jog through the main park trail circuit.' },
+  { id: 4, title: 'Morning 15-Min Mobility Stretch', zone: 'Home / Park', distance: '0.1 mi', minutes: 15, move: 80, kind: 'Walk', color: 'purple', description: 'Gentle full-body stretching session to improve posture and flexibility.' },
+  { id: 5, title: 'Neighborhood Bike Circuit', zone: 'City East Bikeway', distance: '5.2 mi', minutes: 30, move: 160, kind: 'Bike', color: 'mint', description: 'Cycle through the bike path and log your cardiovascular movement.' },
+]
+
+const NEARBY_BUDDIES: Buddy[] = [
+  { id: 101, name: 'Maya Chen', distance: '0.2 mi away', activity: '5K Trail Run', level: 'Advanced', status: 'Active now', avatar: 'MC', color: '#ffd447' },
+  { id: 102, name: 'Jordan Lee', distance: '0.4 mi away', activity: '10k Steps Walk', level: 'Intermediate', status: 'Walking nearby', avatar: 'JL', color: '#8bd4f4' },
+  { id: 103, name: 'Sam Rivera', distance: '0.6 mi away', activity: 'Morning Stretch', level: 'Beginner', status: 'Ready for workout', avatar: 'SR', color: '#ff9a61' },
+  { id: 104, name: 'Priya Nair', distance: '0.8 mi away', activity: 'Bike Circuit', level: 'Advanced', status: 'On bike trail', avatar: 'PN', color: '#b7e88f' },
 ]
 
 const DEFAULT_LEADERBOARD = [
@@ -48,6 +67,45 @@ function Brand() {
       <span>
         MOVE<span>GRID</span>
       </span>
+    </div>
+  )
+}
+
+function PenguinMascot({ message = "Waddle & move! You've got this!" }: { message?: string }) {
+  return (
+    <div className="penguin-mascot-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '0.6rem 0.9rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <svg className="penguin-svg" width="38" height="42" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Penguin Body */}
+        <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+        <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+        {/* Penguin Head */}
+        <circle cx="50" cy="32" r="24" fill="#0f172a" />
+        {/* Eyes */}
+        <circle cx="42" cy="28" r="4" fill="#ffffff" />
+        <circle cx="43" cy="28" r="2" fill="#000000" />
+        <circle cx="58" cy="28" r="4" fill="#ffffff" />
+        <circle cx="57" cy="28" r="2" fill="#000000" />
+        {/* Beak */}
+        <polygon points="50,32 44,38 56,38" fill="#f97316" />
+        {/* Cheeks */}
+        <circle cx="36" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <circle cx="64" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        {/* Scarf */}
+        <rect x="30" y="48" width="40" height="8" rx="4" fill="#38bdf8" />
+        <rect x="58" y="52" width="10" height="20" rx="3" fill="#0284c7" />
+        {/* Flippers */}
+        <ellipse cx="14" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(20 14 65)" />
+        <ellipse cx="86" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(-20 86 65)" />
+        {/* Feet */}
+        <ellipse cx="38" cy="102" rx="10" ry="5" fill="#f97316" />
+        <ellipse cx="62" cy="102" rx="10" ry="5" fill="#f97316" />
+      </svg>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          <span>🐧 Pebble the Mascot</span>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', fontStyle: 'italic' }}>&quot;{message}&quot;</p>
+      </div>
     </div>
   )
 }
@@ -73,8 +131,8 @@ function ClockIcon() {
   return <span className="clock-icon">◷</span>
 }
 
-function CampusMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: Mission) => void }) {
-  const [filter, setFilter] = useState<'All' | 'Walk' | 'Climb' | 'Run'>('All')
+function AreaMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: Mission) => void }) {
+  const [filter, setFilter] = useState<'All' | 'Walk' | 'Run' | 'Hydration' | 'Bike'>('All')
   const filteredMissions = useMemo(() => {
     if (filter === 'All') return missions
     return missions.filter((m) => m.kind.toLowerCase() === filter.toLowerCase())
@@ -91,13 +149,13 @@ function CampusMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: 
   return (
     <div className="map-wrap">
       <div className="map-label">
-        CAMPUS LIVE MAP{' '}
+        CITY WORKOUT MAP{' '}
         <span>
-          <span className="live-dot" /> {filteredMissions.length} active zones nearby
+          <span className="live-dot" /> {filteredMissions.length} active routes nearby
         </span>
       </div>
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.75rem' }}>
-        {(['All', 'Walk', 'Climb', 'Run'] as const).map((k) => (
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        {(['All', 'Walk', 'Run', 'Hydration', 'Bike'] as const).map((k) => (
           <button
             key={k}
             type="button"
@@ -109,7 +167,7 @@ function CampusMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: 
           </button>
         ))}
       </div>
-      <svg className="campus-map" viewBox="0 0 760 360" role="img" aria-label="Illustrated campus map with mission locations">
+      <svg className="campus-map" viewBox="0 0 760 360" role="img" aria-label="Illustrated city map with workout locations">
         <path className="road" d="M0 85 C150 40 200 130 330 84 S570 50 760 110 M0 285 C160 240 230 320 390 270 S620 230 760 300 M120 0 C150 90 105 180 160 360 M570 0 C520 100 600 210 550 360" />
         <path className="river" d="M660 0 C580 70 690 150 610 220 C550 274 650 320 610 380 L760 380 L760 0Z" />
         <g className="buildings">
@@ -121,12 +179,12 @@ function CampusMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: 
           <rect x="500" y="110" width="90" height="58" rx="5" />
         </g>
         <g className="labels">
-          <text x="86" y="90">LIBRARY</text>
-          <text x="238" y="72">SCIENCE HALL</text>
-          <text x="383" y="94">STUDENT UNION</text>
-          <text x="220" y="226">ARTS CENTER</text>
-          <text x="385" y="245">GYMNASIUM</text>
-          <text x="514" y="144">CAFÉ ROW</text>
+          <text x="86" y="90">CENTRAL PARK</text>
+          <text x="238" y="72">DOWNTOWN</text>
+          <text x="383" y="94">CITY SQUARE</text>
+          <text x="220" y="226">RIVERSIDE</text>
+          <text x="385" y="245">FITNESS CLUB</text>
+          <text x="514" y="144">BIKE HUB</text>
         </g>
         {filteredMissions.map((m, i) => {
           const coords = mapCoordinates[i % mapCoordinates.length]
@@ -157,10 +215,10 @@ function CampusMap({ missions, onSelect }: { missions: Mission[]; onSelect: (m: 
       </svg>
       <div className="map-footer">
         <span>
-          <MapPin size={14} /> Live GPS grid
+          <MapPin size={14} /> Live GPS Workout Grid
         </span>
         <button type="button" className="text-button" onClick={() => filteredMissions[0] && onSelect(filteredMissions[0])}>
-          Select mission <ArrowRight size={14} />
+          Select route <ArrowRight size={14} />
         </button>
       </div>
     </div>
@@ -173,7 +231,7 @@ function MissionCard({ mission, onStart }: { mission: Mission; onStart: (m: Miss
       <div className="mission-top">
         <Pill tone={mission.color}>{mission.kind}</Pill>
         <span className="move-value">
-          <Zap size={14} fill="currentColor" /> +{mission.move}
+          <Zap size={14} fill="currentColor" /> +{mission.move} MOVE
         </span>
       </div>
       <h3>{mission.title}</h3>
@@ -208,7 +266,7 @@ function MissionModal({
   loading: boolean
 }) {
   const [step, setStep] = useState(0)
-  const steps = ['Start mission', 'Reach zone', 'Verify QR', 'Complete']
+  const steps = ['Start activity', 'Perform task', 'Verify goal', 'Claim MOVE']
 
   return (
     <div className="modal-backdrop">
@@ -221,7 +279,7 @@ function MissionModal({
         </div>
         <h2>{mission.title}</h2>
         <p>
-          {mission.description} Make your way to {mission.zone} and check in at the mission marker.
+          {mission.description} Complete the target at {mission.zone} to log your health points.
         </p>
         <div className="stepper">
           {steps.map((s, i) => (
@@ -235,19 +293,23 @@ function MissionModal({
           <div className="modal-panel">
             <MapPin size={22} />
             <div>
-              <strong>Head to {mission.zone}</strong>
-              <span>{mission.distance} away · GPS zone active</span>
+              <strong>Location: {mission.zone}</strong>
+              <span>Target: {mission.distance} · {mission.minutes} min session</span>
             </div>
           </div>
         )}
         {step === 1 && (
           <div className="qr-panel">
-            <div className="qr-art">
-              <QrCode size={92} />
-              <div className="scan-line" />
-            </div>
-            <strong>Scan the demo checkpoint</strong>
-            <span>In a real mission, this QR lives at the zone marker.</span>
+            {mission.kind === 'Hydration' ? (
+              <Droplets size={80} style={{ color: '#38bdf8' }} />
+            ) : (
+              <div className="qr-art">
+                <QrCode size={92} />
+                <div className="scan-line" />
+              </div>
+            )}
+            <strong>Log your workout check-in</strong>
+            <span>{mission.kind === 'Hydration' ? 'Logged 2L water consumed!' : 'Scan or log GPS route confirmation.'}</span>
           </div>
         )}
         {step === 2 && (
@@ -255,8 +317,8 @@ function MissionModal({
             <div className="verified-icon">
               <ShieldCheck size={30} />
             </div>
-            <strong>Checkpoint verified</strong>
-            <span>Zone confirmed. Finish the challenge to earn your MOVE points.</span>
+            <strong>Activity Goal Verified</strong>
+            <span>Great work! Complete now to claim your MOVE rewards.</span>
           </div>
         )}
         {step === 3 && (
@@ -264,7 +326,7 @@ function MissionModal({
             <div className="verified-icon">
               <Sparkles size={30} />
             </div>
-            <strong>Mission complete!</strong>
+            <strong>Goal Completed!</strong>
             <span>
               +{mission.move} MOVE · +{mission.minutes} active minutes
             </span>
@@ -285,11 +347,11 @@ function MissionModal({
           {loading ? (
             <LoaderCircle size={16} className="spin" />
           ) : step === 0 ? (
-            'I’m on my way'
+            'Start goal'
           ) : step === 1 ? (
-            'Verify demo QR'
+            'Verify activity'
           ) : step === 2 ? (
-            'Complete challenge'
+            'Log progress'
           ) : (
             'Claim MOVE points'
           )}{' '}
@@ -300,43 +362,78 @@ function MissionModal({
   )
 }
 
-function SquadModal({ onClose }: { onClose: () => void }) {
-  const [joined, setJoined] = useState(false)
+function WorkoutBuddiesModal({
+  onClose,
+  onInvite,
+}: {
+  onClose: () => void
+  onInvite: (buddy: Buddy) => void
+}) {
   return (
     <div className="modal-backdrop">
-      <div className="modal">
+      <div className="modal" style={{ maxWidth: '540px' }}>
         <button type="button" className="close-button" onClick={onClose}>
           <X size={18} />
         </button>
         <div className="modal-kicker">
-          <Users size={15} /> SQUAD HEADQUARTERS
+          <Users size={15} /> WORKOUT BUDDY FINDER
         </div>
-        <h2>Late Night Legends</h2>
-        <p>Central Quad campus mover squad. Join to stack team points on the monthly leaderboard.</p>
-        <div className="modal-panel" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <strong>Squad Rank</strong>
-              <small>#3 Campus squad</small>
+        <h2>Nearby Fitness Buddies</h2>
+        <p>Connect with movers in your area for 10k step walks, 5K runs, or gym workouts.</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: '1rem 0' }}>
+          {NEARBY_BUDDIES.map((b) => (
+            <div
+              key={b.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'rgba(255,255,255,0.05)',
+                padding: '0.75rem 1rem',
+                borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: b.color,
+                    color: '#0f172a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.95rem',
+                  }}
+                >
+                  {b.avatar}
+                </div>
+                <div>
+                  <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{b.name}</strong>
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                    <MapPin size={12} style={{ display: 'inline', marginRight: '3px' }} />
+                    {b.distance} · {b.activity}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="outline-button"
+                style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}
+                onClick={() => onInvite(b)}
+              >
+                <UserPlus size={14} /> Invite
+              </button>
             </div>
-            <Pill tone="orange">4,280 MOVE</Pill>
-          </div>
-          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {['Alex M.', 'Jordan L.', 'Sam R.', 'Maya C.', 'Taylor K.', 'Devon S.'].map((m) => (
-              <span key={m} className="pill lime">
-                {m}
-              </span>
-            ))}
-          </div>
+          ))}
         </div>
-        <button
-          type="button"
-          className={`primary-button full ${joined ? 'secondary' : ''}`}
-          onClick={() => setJoined(!joined)}
-        >
-          {joined ? <Check size={16} /> : <Users size={16} />}
-          {joined ? 'You are in this Squad' : 'Join Squad'}
+
+        <button type="button" className="outline-button full" onClick={onClose}>
+          Close Buddy Finder
         </button>
       </div>
     </div>
@@ -350,7 +447,8 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
   const [complete, setComplete] = useState(false)
   const [user, setUser] = useState<ApiUser | null>(null)
   const [apiMissions, setApiMissions] = useState<Mission[]>(DEFAULT_MISSIONS)
-  const [squadOpen, setSquadOpen] = useState(false)
+  const [buddyModalOpen, setBuddyModalOpen] = useState(false)
+  const [inviteToast, setInviteToast] = useState('')
   const [loadingComplete, setLoadingComplete] = useState(false)
 
   const token = getStoredToken()
@@ -373,12 +471,12 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
           setApiMissions(
             items.map((m, idx) => ({
               id: m.id,
-              title: m.title,
+              title: m.title.includes('Loop') ? '10,000 Daily Steps Goal' : m.title,
               zone: m.zone,
               distance: `${(0.2 + (m.id * 0.15) % 0.8).toFixed(1)} mi`,
               minutes: m.minutes || 15,
               move: m.move_reward || 100,
-              kind: m.kind || (idx % 3 === 0 ? 'Walk' : idx % 3 === 1 ? 'Climb' : 'Run'),
+              kind: m.kind || (idx % 3 === 0 ? 'Walk' : idx % 3 === 1 ? 'Run' : 'Bike'),
               color: idx % 3 === 0 ? 'mint' : idx % 3 === 1 ? 'orange' : 'blue',
               description: m.description,
             }))
@@ -406,12 +504,18 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
     }
   }
 
+  const handleInviteBuddy = (buddy: Buddy) => {
+    setInviteToast(`Workout invitation sent to ${buddy.name}!`)
+    setBuddyModalOpen(false)
+    setTimeout(() => setInviteToast(''), 3500)
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
         <Brand />
         <nav className="desktop-nav">
-          {['Home', 'Missions', 'Fitness', 'Leaderboard', 'Squads', 'Rewards'].map((t) =>
+          {['Home', 'Missions', 'Fitness', 'Leaderboard', 'Workout Buddies', 'Rewards'].map((t) =>
             t === 'Fitness' ? (
               <Link className={activeTab === t ? 'nav-active' : ''} href="/fitness" key={t}>
                 {t}
@@ -424,8 +528,8 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
               <Link className={activeTab === t ? 'nav-active' : ''} href="/rewards" key={t}>
                 {t}
               </Link>
-            ) : t === 'Squads' ? (
-              <button key={t} type="button" className={activeTab === t ? 'nav-active' : ''} onClick={() => setSquadOpen(true)}>
+            ) : t === 'Workout Buddies' ? (
+              <button key={t} type="button" className={activeTab === t ? 'nav-active' : ''} onClick={() => setBuddyModalOpen(true)}>
                 {t}
               </button>
             ) : (
@@ -455,36 +559,30 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
       </header>
 
       <main className="main-content">
-        <div className="welcome">
+        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <p className="eyebrow">CAMPUS LIVE MOVEMENT</p>
+            <p className="eyebrow">EVERYDAY MOVEMENT & WORKOUT COMMUNITY</p>
             <h1>
-              Keep the grid moving, <span>{user ? user.name.split(' ')[0] : 'Alex'}.</span>
+              Keep moving, <span>{user ? user.name.split(' ')[0] : 'Alex'}.</span>
             </h1>
-            <p className="subhead">You&apos;re on a roll. Fresh missions and checkpoints are active nearby.</p>
+            <p className="subhead">Hit your 10k steps, drink 2L water, and train with nearby workout buddies.</p>
           </div>
-          <div className="streak-badge">
-            <Flame size={20} fill="currentColor" />
-            <div>
-              <strong>{user?.streak ?? 7} day streak</strong>
-              <span>Best: 14 days</span>
-            </div>
-          </div>
+          <PenguinMascot message="Remember to hit your 10k steps & drink 2L water today!" />
         </div>
 
         <section className="stats-grid">
-          <StatCard icon={<Zap size={19} />} label="MOVE points" value={move.toLocaleString()} detail="+120 today" tone="lime" />
+          <StatCard icon={<Zap size={19} />} label="MOVE points" value={move.toLocaleString()} detail="+150 today" tone="lime" />
           <StatCard icon={<Flame size={19} />} label="Current streak" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
           <StatCard icon={<Activity size={19} />} label="Active minutes" value="86" detail="of 150 weekly" tone="blue" />
-          <StatCard icon={<Trophy size={19} />} label="Campus rank" value="#24" detail="↑ 6 places" tone="purple" />
+          <StatCard icon={<Trophy size={19} />} label="Global rank" value="#24" detail="↑ 6 places" tone="purple" />
         </section>
 
         <div className="dashboard-grid">
           <div className="content-col">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">RECOMMENDED FOR YOU</p>
-                <h2>Make your next move</h2>
+                <p className="eyebrow">DAILY HIGHLIGHT</p>
+                <h2>Featured Health Goal</h2>
               </div>
               <button type="button" className="text-button" onClick={() => start(apiMissions[0])}>
                 View details <ArrowRight size={14} />
@@ -494,19 +592,19 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
             <div className="recommendation">
               <div className="rec-copy">
                 <Pill tone="lime">
-                  <Sparkles size={12} /> Perfect match
+                  <Sparkles size={12} /> Daily Must-Do
                 </Pill>
-                <h2>{apiMissions[0]?.title || 'Library Loop'}</h2>
-                <p>{apiMissions[0]?.description || 'A quick reset between classes. Walk the north quad, hit checkpoints, and stack your streak.'}</p>
+                <h2>{apiMissions[0]?.title || '10,000 Daily Steps Goal'}</h2>
+                <p>{apiMissions[0]?.description || 'Complete 10,000 steps today to boost cardiovascular energy and stack your streak.'}</p>
                 <div className="rec-meta">
                   <span>
-                    <ClockIcon /> {apiMissions[0]?.minutes || 12} min
+                    <ClockIcon /> {apiMissions[0]?.minutes || 45} min
                   </span>
                   <span>
-                    <Zap size={14} /> +{apiMissions[0]?.move || 120} MOVE
+                    <Zap size={14} /> +{apiMissions[0]?.move || 150} MOVE
                   </span>
                   <span>
-                    <MapPin size={14} /> {apiMissions[0]?.distance || '0.2 mi'}
+                    <MapPin size={14} /> {apiMissions[0]?.distance || '4.8 mi'}
                   </span>
                 </div>
                 <button type="button" className="primary-button" onClick={() => start(apiMissions[0])}>
@@ -525,11 +623,11 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
 
             <div className="section-heading compact">
               <div>
-                <p className="eyebrow">NEARBY NOW</p>
-                <h2>Pick a mission</h2>
+                <p className="eyebrow">DAILY MISSIONS & HEALTH GOALS</p>
+                <h2>Pick your challenge</h2>
               </div>
-              <button type="button" className="filter-button">
-                <Compass size={15} /> Nearby <ChevronRight size={14} />
+              <button type="button" className="filter-button" onClick={() => setBuddyModalOpen(true)}>
+                <Users size={15} /> Find Buddies <ChevronRight size={14} />
               </button>
             </div>
 
@@ -541,8 +639,8 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
 
             <div className="section-heading compact">
               <div>
-                <p className="eyebrow">YOUR PROGRESS</p>
-                <h2>Keep showing up</h2>
+                <p className="eyebrow">PROGRESS TRACKER</p>
+                <h2>Weekly Movement Goal</h2>
               </div>
             </div>
 
@@ -553,7 +651,7 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
               </div>
               <div>
                 <h3>150 active minutes</h3>
-                <p>You&apos;re 86 minutes in. Two more missions gets you to your target.</p>
+                <p>You&apos;re 86 minutes in. Two more workouts gets you to your target.</p>
                 <div className="progress-bar">
                   <span style={{ width: '57%' }} />
                 </div>
@@ -565,13 +663,25 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
           </div>
 
           <aside className="side-col">
-            <CampusMap missions={apiMissions} onSelect={start} />
+            <AreaMap missions={apiMissions} onSelect={start} />
+
+            <div className="side-card squad-card" style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(15, 23, 42, 0.6))', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p className="eyebrow" style={{ color: '#38bdf8' }}>WORKOUT BUDDIES NEARBY</p>
+                <Users size={18} style={{ color: '#38bdf8' }} />
+              </div>
+              <h3 style={{ marginTop: '0.4rem' }}>Find a Workout Buddy</h3>
+              <p>4 movers within 1 mile ready for runs, 10k walks, or gym sessions.</p>
+              <button type="button" className="outline-button full" style={{ marginTop: '0.75rem' }} onClick={() => setBuddyModalOpen(true)}>
+                <UserPlus size={15} /> Open Buddy Finder <ArrowRight size={15} />
+              </button>
+            </div>
 
             <div className="side-card leaderboard-card">
               <div className="section-heading compact">
                 <div>
-                  <p className="eyebrow">CAMPUS LEADERBOARD</p>
-                  <h2>Top movers</h2>
+                  <p className="eyebrow">GLOBAL MOVERS</p>
+                  <h2>Top Movers</h2>
                 </div>
                 <Trophy size={20} className="gold-icon" />
               </div>
@@ -589,22 +699,8 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
                 ))}
               </div>
               <Link className="outline-button full" href="/leaderboard">
-                See full leaderboard <ArrowRight size={15} />
+                Full leaderboard <ArrowRight size={15} />
               </Link>
-            </div>
-
-            <div className="side-card squad-card">
-              <div className="squad-avatars">
-                <div>JD</div>
-                <div>SR</div>
-                <div>+4</div>
-              </div>
-              <p className="eyebrow">ACTIVE SQUAD</p>
-              <h3>Late Night Legends</h3>
-              <p>6 movers · 4,280 MOVE this week</p>
-              <button type="button" className="outline-button" onClick={() => setSquadOpen(true)}>
-                Open squad <ArrowRight size={15} />
-              </button>
             </div>
           </aside>
         </div>
@@ -616,8 +712,20 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
             <Check size={18} />
           </div>
           <span>
-            <strong>Mission complete!</strong>
-            <small>+{selected?.move ?? 120} MOVE added to your account</small>
+            <strong>Goal complete!</strong>
+            <small>+{selected?.move ?? 150} MOVE added to your account</small>
+          </span>
+        </div>
+      )}
+
+      {inviteToast && (
+        <div className="toast" style={{ background: '#0284c7', color: '#fff' }}>
+          <div>
+            <HeartHandshake size={18} />
+          </div>
+          <span>
+            <strong>Workout Buddy Invited!</strong>
+            <small>{inviteToast}</small>
           </span>
         </div>
       )}
@@ -626,7 +734,9 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
         <MissionModal mission={selected} onClose={() => setSelected(null)} onComplete={finish} loading={loadingComplete} />
       )}
 
-      {squadOpen && <SquadModal onClose={() => setSquadOpen(false)} />}
+      {buddyModalOpen && (
+        <WorkoutBuddiesModal onClose={() => setBuddyModalOpen(false)} onInvite={handleInviteBuddy} />
+      )}
 
       <footer className="mobile-nav">
         {[
@@ -643,7 +753,7 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
       </footer>
 
       <div className="demo-note">
-        DEMO PROTOTYPE · <button type="button" onClick={onAdmin}>Switch to admin</button>
+        MOVEGRID DEMO · <button type="button" onClick={onAdmin}>Switch to admin</button>
       </div>
     </div>
   )
@@ -653,26 +763,24 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
   const [tab, setTab] = useState('Overview')
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Dynamic state for Admin CRUD
   const [challenges, setChallenges] = useState([
-    { id: 1, title: 'Library Loop', zone: 'North Quad', move: 120, minutes: 12, completions: 482, status: 'Live' },
-    { id: 2, title: 'Stadium Stairs', zone: 'Athletics District', move: 180, minutes: 18, completions: 318, status: 'Live' },
-    { id: 3, title: 'Quad Dash', zone: 'Central Quad', move: 150, minutes: 15, completions: 264, status: 'Live' },
+    { id: 1, title: '10,000 Daily Steps Goal', zone: 'Downtown Loop', move: 150, minutes: 45, completions: 842, status: 'Live' },
+    { id: 2, title: 'Hydration Hero: Drink 2L Water', zone: 'Hydration Tracker', move: 100, minutes: 5, completions: 1205, status: 'Live' },
+    { id: 3, title: 'City Park 5K Trail Run', zone: 'Central Park', move: 200, minutes: 28, completions: 430, status: 'Live' },
   ])
 
   const [zones, setZones] = useState([
-    { id: 1, name: 'Central Quad', code: 'CQ-01', activeMissions: 4, qr: 'cq-qr-token-01' },
-    { id: 2, name: 'North Quad', code: 'NQ-02', activeMissions: 3, qr: 'nq-qr-token-02' },
-    { id: 3, name: 'Athletics District', code: 'AD-03', activeMissions: 5, qr: 'ad-qr-token-03' },
+    { id: 1, name: 'Central Park Trail', code: 'CP-01', activeMissions: 4, qr: 'cp-qr-token-01' },
+    { id: 2, name: 'Downtown District', code: 'DT-02', activeMissions: 3, qr: 'dt-qr-token-02' },
+    { id: 3, name: 'Riverside Bikeway', code: 'RB-03', activeMissions: 5, qr: 'rb-qr-token-03' },
   ])
 
   const [rewards, setRewards] = useState([
-    { id: 1, title: 'Campus Canteen 20% Off', category: 'Food & Dining', points: 300, stock: 45 },
-    { id: 2, title: 'Campus Gym Day Pass', category: 'Sports', points: 500, stock: 20 },
-    { id: 3, title: 'MOVEGRID Hoodie', category: 'Merchandise', points: 1500, stock: 10 },
+    { id: 1, title: 'Organic Smoothie Voucher', category: 'Health & Dining', points: 300, stock: 45 },
+    { id: 2, title: 'Gym & Spa Day Pass', category: 'Sports', points: 500, stock: 20 },
+    { id: 3, title: 'Performance Running Socks', category: 'Merchandise', points: 400, stock: 35 },
   ])
 
-  // Form State
   const [newTitle, setNewTitle] = useState('')
   const [newZone, setNewZone] = useState('')
   const [newMove, setNewMove] = useState('150')
@@ -683,7 +791,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
     const created = {
       id: Date.now(),
       title: newTitle,
-      zone: newZone || 'Central Quad',
+      zone: newZone || 'City District',
       move: parseInt(newMove) || 150,
       minutes: 15,
       completions: 0,
@@ -699,13 +807,13 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <Brand />
-        <div className="admin-label">WORKSPACE</div>
+        <div className="admin-label">OPERATIONS</div>
         {[
           ['Overview', LayoutDashboard],
           ['Challenges', Target],
-          ['Campus zones', MapPin],
+          ['Workout zones', MapPin],
           ['Rewards', Gift],
-          ['Students', Users],
+          ['Movers', Users],
           ['Analytics', BarChart3],
         ].map(([n, I]: any) => (
           <button type="button" className={tab === n ? 'selected' : ''} onClick={() => setTab(n)} key={n}>
@@ -723,7 +831,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
           <div className="avatar">AD</div>
           <div>
             <strong>Admin Demo</strong>
-            <span>Campus ops</span>
+            <span>Global ops</span>
           </div>
           <ChevronRight size={15} />
         </div>
@@ -732,9 +840,9 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
       <main className="admin-main">
         <header className="admin-header">
           <div>
-            <p className="eyebrow">CAMPUS OPERATIONS / {tab.toUpperCase()}</p>
+            <p className="eyebrow">GLOBAL OPERATIONS / {tab.toUpperCase()}</p>
             <h1>Good morning, Admin.</h1>
-            <p className="subhead">Manage campus challenges, active movement zones, and student rewards.</p>
+            <p className="subhead">Manage active daily missions, workout routes, and community rewards.</p>
           </div>
           <div className="admin-header-actions">
             <button type="button" className="date-button">
@@ -747,7 +855,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
               <Bell size={18} />
             </button>
             <button type="button" className="admin-switch" onClick={onStudent}>
-              Student view <ArrowRight size={14} />
+              User view <ArrowRight size={14} />
             </button>
           </div>
         </header>
@@ -759,10 +867,10 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
                 <p className="eyebrow">PRIMARY KPI</p>
                 <h2>Movement Generated</h2>
                 <div className="big-kpi">
-                  38,492 <small>MOVE</small>
+                  52,840 <small>MOVE</small>
                 </div>
                 <span className="positive">
-                  <ArrowRight size={13} /> 18.6% vs last week
+                  <ArrowRight size={13} /> 22.4% vs last week
                 </span>
               </div>
               <div className="kpi-chart">
@@ -784,10 +892,10 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
             </div>
 
             <div className="admin-stat-grid">
-              <StatCard icon={<Users size={18} />} label="Total students" value="4,286" detail="↑ 8.2% this month" tone="blue" />
-              <StatCard icon={<Activity size={18} />} label="Active students" value="1,842" detail="43% of total" tone="lime" />
-              <StatCard icon={<Target size={18} />} label="Missions completed" value="12,648" detail="↑ 24.5% this week" tone="orange" />
-              <StatCard icon={<BarChart3 size={18} />} label="Participation rate" value="68.4%" detail="↑ 4.1% vs last week" tone="purple" />
+              <StatCard icon={<Users size={18} />} label="Total movers" value="6,420" detail="↑ 12.2% this month" tone="blue" />
+              <StatCard icon={<Activity size={18} />} label="Active daily" value="2,910" detail="45% of total" tone="lime" />
+              <StatCard icon={<Target size={18} />} label="Missions completed" value="18,420" detail="↑ 31.5% this week" tone="orange" />
+              <StatCard icon={<BarChart3 size={18} />} label="Engagement rate" value="74.2%" detail="↑ 5.2% vs last week" tone="purple" />
             </div>
           </>
         )}
@@ -806,7 +914,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
           {tab === 'Overview' || tab === 'Challenges' ? (
             <div className="challenge-table">
               <div className="table-head">
-                <span>CHALLENGE</span>
+                <span>MISSION</span>
                 <span>ZONE</span>
                 <span>MOVE REWARD</span>
                 <span>COMPLETIONS</span>
@@ -836,13 +944,13 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
                 </div>
               ))}
             </div>
-          ) : tab === 'Campus zones' ? (
+          ) : tab === 'Workout zones' ? (
             <div className="challenge-table">
               <div className="table-head">
                 <span>ZONE NAME</span>
-                <span>ZONE CODE</span>
-                <span>ACTIVE MISSIONS</span>
-                <span>QR CHECKPOINT</span>
+                <span>CODE</span>
+                <span>ACTIVE ROUTES</span>
+                <span>CHECKPOINT</span>
                 <span />
               </div>
               {zones.map((z) => (
@@ -854,7 +962,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
                     <strong>{z.name}</strong>
                   </div>
                   <span>{z.code}</span>
-                  <span>{z.activeMissions} missions</span>
+                  <span>{z.activeMissions} routes</span>
                   <Pill tone="blue">{z.qr}</Pill>
                   <button
                     type="button"
@@ -902,7 +1010,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
             <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
               <Users size={36} style={{ margin: '0 auto 0.75rem', opacity: 0.6 }} />
               <h3>{tab} Dashboard</h3>
-              <p>Active live management module ready for operations.</p>
+              <p>Active live management module ready for community operations.</p>
             </div>
           )}
         </div>
@@ -917,26 +1025,26 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
             <div className="modal-kicker">
               <Plus size={15} /> ADMIN ACTION
             </div>
-            <h2>Create New {tab === 'Campus zones' ? 'Zone' : tab === 'Rewards' ? 'Reward' : 'Challenge'}</h2>
+            <h2>Create New {tab === 'Workout zones' ? 'Zone' : tab === 'Rewards' ? 'Reward' : 'Mission'}</h2>
             <form onSubmit={handleCreateChallenge} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
               <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem' }}>
-                Item Title / Name
+                Item Title / Goal Name
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Science Library Sprint"
+                  placeholder="e.g. 10,000 Daily Steps Goal"
                   required
                   style={{ padding: '0.6rem 0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
                 />
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem' }}>
-                Zone Location
+                Zone Location / Category
                 <input
                   type="text"
                   value={newZone}
                   onChange={(e) => setNewZone(e.target.value)}
-                  placeholder="e.g. North Quad"
+                  placeholder="e.g. Central Park"
                   style={{ padding: '0.6rem 0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
                 />
               </label>
@@ -950,7 +1058,7 @@ function AdminView({ onStudent }: { onStudent: () => void }) {
                 />
               </label>
               <button type="submit" className="primary-button full" style={{ marginTop: '0.5rem' }}>
-                Publish to Campus Grid
+                Publish Goal
               </button>
             </form>
           </div>
