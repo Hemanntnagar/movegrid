@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from datetime import date, datetime
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
@@ -9,6 +9,24 @@ class ClassGroup(Base):
     name: Mapped[str] = mapped_column(String(120), unique=True)
     department: Mapped[str] = mapped_column(String(120), default="General")
 
+class Competition(Base):
+    __tablename__ = "competitions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(160))
+    description: Mapped[str] = mapped_column(Text, default="")
+    starts_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+class Team(Base):
+    __tablename__ = "teams"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    avatar: Mapped[str] = mapped_column(String(255), default="/avatars/team.png")
+    competition_id: Mapped[int | None] = mapped_column(ForeignKey("competitions.id"), nullable=True)
+    competition_points: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -17,8 +35,13 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20), default="student")
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id"), nullable=True)
+    team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True, index=True)
+    fitness_level: Mapped[str] = mapped_column(String(30), default="Beginner")
     total_points: Mapped[int] = mapped_column(Integer, default=0)
     streak: Mapped[int] = mapped_column(Integer, default=0)
+    streak_score: Mapped[int] = mapped_column(Integer, default=0)
+    streak_month: Mapped[str] = mapped_column(String(7), default="")
+    last_activity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active_minutes: Mapped[int] = mapped_column(Integer, default=0)
     avatar: Mapped[str] = mapped_column(String(255), default="/avatars/student.png")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -34,6 +57,18 @@ class User(Base):
     @property
     def is_admin(self) -> bool:
         return self.role == "admin"
+
+class LeaderboardRank(Base):
+    __tablename__ = "leaderboard_ranks"
+    __table_args__ = (UniqueConstraint("board", "subject_type", "subject_id", name="uq_leaderboard_subject"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    board: Mapped[str] = mapped_column(String(30), index=True)
+    subject_type: Mapped[str] = mapped_column(String(20), index=True)
+    subject_id: Mapped[int] = mapped_column(Integer, index=True)
+    rank: Mapped[int] = mapped_column(Integer, default=0)
+    previous_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    points: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Zone(Base):
     __tablename__ = "zones"
@@ -114,9 +149,11 @@ class Reward(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(160))
     description: Mapped[str] = mapped_column(Text, default="")
+    category: Mapped[str] = mapped_column(String(60), default="General")
     points_required: Mapped[int] = mapped_column(Integer)
     stock: Mapped[int] = mapped_column(Integer, default=0)
     image: Mapped[str] = mapped_column(String(255), default="/rewards/default.png")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     @property
     def cost(self) -> int:
@@ -126,13 +163,18 @@ class Reward(Base):
     def inventory(self) -> int:
         return self.stock
 
+    @property
+    def is_active(self) -> bool:
+        return self.active
+
 class RewardRedemption(Base):
     __tablename__ = "reward_redemptions"
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     reward_id: Mapped[int] = mapped_column(ForeignKey("rewards.id"))
     points_spent: Mapped[int] = mapped_column(Integer)
     redeemed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    status: Mapped[str] = mapped_column(String(30), default="COMPLETED")
 
 class Achievement(Base):
     __tablename__ = "achievements"
@@ -148,3 +190,28 @@ class UserAchievement(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     achievement_id: Mapped[int] = mapped_column(ForeignKey("achievements.id"))
     unlocked_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class Exercise(Base):
+    __tablename__ = "exercises"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(160))
+    description: Mapped[str] = mapped_column(Text, default="")
+    category: Mapped[str] = mapped_column(String(40))
+    difficulty: Mapped[str] = mapped_column(String(30), default="Beginner")
+    duration_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    target_reps: Mapped[int] = mapped_column(Integer, default=0)
+    instructions: Mapped[str] = mapped_column(Text, default="")
+    points: Mapped[int] = mapped_column(Integer, default=15)
+    requires_equipment: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+class DailyAssignment(Base):
+    __tablename__ = "daily_assignments"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id"))
+    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    status: Mapped[str] = mapped_column(String(20), default="ASSIGNED", index=True)
+    points: Mapped[int] = mapped_column(Integer, default=0)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

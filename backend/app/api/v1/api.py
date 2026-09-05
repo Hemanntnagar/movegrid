@@ -1,16 +1,43 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_access_token, decode_subject, hash_password, verify_password
-from app.models.entities import Activity, Challenge, Reward, RewardRedemption, Squad, SquadMember, User, Zone
-from app.schemas.common import ActivityRead, ChallengeCreate, LoginRequest, MissionRead, RewardCreate, RewardRead, SquadCreate, Token, UserCreate, UserRead, VerifyRequest, ZoneCreate
+from app.models.entities import Activity, Challenge, Reward, Squad, SquadMember, User, Zone
+from app.schemas.common import (
+    ActivityRead,
+    ChallengeCreate,
+    CompleteAssignmentResponse,
+    FitnessHistoryResponse,
+    LeaderboardResponse,
+    LoginRequest,
+    MissionRead,
+    RedeemResponse,
+    RewardCreate,
+    RewardRead,
+    RewardRedemptionRead,
+    SquadCreate,
+    TodayFitnessResponse,
+    Token,
+    UserCreate,
+    UserRead,
+    VerifyRequest,
+    ZoneCreate,
+)
+from app.services.fitness_assignment_service import complete_assignment, get_assignment_history, get_today_assignments
+from app.services.leaderboard_service import (
+    get_competition_leaderboard,
+    get_move_leaderboard,
+    get_streak_leaderboard,
+)
 from app.services.mission_service import list_missions, verify_and_complete
+from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
 
 api_router = APIRouter()
 oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 async def current_user(token: str = Depends(oauth2), db: AsyncSession = Depends(get_db)) -> User:
     subject = decode_subject(token)
@@ -18,6 +45,14 @@ async def current_user(token: str = Depends(oauth2), db: AsyncSession = Depends(
     if not user:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return user
+
+async def optional_user(token: str | None = Depends(oauth2_optional), db: AsyncSession = Depends(get_db)) -> User | None:
+    if not token:
+        return None
+    subject = decode_subject(token)
+    if not subject or not subject.isdigit():
+        return None
+    return await db.get(User, int(subject))
 
 async def admin_user(user: User = Depends(current_user)) -> User:
     if user.role != "admin":
@@ -73,6 +108,18 @@ async def complete(challenge_id: int, payload: VerifyRequest, user: User = Depen
 async def history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Activity).where(Activity.user_id == user.id).order_by(Activity.started_at.desc()))).scalars().all()
 
+@api_router.get("/daily-fitness/today", response_model=TodayFitnessResponse)
+async def daily_fitness_today(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await get_today_assignments(db, user)
+
+@api_router.post("/daily-fitness/{assignment_id}/complete", response_model=CompleteAssignmentResponse)
+async def daily_fitness_complete(assignment_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await complete_assignment(db, user, assignment_id)
+
+@api_router.get("/daily-fitness/history", response_model=FitnessHistoryResponse)
+async def daily_fitness_history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await get_assignment_history(db, user)
+
 @api_router.get("/zones")
 async def zones(db: AsyncSession = Depends(get_db)): return (await db.execute(select(Zone).where(Zone.is_active.is_(True)))).scalars().all()
 
@@ -82,10 +129,30 @@ async def zone(zone_id: int, db: AsyncSession = Depends(get_db)):
     if not item: raise HTTPException(404, "Zone not found")
     return item
 
-@api_router.get("/leaderboard")
-async def leaderboard(db: AsyncSession = Depends(get_db)):
-    users = (await db.execute(select(User).order_by(User.total_points.desc()).limit(20))).scalars()
-    return [{"rank": index, "name": u.name, "move": u.total_points, "streak": u.streak} for index, u in enumerate(users, 1)]
+@api_router.get("/leaderboard", response_model=LeaderboardResponse)
+@api_router.get("/leaderboard/move", response_model=LeaderboardResponse)
+async def move_leaderboard(
+    limit: int = Query(20, ge=1, le=100),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_move_leaderboard(db, current_user=user, limit=limit)
+
+@api_router.get("/leaderboard/streak", response_model=LeaderboardResponse)
+async def streak_leaderboard(
+    limit: int = Query(20, ge=1, le=100),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_streak_leaderboard(db, current_user=user, limit=limit)
+
+@api_router.get("/leaderboard/competition", response_model=LeaderboardResponse)
+async def competition_leaderboard(
+    limit: int = Query(20, ge=1, le=100),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_competition_leaderboard(db, current_user=user, limit=limit)
 
 @api_router.get("/leaderboard/class")
 async def class_leaderboard(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
@@ -113,20 +180,20 @@ async def leave_squad(squad_id: int, user: User = Depends(current_user), db: Asy
     return {"status": "left", "squad_id": squad_id}
 
 @api_router.get("/rewards", response_model=list[RewardRead])
-async def rewards(db: AsyncSession = Depends(get_db)): return (await db.execute(select(Reward))).scalars().all()
+async def rewards(db: AsyncSession = Depends(get_db)):
+    return await list_rewards(db, active_only=True)
 
-@api_router.post("/rewards/{reward_id}/redeem")
-async def redeem(reward_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    reward = await db.get(Reward, reward_id)
-    if not reward: raise HTTPException(404, "Reward not found")
-    if reward.stock <= 0 or user.total_points < reward.points_required: raise HTTPException(400, "Reward is unavailable")
-    reward.stock -= 1; user.total_points -= reward.points_required
-    redemption = RewardRedemption(user_id=user.id, reward_id=reward.id, points_spent=reward.points_required)
-    db.add(redemption); await db.commit(); return {"status": "redeemed", "reward_id": reward_id}
-
-@api_router.get("/rewards/history")
+@api_router.get("/rewards/history", response_model=list[RewardRedemptionRead])
 async def reward_history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    return (await db.execute(select(RewardRedemption).where(RewardRedemption.user_id == user.id).order_by(RewardRedemption.redeemed_at.desc()))).scalars().all()
+    return await list_redemption_history(db, user)
+
+@api_router.get("/rewards/{reward_id}", response_model=RewardRead)
+async def reward_detail(reward_id: int, db: AsyncSession = Depends(get_db)):
+    return await get_reward(db, reward_id, require_active=True)
+
+@api_router.post("/rewards/{reward_id}/redeem", response_model=RedeemResponse)
+async def redeem(reward_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await redeem_reward(db, user, reward_id)
 
 @api_router.get("/admin/analytics")
 async def analytics(_: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
