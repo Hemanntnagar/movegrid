@@ -198,3 +198,41 @@ class FitnessHistoryResponse(BaseModel):
     completed: list[DailyAssignmentRead]
     expired: list[DailyAssignmentRead]
     assigned: list[DailyAssignmentRead]
+
+
+class PresenceUpdate(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    is_sharing: bool = True
+
+
+class PresenceRead(BaseModel):
+    user_id: int
+    latitude: float
+    longitude: float
+    is_sharing: bool
+    updated_at: datetime
+
+
+class NearbyUserRead(BaseModel):
+    id: int
+    name: str
+    avatar: str
+    initials: str
+    latitude: float
+    longitude: float
+    distance_m: float
+    distance_label: str
+    total_points: int = 0
+    streak: int = 0
+    updated_at: datetime
+    is_current_user: bool = False
+
+
+class NearbyPresenceResponse(BaseModel):
+    latitude: float
+    longitude: float
+    radius_m: float
+    count: int
+    me: NearbyUserRead | None = None
+    nearby: list[NearbyUserRead]

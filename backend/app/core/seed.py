@@ -5,8 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exercise_catalog import SEED_EXERCISES
 from app.core.security import hash_password
-from app.models.entities import Challenge, ClassGroup, Competition, Exercise, Reward, Team, User, Zone
+from app.models.entities import Challenge, ClassGroup, Competition, Exercise, Reward, Team, User, UserPresence, Zone
 from app.services.leaderboard_service import refresh_all_leaderboard_ranks
+from app.services.presence_service import DEMO_NEIGHBOR_EMAILS, DEMO_OFFSETS_M, offset_lat_lng
 
 AVATAR_COLORS = [
     "#ffd447",
@@ -278,5 +279,34 @@ async def seed_demo_data(db: AsyncSession) -> None:
             if bump == 0:
                 bump = 1
             row.previous_rank = max(1, row.rank + bump)
+
+    # Seed live presence around Central Green for demo neighbors.
+    campus_lat = zone.latitude if zone else 40.7128
+    campus_lng = zone.longitude if zone else -74.006
+    now = datetime.utcnow()
+    for index, email in enumerate(DEMO_NEIGHBOR_EMAILS):
+        neighbor = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
+        if not neighbor:
+            continue
+        existing_presence = (
+            await db.execute(select(UserPresence).where(UserPresence.user_id == neighbor.id))
+        ).scalar_one_or_none()
+        north, east = DEMO_OFFSETS_M[index % len(DEMO_OFFSETS_M)]
+        lat, lng = offset_lat_lng(campus_lat, campus_lng, north, east)
+        if existing_presence:
+            existing_presence.latitude = lat
+            existing_presence.longitude = lng
+            existing_presence.is_sharing = True
+            existing_presence.updated_at = now
+        else:
+            db.add(
+                UserPresence(
+                    user_id=neighbor.id,
+                    latitude=lat,
+                    longitude=lng,
+                    is_sharing=True,
+                    updated_at=now,
+                )
+            )
 
     await db.commit()

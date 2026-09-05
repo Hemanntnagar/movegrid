@@ -215,3 +215,13 @@ class DailyAssignment(Base):
     status: Mapped[str] = mapped_column(String(20), default="ASSIGNED", index=True)
     points: Mapped[int] = mapped_column(Integer, default=0)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class UserPresence(Base):
+    __tablename__ = "user_presence"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+    latitude: Mapped[float] = mapped_column(default=0)
+    longitude: Mapped[float] = mapped_column(default=0)
+    is_sharing: Mapped[bool] = mapped_column(Boolean, default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

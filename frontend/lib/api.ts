@@ -133,6 +133,38 @@ export type ApiRedeemResult = {
   redeemed_at: string
 }
 
+export type ApiNearbyUser = {
+  id: number
+  name: string
+  avatar: string
+  initials: string
+  latitude: number
+  longitude: number
+  distance_m: number
+  distance_label: string
+  total_points: number
+  streak: number
+  updated_at: string
+  is_current_user: boolean
+}
+
+export type ApiNearbyPresence = {
+  latitude: number
+  longitude: number
+  radius_m: number
+  count: number
+  me: ApiNearbyUser | null
+  nearby: ApiNearbyUser[]
+}
+
+export type ApiPresence = {
+  user_id: number
+  latitude: number
+  longitude: number
+  is_sharing: boolean
+  updated_at: string
+}
+
 const TOKEN_KEY = "movegrid_token"
 
 export function getStoredToken(): string | null {
@@ -214,4 +246,15 @@ export const movegridApi = {
     }),
   rewardHistory: (token: string) =>
     request<ApiRewardRedemption[]>("/rewards/history", { headers: authHeaders(token) }),
+  updatePresence: (token: string, latitude: number, longitude: number, isSharing = true) =>
+    request<ApiPresence>("/presence", {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ latitude, longitude, is_sharing: isSharing }),
+    }),
+  nearbyPresence: (latitude: number, longitude: number, token?: string | null, radiusM = 800) =>
+    request<ApiNearbyPresence>(
+      `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
+      { headers: token ? authHeaders(token) : undefined },
+    ),
 }

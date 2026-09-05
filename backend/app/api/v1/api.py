@@ -14,6 +14,9 @@ from app.schemas.common import (
     LeaderboardResponse,
     LoginRequest,
     MissionRead,
+    NearbyPresenceResponse,
+    PresenceRead,
+    PresenceUpdate,
     RedeemResponse,
     RewardCreate,
     RewardRead,
@@ -33,6 +36,7 @@ from app.services.leaderboard_service import (
     get_streak_leaderboard,
 )
 from app.services.mission_service import list_missions, verify_and_complete
+from app.services.presence_service import list_nearby, upsert_presence
 from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
 
 api_router = APIRouter()
@@ -128,6 +132,31 @@ async def zone(zone_id: int, db: AsyncSession = Depends(get_db)):
     item = await db.get(Zone, zone_id)
     if not item: raise HTTPException(404, "Zone not found")
     return item
+
+@api_router.post("/presence", response_model=PresenceRead)
+async def update_presence(
+    payload: PresenceUpdate,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await upsert_presence(db, user, payload)
+
+@api_router.get("/presence/nearby", response_model=NearbyPresenceResponse)
+async def nearby_presence(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_m: float = Query(800, ge=50, le=5000),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_nearby(
+        db,
+        latitude=latitude,
+        longitude=longitude,
+        radius_m=radius_m,
+        current_user=user,
+        include_demo=True,
+    )
 
 @api_router.get("/leaderboard", response_model=LeaderboardResponse)
 @api_router.get("/leaderboard/move", response_model=LeaderboardResponse)
