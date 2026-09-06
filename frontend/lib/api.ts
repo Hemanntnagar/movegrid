@@ -256,15 +256,6 @@ export const movegridApi = {
       : request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
           headers: token ? authHeaders(token) : undefined,
         }),
-  analytics: () =>
-    isDemoMode
-      ? asPromise(demoApi.analytics())
-      : request<{
-          movement_generated: number
-          active_students: number
-          missions_completed: number
-          engagement_rate: number
-        }>('/admin/analytics'),
   completeMission: (id: number, code = 'movegrid-demo') =>
     isDemoMode
       ? asPromise(demoApi.completeMission(id, code))

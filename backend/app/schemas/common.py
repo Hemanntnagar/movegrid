@@ -61,40 +61,13 @@ class MissionRead(BaseModel):
     minutes: int
     kind: str
 
-class ChallengeCreate(BaseModel):
-    title: str
-    description: str
-    type: str = "Walk"
-    difficulty: str = "Medium"
-    duration_minutes: int = Field(default=15, gt=0)
-    reward_points: int = Field(default=100, ge=0)
-    zone_id: int
-    is_active: bool = True
-
-class ZoneCreate(BaseModel):
-    name: str
-    description: str = ""
-    latitude: float = 0
-    longitude: float = 0
-    qr_token: str = "movegrid-demo"
-    is_active: bool = True
-
-class RewardCreate(BaseModel):
-    title: str
-    description: str = ""
-    category: str = "General"
-    points_required: int = Field(gt=0)
-    stock: int = Field(default=0, ge=0)
-    image: str = "/rewards/default.png"
-    active: bool = True
-
 class VerifyRequest(BaseModel):
     code: str = Field(min_length=1)
 
 class SquadCreate(BaseModel):
     name: str
-    activity: str = "Campus walk"
-    location: str = "Campus"
+    activity: str = "Neighborhood walk"
+    location: str = "City"
     scheduled_time: str = "Today"
     max_members: int = Field(default=8, gt=0)
 

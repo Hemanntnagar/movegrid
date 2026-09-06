@@ -8,7 +8,7 @@ import { ApiNearbyUser, getStoredToken, movegridApi } from '../lib/api'
 
 type GeoStatus = 'idle' | 'locating' | 'live' | 'denied' | 'error'
 
-const FALLBACK_CAMPUS = { latitude: 40.7128, longitude: -74.006 }
+const FALLBACK_ORIGIN = { latitude: 40.7128, longitude: -74.006 }
 const DEFAULT_ZOOM = 17
 
 function avatarColor(avatar: string, fallbackIndex: number) {
@@ -50,7 +50,7 @@ type NearbyLiveMapProps = {
 export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps) {
   const authToken = token ?? getStoredToken()
   const [status, setStatus] = useState<GeoStatus>('idle')
-  const [origin, setOrigin] = useState(FALLBACK_CAMPUS)
+  const [origin, setOrigin] = useState(FALLBACK_ORIGIN)
   const [nearby, setNearby] = useState<ApiNearbyUser[]>([])
   const [me, setMe] = useState<ApiNearbyUser | null>(null)
   const [sharing, setSharing] = useState(true)
@@ -115,7 +115,7 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
       mapInstance = L.map(el, {
         zoomControl: true,
         attributionControl: true,
-      }).setView([FALLBACK_CAMPUS.latitude, FALLBACK_CAMPUS.longitude], DEFAULT_ZOOM)
+      }).setView([FALLBACK_ORIGIN.latitude, FALLBACK_ORIGIN.longitude], DEFAULT_ZOOM)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -244,8 +244,8 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
     if (!navigator.geolocation) {
       setStatus('error')
       setError('Geolocation is not supported in this browser.')
-      setOrigin(FALLBACK_CAMPUS)
-      void refreshNearby(FALLBACK_CAMPUS.latitude, FALLBACK_CAMPUS.longitude)
+      setOrigin(FALLBACK_ORIGIN)
+      void refreshNearby(FALLBACK_ORIGIN.latitude, FALLBACK_ORIGIN.longitude)
       return
     }
 
@@ -264,13 +264,13 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
       (geoError) => {
         if (geoError.code === geoError.PERMISSION_DENIED) {
           setStatus('denied')
-          setError('Location permission denied. Showing campus fallback.')
+          setError('Location permission denied. Showing a default map area.')
         } else {
           setStatus('error')
-          setError('Could not read live GPS. Showing campus fallback.')
+          setError('Could not read live GPS. Showing a default map area.')
         }
-        setOrigin(FALLBACK_CAMPUS)
-        void refreshNearby(FALLBACK_CAMPUS.latitude, FALLBACK_CAMPUS.longitude)
+        setOrigin(FALLBACK_ORIGIN)
+        void refreshNearby(FALLBACK_ORIGIN.latitude, FALLBACK_ORIGIN.longitude)
       },
       { enableHighAccuracy: true, maximumAge: 10_000, timeout: 12_000 }
     )
@@ -294,7 +294,7 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
         ? 'Locating…'
         : status === 'denied'
           ? 'Permission needed'
-          : 'Campus fallback'
+          : 'Default area'
 
   return (
     <div className={`nearby-map side-card ${variant === 'page' ? 'nearby-map-page' : ''}`}>
@@ -324,7 +324,7 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
 
       <div className="nearby-map-footer">
         <span>
-          <Navigation size={14} /> {status === 'live' ? 'Your live location' : 'Centered on campus'}
+          <Navigation size={14} /> {status === 'live' ? 'Your live location' : 'Centered on default area'}
         </span>
         <div className="nearby-map-footer-actions">
           <button

@@ -57,7 +57,7 @@ const EXERCISE_BANK: Record<FocusArea, { title: string; notes: string }[]> = {
     { title: 'Glute Bridge', notes: 'Squeeze at the top for 1 second.' },
   ],
   Walking: [
-    { title: 'Campus Loop Walk', notes: 'Steady pace you can still talk through.' },
+    { title: 'Neighborhood Loop Walk', notes: 'Steady pace you can still talk through.' },
     { title: 'Recovery Stroll', notes: 'Easy steps to reset energy.' },
     { title: 'Steps Sprint Goal', notes: 'Aim for a chunk of your 10k steps.' },
   ],
@@ -186,7 +186,7 @@ export const CUSTOM_EXERCISE_PRESETS: { title: string; category: FocusArea; dura
   { title: 'Bodyweight Squats', category: 'Strength', duration: 10, notes: '20 controlled reps.' },
   { title: 'Push-up Set', category: 'Strength', duration: 10, notes: 'Match your fitness level.' },
   { title: 'Plank Hold', category: 'Core', duration: 5, notes: 'Accumulate hold time.' },
-  { title: 'Campus Loop Walk', category: 'Walking', duration: 15, notes: 'Brisk conversational pace.' },
+  { title: 'Neighborhood Loop Walk', category: 'Walking', duration: 15, notes: 'Brisk conversational pace.' },
   { title: 'Jumping Jacks Circuit', category: 'Cardio', duration: 8, notes: '3 short rounds.' },
   { title: 'Morning Mobility Flow', category: 'Mobility', duration: 10, notes: 'Full-body openers.' },
   { title: 'Lunges', category: 'Strength', duration: 10, notes: '20 total alternating reps.' },

@@ -22,15 +22,15 @@ async def client():
         session.add_all(
             [
                 User(
-                    email="student@movegrid.demo",
+                    email="demo@movegrid.demo",
                     name="Alex Morgan",
                     password_hash=hash_password("movegrid-demo"),
-                    role="student",
+                    role="member",
                     total_points=1000,
                 ),
                 Reward(
                     title="Canteen Voucher",
-                    description="Campus canteen credit.",
+                    description="Partner cafe credit.",
                     category="Food",
                     points_required=400,
                     stock=5,
@@ -76,7 +76,7 @@ async def client():
 async def _login(http: AsyncClient) -> dict:
     login = await http.post(
         "/api/v1/auth/login",
-        json={"email": "student@movegrid.demo", "password": "movegrid-demo"},
+        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
     )
     assert login.status_code == 200
     return {"Authorization": f"Bearer {login.json()['access_token']}"}
@@ -150,7 +150,7 @@ async def test_redeem_rejects_insufficient_move_and_out_of_stock(client):
 
     async with session_factory() as session:
         user = (
-            await session.execute(select(User).where(User.email == "student@movegrid.demo"))
+            await session.execute(select(User).where(User.email == "demo@movegrid.demo"))
         ).scalar_one()
         user.total_points = 50
         await session.commit()

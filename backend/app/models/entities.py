@@ -30,10 +30,10 @@ class Team(Base):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), default="MOVEGRID Student")
+    name: Mapped[str] = mapped_column(String(120), default="MOVEGRID Mover")
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[str] = mapped_column(String(20), default="student")
+    role: Mapped[str] = mapped_column(String(20), default="member")
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id"), nullable=True)
     team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True, index=True)
     fitness_level: Mapped[str] = mapped_column(String(30), default="Beginner")
@@ -43,7 +43,7 @@ class User(Base):
     streak_month: Mapped[str] = mapped_column(String(7), default="")
     last_activity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active_minutes: Mapped[int] = mapped_column(Integer, default=0)
-    avatar: Mapped[str] = mapped_column(String(255), default="/avatars/student.png")
+    avatar: Mapped[str] = mapped_column(String(255), default="/avatars/mover.png")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     @property
@@ -53,10 +53,6 @@ class User(Base):
     @property
     def move_points(self) -> int:
         return self.total_points
-
-    @property
-    def is_admin(self) -> bool:
-        return self.role == "admin"
 
 class LeaderboardRank(Base):
     __tablename__ = "leaderboard_ranks"
@@ -132,8 +128,8 @@ class Squad(Base):
     __tablename__ = "squads"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    activity: Mapped[str] = mapped_column(String(120), default="Campus walk")
-    location: Mapped[str] = mapped_column(String(120), default="Campus")
+    activity: Mapped[str] = mapped_column(String(120), default="Neighborhood walk")
+    location: Mapped[str] = mapped_column(String(120), default="City")
     scheduled_time: Mapped[str] = mapped_column(String(80), default="Today")
     max_members: Mapped[int] = mapped_column(Integer, default=8)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)

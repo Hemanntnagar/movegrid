@@ -22,7 +22,7 @@ function Brand() {
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('student@movegrid.demo')
+  const [email, setEmail] = useState('demo@movegrid.demo')
   const [password, setPassword] = useState('movegrid-demo')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -61,7 +61,7 @@ export default function LoginPage() {
       </header>
       <main className="login-main">
         <form className="login-card" onSubmit={onSubmit}>
-          <p className="eyebrow">STUDENT ACCESS</p>
+          <p className="eyebrow">WELCOME BACK</p>
           <h1>
             Jump into <span>daily fitness</span>
           </h1>
@@ -88,7 +88,7 @@ export default function LoginPage() {
           <p className="login-hint">
             {isDemoMode
               ? 'Offline demo — any email/password works (no API env needed).'
-              : 'Demo: student@movegrid.demo / movegrid-demo'}
+              : 'Demo: demo@movegrid.demo / movegrid-demo'}
           </p>
         </form>
       </main>

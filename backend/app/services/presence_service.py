@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.entities import User, UserPresence
 from app.schemas.common import NearbyPresenceResponse, NearbyUserRead, PresenceUpdate, PresenceRead
 
-# Demo students whose locations orbit the requester so the live map always feels populated.
+# Demo movers whose locations orbit the requester so the live map always feels populated.
 DEMO_NEIGHBOR_EMAILS = [
     "maya@movegrid.demo",
     "jordan@movegrid.demo",
@@ -93,7 +93,7 @@ async def upsert_presence(db: AsyncSession, user: User, payload: PresenceUpdate)
 
 
 async def _ensure_demo_neighbors(db: AsyncSession, latitude: float, longitude: float) -> None:
-    """Keep seeded demo students live near the requesting coordinates."""
+    """Keep seeded demo movers live near the requesting coordinates."""
     now = datetime.utcnow()
     for index, email in enumerate(DEMO_NEIGHBOR_EMAILS):
         user = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
@@ -144,7 +144,7 @@ async def list_nearby(
             .where(
                 UserPresence.is_sharing.is_(True),
                 UserPresence.updated_at >= cutoff,
-                User.role == "student",
+                User.role == "member",
             )
         )
     ).all()

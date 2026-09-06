@@ -25,7 +25,7 @@ const DEMO_REWARDS: ApiReward[] = [
   {
     id: 1,
     title: 'Smoothie Voucher',
-    description: 'One free campus smoothie.',
+    description: 'One free smoothie from a partner cafe.',
     category: 'Food',
     points_required: 200,
     stock: 24,
@@ -35,7 +35,7 @@ const DEMO_REWARDS: ApiReward[] = [
   {
     id: 2,
     title: 'Gym Day Pass',
-    description: 'Guest pass for the campus fitness center.',
+    description: 'Guest pass for a partner fitness center.',
     category: 'Fitness',
     points_required: 350,
     stock: 12,
@@ -45,7 +45,7 @@ const DEMO_REWARDS: ApiReward[] = [
   {
     id: 3,
     title: 'MOVE Sticker Pack',
-    description: 'Limited campus sticker set.',
+    description: 'Limited MOVEGRID sticker set.',
     category: 'Merch',
     points_required: 120,
     stock: 40,
@@ -96,7 +96,7 @@ function writeJson(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-function defaultUser(email = 'student@movegrid.demo'): DemoUserState {
+function defaultUser(email = 'demo@movegrid.demo'): DemoUserState {
   const short = email.split('@')[0] || 'Alex'
   const name =
     short
@@ -152,7 +152,7 @@ function assignmentFromPlan(plan: FitnessPlan | null, day: DemoDayState): ApiDai
           {
             id: 'fallback-1',
             time: '08:00',
-            title: 'Campus Loop Walk',
+            title: 'Neighborhood Loop Walk',
             duration: 15,
             category: 'Walking' as const,
             notes: 'Brisk conversational pace.',
@@ -205,7 +205,7 @@ function toApiUser(user: DemoUserState): ApiUser {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: 'student',
+    role: 'member',
     fitness_level: getStoredPlan()?.fitnessLevel ?? 'Beginner',
     team_id: 1,
     total_points: user.total_points,
@@ -540,15 +540,6 @@ export const demoApi = {
     user.active_minutes += 20
     saveUser(user)
     return { status: 'COMPLETED', points_awarded: 150, total_points: user.total_points }
-  },
-
-  analytics() {
-    return {
-      movement_generated: 38492,
-      active_students: 1842,
-      missions_completed: 12648,
-      engagement_rate: 68.4,
-    }
   },
 
   /** Ensure a browser session exists so the trail works without a remote API. */
