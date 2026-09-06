@@ -2,7 +2,9 @@
   "name": "movegrid",
   "private": true,
   "packageManager": "pnpm@9.15.0",
-  "workspaces": ["frontend"],
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "dev": "pnpm --dir frontend dev",
     "build": "pnpm --dir frontend build",
@@ -13,5 +15,8 @@
   },
   "devDependencies": {
     "typescript": "5.7.3"
+  },
+  "dependencies": {
+    "next": "16.3.3"
   }
 }
