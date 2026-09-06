@@ -339,7 +339,7 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
             Refresh <ArrowRight size={14} />
           </button>
           {variant === 'sidebar' && (
-            <Link className="text-button" href="/map">
+            <Link className="text-button" href="/buddies">
               Expand <ArrowRight size={14} />
             </Link>
           )}

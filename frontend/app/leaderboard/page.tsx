@@ -25,6 +25,7 @@ import {
   getStoredToken,
   movegridApi,
 } from '../../lib/api'
+import { AppChrome } from '../../components/AppChrome'
 
 type BoardTab = 'move' | 'streak' | 'competition'
 
@@ -229,27 +230,19 @@ export default function LeaderboardPage() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <Brand />
-        <nav className="desktop-nav">
-          <Link href="/">Home</Link>
-          <Link href="/fitness">Fitness</Link>
-          <Link href="/leaderboard" className="nav-active">
-            Leaderboard
-          </Link>
-          <Link href="/rewards">Rewards</Link>
-        </nav>
-        <div className="top-actions">
-          <div className="move-chip">
-            <Zap size={14} fill="currentColor" />
-            {user.total_points.toLocaleString()} MOVE
-          </div>
-          <div className="avatar">{initialsFromAvatar(user.avatar, user.name)}</div>
-          <button className="outline-button" onClick={logout}>
-            Log out
-          </button>
-        </div>
-      </header>
+      <AppChrome
+        rightSlot={
+          <>
+            <div className="move-chip">
+              <Zap size={14} fill="currentColor" />
+              {user.total_points.toLocaleString()} MOVE
+            </div>
+            <button className="outline-button" onClick={logout}>
+              Log out
+            </button>
+          </>
+        }
+      />
 
       <main className="main-content leaderboard-page">
         <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
@@ -257,7 +250,7 @@ export default function LeaderboardPage() {
             <Link className="text-button" href="/">
               <ArrowLeft size={14} /> Back to dashboard
             </Link>
-            <p className="eyebrow">GLOBAL LEADERBOARDS</p>
+            <p className="eyebrow">STANDINGS</p>
             <h1>
               See who&apos;s moving, <span>{user.name.split(' ')[0]}.</span>
             </h1>

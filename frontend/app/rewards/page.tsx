@@ -28,6 +28,7 @@ import {
   getStoredToken,
   movegridApi,
 } from '../../lib/api'
+import { AppChrome } from '../../components/AppChrome'
 
 function Brand() {
   return (
@@ -224,27 +225,19 @@ export default function RewardsPage() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <Brand />
-        <nav className="desktop-nav">
-          <Link href="/">Home</Link>
-          <Link href="/fitness">Fitness</Link>
-          <Link href="/leaderboard">Leaderboard</Link>
-          <Link href="/rewards" className="nav-active">
-            Rewards
-          </Link>
-        </nav>
-        <div className="top-actions">
-          <div className="move-chip">
-            <Zap size={14} fill="currentColor" />
-            {user.total_points.toLocaleString()} MOVE
-          </div>
-          <div className="avatar">{user.name.slice(0, 2).toUpperCase()}</div>
-          <button className="outline-button" onClick={logout}>
-            Log out
-          </button>
-        </div>
-      </header>
+      <AppChrome
+        rightSlot={
+          <>
+            <div className="move-chip">
+              <Zap size={14} fill="currentColor" />
+              {user.total_points.toLocaleString()} MOVE
+            </div>
+            <button className="outline-button" onClick={logout}>
+              Log out
+            </button>
+          </>
+        }
+      />
 
       <main className="main-content rewards-page">
         <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>

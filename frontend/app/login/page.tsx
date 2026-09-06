@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn } from 'lucide-react'
 import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
+import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter } from 'next/navigation'
 
 function Brand() {
@@ -31,7 +32,7 @@ export default function LoginPage() {
     if (!token) return
     movegridApi
       .me(token)
-      .then(() => router.replace('/fitness'))
+      .then(() => router.replace(hasCompletedOnboarding() ? '/' : '/onboarding'))
       .catch(() => clearToken())
   }, [router])
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
     try {
       const token = await movegridApi.login(email, password)
       storeToken(token.access_token)
-      router.push('/fitness')
+      router.push(hasCompletedOnboarding() ? '/' : '/onboarding')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
