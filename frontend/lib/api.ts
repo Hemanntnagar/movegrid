@@ -1,4 +1,21 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1").replace(/\/$/, "")
+import { demoApi } from './demoApi'
+
+const configured = (process.env.NEXT_PUBLIC_API_URL ?? '').trim().replace(/\/$/, '')
+
+/**
+ * Production with no NEXT_PUBLIC_API_URL → full in-browser demo (zero Vercel env).
+ * Local/dev with no URL → localhost API for normal backend work.
+ */
+export const isDemoMode =
+  configured.length === 0 && process.env.NODE_ENV === 'production'
+
+const API_URL = configured
+  ? configured.endsWith('/api/v1')
+    ? configured
+    : `${configured}/api/v1`
+  : isDemoMode
+    ? ''
+    : 'http://localhost:8000/api/v1'
 
 export type ApiMission = { id: number; title: string; description: string; zone: string; move_reward: number; minutes: number; kind: string }
 export type ApiUser = {
@@ -28,7 +45,7 @@ export type ApiLeaderboardEntry = {
 }
 
 export type ApiLeaderboard = {
-  board: "move" | "streak" | "competition" | string
+  board: 'move' | 'streak' | 'competition' | string
   title: string
   metric_label: string
   limit: number
@@ -56,7 +73,7 @@ export type ApiDailyAssignment = {
   exercise_id: number
   assigned_at: string
   expires_at: string
-  status: "ASSIGNED" | "COMPLETED" | "EXPIRED" | string
+  status: 'ASSIGNED' | 'COMPLETED' | 'EXPIRED' | string
   points: number
   completed_at: string | null
   seconds_remaining: number
@@ -165,10 +182,10 @@ export type ApiPresence = {
   updated_at: string
 }
 
-const TOKEN_KEY = "movegrid_token"
+const TOKEN_KEY = 'movegrid_token'
 
 export function getStoredToken(): string | null {
-  if (typeof window === "undefined") return null
+  if (typeof window === 'undefined') return null
   return localStorage.getItem(TOKEN_KEY)
 }
 
@@ -180,19 +197,20 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
 }
 
-function apiBase(): string {
-  if (API_URL.endsWith("/api/v1")) return API_URL
-  return `${API_URL}/api/v1`
+/** Start a local demo session when no backend URL is configured. */
+export function ensureDemoSession() {
+  if (!isDemoMode) return
+  demoApi.ensureSession()
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBase()}${path}`, {
+  const response = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   })
   if (!response.ok) {
     const body = await response.json().catch(() => null)
-    throw new Error(body?.detail ?? "MOVEGRID API request failed")
+    throw new Error(body?.detail ?? 'MOVEGRID API request failed')
   }
   return response.json()
 }
@@ -201,60 +219,98 @@ function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
 }
 
+function asPromise<T>(value: T): Promise<T> {
+  return Promise.resolve(value)
+}
+
 export const movegridApi = {
   login: (email: string, password: string) =>
-    request<ApiToken>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
-  me: (token: string) => request<ApiUser>("/auth/me", { headers: authHeaders(token) }),
-  missions: () => request<ApiMission[]>("/missions"),
+    isDemoMode
+      ? asPromise(demoApi.login(email, password))
+      : request<ApiToken>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  me: (token: string) =>
+    isDemoMode ? asPromise(demoApi.me(token)) : request<ApiUser>('/auth/me', { headers: authHeaders(token) }),
+  missions: () =>
+    isDemoMode ? asPromise(demoApi.missions()) : request<ApiMission[]>('/missions'),
   leaderboard: (token?: string | null, limit = 20) =>
-    request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
-      headers: token ? authHeaders(token) : undefined,
-    }),
+    isDemoMode
+      ? asPromise(demoApi.leaderboardMove(limit))
+      : request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
+          headers: token ? authHeaders(token) : undefined,
+        }),
   leaderboardMove: (token?: string | null, limit = 20) =>
-    request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
-      headers: token ? authHeaders(token) : undefined,
-    }),
+    isDemoMode
+      ? asPromise(demoApi.leaderboardMove(limit))
+      : request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
+          headers: token ? authHeaders(token) : undefined,
+        }),
   leaderboardStreak: (token?: string | null, limit = 20) =>
-    request<ApiLeaderboard>(`/leaderboard/streak?limit=${limit}`, {
-      headers: token ? authHeaders(token) : undefined,
-    }),
+    isDemoMode
+      ? asPromise(demoApi.leaderboardStreak(limit))
+      : request<ApiLeaderboard>(`/leaderboard/streak?limit=${limit}`, {
+          headers: token ? authHeaders(token) : undefined,
+        }),
   leaderboardCompetition: (token?: string | null, limit = 20) =>
-    request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
-      headers: token ? authHeaders(token) : undefined,
-    }),
+    isDemoMode
+      ? asPromise(demoApi.leaderboardCompetition(limit))
+      : request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
+          headers: token ? authHeaders(token) : undefined,
+        }),
   analytics: () =>
-    request<{ movement_generated: number; active_students: number; missions_completed: number; engagement_rate: number }>(
-      "/admin/analytics",
-    ),
-  completeMission: (id: number, code = "movegrid-demo") =>
-    request(`/missions/${id}/complete`, { method: "POST", body: JSON.stringify({ code }) }),
+    isDemoMode
+      ? asPromise(demoApi.analytics())
+      : request<{
+          movement_generated: number
+          active_students: number
+          missions_completed: number
+          engagement_rate: number
+        }>('/admin/analytics'),
+  completeMission: (id: number, code = 'movegrid-demo') =>
+    isDemoMode
+      ? asPromise(demoApi.completeMission(id, code))
+      : request(`/missions/${id}/complete`, { method: 'POST', body: JSON.stringify({ code }) }),
   todayFitness: (token: string) =>
-    request<ApiTodayFitness>("/daily-fitness/today", { headers: authHeaders(token) }),
+    isDemoMode
+      ? asPromise(demoApi.todayFitness(token))
+      : request<ApiTodayFitness>('/daily-fitness/today', { headers: authHeaders(token) }),
   completeFitness: (token: string, assignmentId: number) =>
-    request<ApiCompleteFitness>(`/daily-fitness/${assignmentId}/complete`, {
-      method: "POST",
-      headers: authHeaders(token),
-    }),
+    isDemoMode
+      ? asPromise(demoApi.completeFitness(token, assignmentId))
+      : request<ApiCompleteFitness>(`/daily-fitness/${assignmentId}/complete`, {
+          method: 'POST',
+          headers: authHeaders(token),
+        }),
   fitnessHistory: (token: string) =>
-    request<ApiFitnessHistory>("/daily-fitness/history", { headers: authHeaders(token) }),
-  rewards: () => request<ApiReward[]>("/rewards"),
-  reward: (id: number) => request<ApiReward>(`/rewards/${id}`),
+    isDemoMode
+      ? asPromise(demoApi.fitnessHistory(token))
+      : request<ApiFitnessHistory>('/daily-fitness/history', { headers: authHeaders(token) }),
+  rewards: () => (isDemoMode ? asPromise(demoApi.rewards()) : request<ApiReward[]>('/rewards')),
+  reward: (id: number) =>
+    isDemoMode ? asPromise(demoApi.reward(id)) : request<ApiReward>(`/rewards/${id}`),
   redeemReward: (token: string, id: number) =>
-    request<ApiRedeemResult>(`/rewards/${id}/redeem`, {
-      method: "POST",
-      headers: authHeaders(token),
-    }),
+    isDemoMode
+      ? asPromise(demoApi.redeemReward(token, id))
+      : request<ApiRedeemResult>(`/rewards/${id}/redeem`, {
+          method: 'POST',
+          headers: authHeaders(token),
+        }),
   rewardHistory: (token: string) =>
-    request<ApiRewardRedemption[]>("/rewards/history", { headers: authHeaders(token) }),
+    isDemoMode
+      ? asPromise(demoApi.rewardHistory(token))
+      : request<ApiRewardRedemption[]>('/rewards/history', { headers: authHeaders(token) }),
   updatePresence: (token: string, latitude: number, longitude: number, isSharing = true) =>
-    request<ApiPresence>("/presence", {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify({ latitude, longitude, is_sharing: isSharing }),
-    }),
+    isDemoMode
+      ? asPromise(demoApi.updatePresence(token, latitude, longitude, isSharing))
+      : request<ApiPresence>('/presence', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ latitude, longitude, is_sharing: isSharing }),
+        }),
   nearbyPresence: (latitude: number, longitude: number, token?: string | null, radiusM = 800) =>
-    request<ApiNearbyPresence>(
-      `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
-      { headers: token ? authHeaders(token) : undefined },
-    ),
+    isDemoMode
+      ? asPromise(demoApi.nearbyPresence(latitude, longitude, token, radiusM))
+      : request<ApiNearbyPresence>(
+          `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
+          { headers: token ? authHeaders(token) : undefined },
+        ),
 }

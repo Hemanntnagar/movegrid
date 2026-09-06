@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn } from 'lucide-react'
-import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
+import { clearToken, getStoredToken, isDemoMode, movegridApi, storeToken } from '../../lib/api'
 import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter } from 'next/navigation'
 
@@ -85,7 +85,11 @@ export default function LoginPage() {
             {loading ? <LoaderCircle size={16} className="spin" /> : <LogIn size={16} />}
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
-          <p className="login-hint">Demo: student@movegrid.demo / movegrid-demo</p>
+          <p className="login-hint">
+            {isDemoMode
+              ? 'Offline demo — any email/password works (no API env needed).'
+              : 'Demo: student@movegrid.demo / movegrid-demo'}
+          </p>
         </form>
       </main>
     </div>

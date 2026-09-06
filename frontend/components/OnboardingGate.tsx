@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { ensureDemoSession } from '../lib/api'
 import { hasCompletedOnboarding } from '../lib/fitnessPlan'
 
 const SKIP = new Set(['/onboarding', '/login'])
@@ -23,6 +24,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       router.replace('/onboarding')
       return
     }
+    ensureDemoSession()
     setReady(true)
   }, [pathname, router])
 
