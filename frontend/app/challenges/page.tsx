@@ -11,6 +11,7 @@ import {
   Footprints,
   LoaderCircle,
   MapPin,
+  Pause,
   Play,
   QrCode,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 import { ApiUser, clearToken, getStoredToken, movegridApi } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
+import { useStepCounter } from '../../hooks/useStepCounter'
 
 type UIKind = 'Walk' | 'Climb' | 'Run' | 'Bike' | 'Hydration' | string
 
@@ -131,6 +133,105 @@ function MissionCard({ mission, onStart }: { mission: Mission; onStart: (m: Miss
   )
 }
 
+
+// ─── Circular step progress ring ─────────────────────────────────────────────
+
+function StepRing({ percent, steps, goal }: { percent: number; steps: number; goal: number }) {
+  const radius = 54
+  const circumference = 2 * Math.PI * radius
+  const dash = (percent / 100) * circumference
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+      <svg width="136" height="136" viewBox="0 0 136 136" style={{ overflow: 'visible' }}>
+        {/* track */}
+        <circle
+          cx="68" cy="68" r={radius}
+          fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10"
+        />
+        {/* progress arc */}
+        <circle
+          cx="68" cy="68" r={radius}
+          fill="none"
+          stroke="#a3e635"
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${circumference}`}
+          strokeDashoffset="0"
+          transform="rotate(-90 68 68)"
+          style={{ transition: 'stroke-dasharray 0.4s ease' }}
+        />
+        {/* centre label */}
+        <text x="68" y="62" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="700">
+          {steps.toLocaleString()}
+        </text>
+        <text x="68" y="80" textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize="11">
+          steps
+        </text>
+      </svg>
+      <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)' }}>
+        {goal.toLocaleString()} goal · {percent}% done
+      </span>
+    </div>
+  )
+}
+
+// ─── Live step panel (shown at mission step 1 for Walk missions) ─────────────
+
+function LiveStepPanel() {
+  const { steps, goal, percent, active, permissionState, requestPermission, pause, addSteps } =
+    useStepCounter()
+
+  if (permissionState === 'unavailable') {
+    return (
+      <div className="qr-panel">
+        <Footprints size={64} style={{ opacity: 0.4 }} />
+        <strong>Sensor not available</strong>
+        <span style={{ fontSize: '0.8rem', textAlign: 'center', opacity: 0.65 }}>
+          Step counting requires a phone with a motion sensor. Open this page on your Android or
+          iPhone.
+        </span>
+        {/* Desktop testing helper — add 100 steps at a time */}
+        <button
+          type="button"
+          className="outline-button"
+          style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}
+          onClick={() => addSteps(100)}
+        >
+          + 100 demo steps
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="qr-panel" style={{ gap: '1rem' }}>
+      <StepRing percent={percent} steps={steps} goal={goal} />
+
+      {permissionState === 'prompt' && !active ? (
+        <button type="button" className="primary-button" onClick={requestPermission}>
+          <Play size={15} fill="currentColor" /> Allow motion sensor
+        </button>
+      ) : active ? (
+        <button type="button" className="outline-button" onClick={pause}>
+          <Pause size={15} /> Pause counting
+        </button>
+      ) : (
+        <button type="button" className="primary-button" onClick={requestPermission}>
+          <Play size={15} fill="currentColor" /> Resume counting
+        </button>
+      )}
+
+      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
+        {active
+          ? `Counting live from your phone\u2019s motion sensor`
+          : 'Tap to start reading from your phone'}
+      </span>
+    </div>
+  )
+}
+
+// ─── Mission modal ────────────────────────────────────────────────────────────
+
 function MissionModal({
   mission,
   onClose,
@@ -144,6 +245,9 @@ function MissionModal({
 }) {
   const [step, setStep] = useState(0)
   const steps = ['Start activity', 'Perform task', 'Verify goal', 'Claim MOVE']
+
+  // For Walk missions, step 1 shows the live sensor panel.
+  const isWalkMission = mission.kind === 'Walk' || mission.kind === 'Climb'
 
   return (
     <div className="modal-backdrop">
@@ -178,20 +282,26 @@ function MissionModal({
           </div>
         )}
         {step === 1 && (
-          <div className="qr-panel">
-            {mission.kind === 'Hydration' ? (
-              <Droplets size={80} style={{ color: '#38bdf8' }} />
+          <>
+            {isWalkMission ? (
+              <LiveStepPanel />
+            ) : mission.kind === 'Hydration' ? (
+              <div className="qr-panel">
+                <Droplets size={80} style={{ color: '#38bdf8' }} />
+                <strong>Log your workout check-in</strong>
+                <span>Logged 2L water consumed!</span>
+              </div>
             ) : (
-              <div className="qr-art">
-                <QrCode size={92} />
-                <div className="scan-line" />
+              <div className="qr-panel">
+                <div className="qr-art">
+                  <QrCode size={92} />
+                  <div className="scan-line" />
+                </div>
+                <strong>Log your workout check-in</strong>
+                <span>Scan or log GPS route confirmation.</span>
               </div>
             )}
-            <strong>Log your workout check-in</strong>
-            <span>
-              {mission.kind === 'Hydration' ? 'Logged 2L water consumed!' : 'Scan or log GPS route confirmation.'}
-            </span>
-          </div>
+          </>
         )}
         {step === 2 && (
           <div className="verified">
@@ -242,6 +352,7 @@ function MissionModal({
     </div>
   )
 }
+
 
 export default function ChallengesPage() {
   const [selected, setSelected] = useState<Mission | null>(null)
