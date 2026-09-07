@@ -3,14 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-<<<<<<< HEAD
-  Activity, ArrowRight, Bell, Flame, Gift, LayoutDashboard, Lock,
+  ArrowRight, Bell, Flame, Footprints, Gift, LayoutDashboard, Lock,
   Target, Trophy, Unlock, Users, Zap
-=======
-  Activity, ArrowRight, BarChart3, Bell, Bolt, Check, ChevronRight, CircleHelp,
-  Flame, Footprints, Gift, LayoutDashboard, Lock, MapPin, Plus, Target, Trash2, Trophy,
-  Unlock, Users, X, Zap
->>>>>>> 67f33a9 (step counter)
 } from 'lucide-react'
 import {
   ApiTodayFitness, ApiUser, clearToken, getStoredToken, movegridApi
@@ -113,12 +107,7 @@ function DailyChallengeBar({
   )
 }
 
-<<<<<<< HEAD
 export default function Page() {
-=======
-
-function StudentView({ onAdmin }: { onAdmin: () => void }) {
->>>>>>> 67f33a9 (step counter)
   const [move, setMove] = useState(2480)
   const [user, setUser] = useState<ApiUser | null>(null)
   const [fitness, setFitness] = useState<ApiTodayFitness | null>(null)
@@ -126,7 +115,7 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
   const [rankLabel, setRankLabel] = useState('#24')
 
   // Live step counter from phone accelerometer
-  const { steps, goal: stepGoal, percent: stepPercent, permissionState, requestPermission, active: stepActive } = useStepCounter()
+  const { steps, goal: stepGoal, percent: stepPercent, requestPermission, active: stepActive } = useStepCounter()
 
   const token = getStoredToken()
 
@@ -170,8 +159,6 @@ function StudentView({ onAdmin }: { onAdmin: () => void }) {
     end.setHours(24, 0, 0, 0)
     return Math.max(0, Math.floor((end.getTime() - Date.now()) / 1000))
   }, [fitness?.expires_at, tick])
-
-  const activeMinutes = user?.active_minutes ?? 86
 
   return (
     <div className="app-shell">
