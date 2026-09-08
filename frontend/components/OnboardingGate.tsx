@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ensureDemoSession } from '../lib/api'
 import { hasCompletedOnboarding } from '../lib/fitnessPlan'
 
-const SKIP = new Set(['/onboarding', '/login'])
+const SKIP = new Set(['/onboarding', '/login', '/signup', '/profile'])
 
 /** Redirects first-time visitors to the one-time questionnaire. */
 export function OnboardingGate({ children }: { children: React.ReactNode }) {

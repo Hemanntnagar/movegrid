@@ -105,15 +105,15 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
         <div className="chrome-left">
           {user ? (
             <Link
-              href="/login"
+              href="/profile"
               className="profile-orb"
-              title={user.name}
+              title={`Profile: ${user.name}`}
               aria-label={`Profile: ${user.name}`}
             >
               <span>{initials}</span>
             </Link>
           ) : (
-            <Link href="/login" className="profile-orb guest" title="Sign in" aria-label="Open profile / sign in">
+            <Link href="/profile" className="profile-orb guest" title="User profile" aria-label="Open user profile">
               <UserRound size={18} />
             </Link>
           )}
@@ -189,17 +189,22 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
 
         <div className="side-panel-foot">
           {user ? (
-            <div className="side-panel-user">
+            <Link href="/profile" className="side-panel-user" onClick={() => setOpen(false)} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="profile-orb sm">{initials}</div>
               <div>
                 <strong>{user.name}</strong>
-                <small>{user.total_points.toLocaleString()} MOVE</small>
+                <small>{user.total_points.toLocaleString()} MOVE · View profile</small>
               </div>
-            </div>
-          ) : (
-            <Link href="/login" className="primary-button full" onClick={() => setOpen(false)}>
-              <LogIn size={15} /> Sign in
             </Link>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              <Link href="/login" className="primary-button" style={{ flex: 1, textDecoration: 'none' }} onClick={() => setOpen(false)}>
+                <LogIn size={15} /> Sign in
+              </Link>
+              <Link href="/signup" className="outline-button" style={{ flex: 1, textDecoration: 'none', textAlign: 'center', justifyContent: 'center' }} onClick={() => setOpen(false)}>
+                Sign up
+              </Link>
+            </div>
           )}
         </div>
       </aside>

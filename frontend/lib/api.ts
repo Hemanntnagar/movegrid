@@ -259,6 +259,13 @@ function asPromise<T>(value: T): Promise<T> {
 }
 
 export const movegridApi = {
+  register: (name: string, email: string, password: string, fitness_level?: string) =>
+    isDemoMode
+      ? asPromise(demoApi.register(name, email, password, fitness_level))
+      : request<ApiUser>('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, full_name: name, email, password, fitness_level }),
+        }),
   login: (email: string, password: string) =>
     isDemoMode
       ? asPromise(demoApi.login(email, password))

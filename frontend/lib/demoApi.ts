@@ -260,6 +260,37 @@ export function isDemoToken(token: string | null | undefined) {
 }
 
 export const demoApi = {
+  register(name: string, email: string, _password: string, fitness_level?: string): ApiToken {
+    const cleanEmail = email.trim() || 'user@movegrid.demo'
+    const cleanName = name.trim() || cleanEmail.split('@')[0] || 'MOVEGRID Mover'
+    const initials = cleanName
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0])
+      .join('')
+      .toUpperCase() || 'MG'
+    const newUser: DemoUserState = {
+      id: Date.now(),
+      name: cleanName,
+      email: cleanEmail,
+      total_points: 250,
+      streak: 1,
+      streak_score: 10,
+      active_minutes: 0,
+      avatar: `initials:${initials}:#8bd4f4`,
+    }
+    saveUser(newUser)
+    if (fitness_level && typeof window !== 'undefined') {
+      const existingPlan = getStoredPlan()
+      writeJson('movegrid_fitness_plan', {
+        ...(existingPlan ?? {}),
+        fitnessLevel: fitness_level,
+        hasCompletedOnboarding: true,
+      })
+    }
+    return { access_token: `demo.${Date.now()}`, token_type: 'bearer' }
+  },
+
   login(email: string, _password: string): ApiToken {
     const base = defaultUser(email)
     const user = { ...getUser(), ...base, email }
