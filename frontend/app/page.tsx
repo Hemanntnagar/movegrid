@@ -1,55 +1,370 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
-  Activity, ArrowRight, BarChart3, Bell, Bike, Bolt, Check, ChevronRight, CircleHelp, Compass,
-  Crown, Flame, Footprints, Gift, Grid3X3, LayoutDashboard, MapPin, Menu, Play, QrCode,
-  ScanLine, Search, ShieldCheck, Sparkles, Star, Target, Trophy, Users, X, Zap
+  Bell,
+  Camera,
+  Compass,
+  Flame,
+  Footprints,
+  Gift,
+  Grid3X3,
+  HelpCircle,
+  Info,
+  Layers,
+  LayoutDashboard,
+  Lock,
+  MapPin,
+  Menu,
+  MessageSquare,
+  Moon,
+  Play,
+  Plus,
+  Puzzle,
+  Rocket,
+  Sailboat,
+  Settings,
+  Shield,
+  Sparkles,
+  Sun,
+  Target,
+  Trophy,
+  User,
+  Users,
+  Zap,
 } from 'lucide-react'
+import { DashboardPath } from '../components/DashboardPath'
 
-type Mission = { id: number; title: string; zone: string; distance: string; minutes: number; move: number; kind: string; color: string; description: string }
+export default function Page() {
+  const [activeNav, setActiveNav] = useState('Home')
+  const [points, setPoints] = useState(2480)
+  const [steps, setSteps] = useState(6420)
+  const targetSteps = 10000
+  const stepPercent = Math.min(100, Math.round((steps / targetSteps) * 100))
 
-const missions: Mission[] = [
-  { id: 1, title: 'Library Loop', zone: 'North Quad', distance: '0.2 mi', minutes: 12, move: 120, kind: 'Walk', color: 'mint', description: 'A brisk loop around the library and fountain.' },
-  { id: 2, title: 'Stadium Stairs', zone: 'Athletics District', distance: '0.6 mi', minutes: 18, move: 180, kind: 'Climb', color: 'orange', description: 'Take the long way up the stadium steps.' },
-  { id: 3, title: 'Quad Dash', zone: 'Central Quad', distance: '0.4 mi', minutes: 15, move: 150, kind: 'Run', color: 'blue', description: 'Sprint between the campus landmarks.' },
-]
+  // Countdown timer for daily banner
+  const [secondsLeft, setSecondsLeft] = useState(83789) // 23h 16m 29s
+  useEffect(() => {
+    const timer = setInterval(() => setSecondsLeft((prev) => Math.max(0, prev - 1)), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
-const leaderboard = [
-  ['Maya Chen', '2,840', 'MC', true], ['Jordan Lee', '2,690', 'JL', false], ['You', '2,480', 'YO', false], ['Sam Rivera', '2,210', 'SR', false]
-]
+  const formatTime = (totalSec: number) => {
+    const h = Math.floor(totalSec / 3600)
+    const m = Math.floor((totalSec % 3600) / 60)
+    const s = totalSec % 60
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
 
-function Brand() { return <div className="brand"><div className="brand-mark"><Bolt size={18} fill="currentColor" /></div><span>MOVE<span>GRID</span></span></div> }
-function Pill({ children, tone = 'lime' }: { children: React.ReactNode; tone?: string }) { return <span className={`pill ${tone}`}>{children}</span> }
-function StatCard({ icon, label, value, detail, tone }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string }) { return <div className={`stat-card ${tone}`}><div className="stat-icon">{icon}</div><div><p>{label}</p><strong>{value}</strong><small>{detail}</small></div></div> }
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-[#38bdf8] via-[#7dd3fc] to-[#60a5fa] font-sans text-slate-900 overflow-x-hidden pb-28">
+      {/* Background Animated Clouds */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+        <div className="absolute top-10 left-[5%] w-32 h-12 bg-white/40 rounded-full blur-[1px]" />
+        <div className="absolute top-16 left-[8%] w-24 h-10 bg-white/50 rounded-full blur-[1px]" />
+        <div className="absolute top-20 right-[10%] w-44 h-16 bg-white/40 rounded-full blur-[1px]" />
+        <div className="absolute top-28 right-[14%] w-32 h-12 bg-white/50 rounded-full blur-[1px]" />
+      </div>
 
-function CampusMap({ onSelect }: { onSelect: (m: Mission) => void }) {
-  return <div className="map-wrap"><div className="map-label">CAMPUS LIVE MAP <span><span className="live-dot" /> 12 missions nearby</span></div><svg className="campus-map" viewBox="0 0 760 360" role="img" aria-label="Illustrated campus map with mission locations">
-    <path className="road" d="M0 85 C150 40 200 130 330 84 S570 50 760 110 M0 285 C160 240 230 320 390 270 S620 230 760 300 M120 0 C150 90 105 180 160 360 M570 0 C520 100 600 210 550 360" />
-    <path className="river" d="M660 0 C580 70 690 150 610 220 C550 274 650 320 610 380 L760 380 L760 0Z" />
-    <g className="buildings"><rect x="70" y="58" width="92" height="55" rx="5"/><rect x="210" y="35" width="110" height="62" rx="5"/><rect x="360" y="62" width="100" height="54" rx="5"/><rect x="195" y="190" width="120" height="60" rx="5"/><rect x="365" y="210" width="95" height="58" rx="5"/><rect x="500" y="110" width="90" height="58" rx="5"/></g>
-    <g className="labels"><text x="86" y="90">LIBRARY</text><text x="238" y="72">SCIENCE HALL</text><text x="383" y="94">STUDENT UNION</text><text x="220" y="226">ARTS CENTER</text><text x="385" y="245">GYMNASIUM</text><text x="514" y="144">CAFÉ ROW</text></g>
-    {missions.map((m, i) => <g key={m.id} className="map-pin" onClick={() => onSelect(m)} transform={`translate(${[175, 510, 340][i]},${[142, 178, 145][i]})`}><circle r="18" /><circle r="6" /><text y="-28" textAnchor="middle">{m.move} MOVE</text></g>)}
-    <g className="you-pin" transform="translate(300,280)"><circle r="15"/><circle r="5"/></g><text className="you-label" x="300" y="315">YOU ARE HERE</text>
-  </svg><div className="map-footer"><span><MapPin size={14}/> Your campus, live</span><button className="text-button">Open full map <ArrowRight size={14}/></button></div></div>
+      {/* Main Container Container Shell */}
+      <div className="relative z-10 mx-auto max-w-[1280px] px-3 sm:px-6 pt-4">
+        {/* ==================== TOP HEADER BAR ==================== */}
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {/* Logo Badge */}
+          <div className="flex items-center gap-2 rounded-2xl border-[3px] border-[#1e293b] bg-[#fef08a] px-4 py-2 shadow-[0_5px_0_#1e293b] transition-transform hover:scale-105 cursor-pointer">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f59e0b] border-[2px] border-[#1e293b]">
+              <Trophy size={18} className="text-white fill-white" />
+            </div>
+            <span className="text-xl font-black tracking-tight text-[#1e293b]">MOVEGRID</span>
+          </div>
+
+          {/* Center Header Pill Widgets */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* User Level Badge */}
+            <div className="flex items-center gap-2.5 rounded-full border-[3px] border-[#1e293b] bg-[#f472b6]/90 px-3.5 py-1.5 shadow-[0_4px_0_#1e293b] text-white">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-800 font-bold border-[2px] border-[#1e293b]">
+                <span className="text-sm">🐧</span>
+                <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white border border-[#1e293b]">
+                  5
+                </span>
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-xs font-black tracking-tight text-white drop-shadow">
+                  Demo <span className="text-amber-300">74</span> ⚡
+                </span>
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-pink-100 mt-0.5">
+                  STEP EXPLORER
+                </span>
+              </div>
+            </div>
+
+            {/* MOVE PTS Capsule */}
+            <div className="flex items-center gap-2 rounded-full border-[3px] border-[#1e293b] bg-[#fde047] px-3.5 py-1.5 shadow-[0_4px_0_#1e293b]">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 border border-[#1e293b] text-white font-black text-xs shadow-inner">
+                ★
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-xs font-black text-[#1e293b]">
+                  {points.toLocaleString()}
+                </span>
+                <span className="text-[9px] font-black tracking-wider text-amber-900 uppercase">
+                  MOVE PTS
+                </span>
+              </div>
+              <button
+                type="button"
+                className="ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white border border-[#1e293b] font-black transition-transform hover:scale-110 active:scale-95"
+                title="Add MOVE PTS"
+              >
+                <Plus size={14} strokeWidth={3} />
+              </button>
+            </div>
+
+            {/* Daily Steps Tracker Capsule */}
+            <div className="flex items-center gap-3 rounded-full border-[3px] border-[#1e293b] bg-[#c084fc]/90 px-3.5 py-1.5 shadow-[0_4px_0_#1e293b] text-white">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 border border-[#1e293b] text-[#1e293b]">
+                <Footprints size={15} strokeWidth={2.5} />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-200">
+                  TODAY&apos;S STEPS
+                </span>
+                <span className="text-xs font-black text-white">
+                  {steps.toLocaleString()} <span className="text-purple-200 font-normal">/ 10k</span>
+                </span>
+              </div>
+              <div className="rounded-full bg-emerald-400 px-2 py-0.5 border border-[#1e293b] text-[10px] font-black text-[#1e293b]">
+                {stepPercent}%
+              </div>
+            </div>
+          </div>
+
+          {/* Right Header Action Icons */}
+          <div className="flex items-center gap-2">
+            {/* Notification Bell */}
+            <button
+              type="button"
+              className="relative flex h-10 w-10 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#38bdf8] shadow-[0_4px_0_#1e293b] transition-transform hover:scale-105 active:scale-95"
+              aria-label="Notifications"
+            >
+              <Bell size={20} className="text-slate-900 fill-amber-300" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white border border-[#1e293b]">
+                1
+              </span>
+            </button>
+
+            {/* Settings Button */}
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#a855f7] shadow-[0_4px_0_#1e293b] text-white transition-transform hover:scale-105 active:scale-95"
+              aria-label="Settings"
+            >
+              <Settings size={20} strokeWidth={2.5} />
+            </button>
+          </div>
+        </header>
+
+        {/* ==================== DAILY EXPIRY BANNER CARD ==================== */}
+        <section className="mb-4 overflow-hidden rounded-3xl border-[4px] border-[#1e293b] bg-white p-3.5 sm:p-4 shadow-[0_8px_0_rgba(30,41,59,0.18)]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Left Info */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-amber-400 text-[#1e293b]">
+                <Target size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black tracking-tight text-slate-900 m-0">
+                    Keep moving, Demo!
+                  </h2>
+                  <span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-black text-white uppercase border border-[#1e293b]">
+                    DAILY 24H
+                  </span>
+                </div>
+                <p className="text-xs font-semibold text-slate-600 m-0 mt-0.5">
+                  Finish today&apos;s path level before window closes • Expires in{' '}
+                  <span className="font-extrabold text-red-600">{formatTime(secondsLeft)}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Right Action Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('dashboard-path-container')
+                el?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="flex shrink-0 items-center gap-2 rounded-2xl border-[3px] border-[#1e293b] bg-[#fde047] px-5 py-2.5 text-xs font-black uppercase tracking-wider text-[#1e293b] shadow-[0_5px_0_#1e293b] transition-transform hover:scale-105 active:scale-95"
+            >
+              <span>START STEPPING 👟</span>
+            </button>
+          </div>
+        </section>
+
+        {/* ==================== MAIN GAME BOARD CONTAINER ==================== */}
+        <div id="dashboard-path-container" className="relative grid grid-cols-1 lg:grid-cols-[80px_1fr_80px] gap-4 items-start">
+          {/* LEFT FLOATING GAME TOOLBAR */}
+          <aside className="hidden lg:flex flex-col gap-4 z-20">
+            {/* Rocket Action */}
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#ec4899] shadow-[0_5px_0_#1e293b] text-white transition-transform hover:scale-105 active:scale-95"
+                title="Rocket Booster"
+              >
+                <Rocket size={26} strokeWidth={2.5} />
+              </button>
+              <span className="mt-1 rounded-full bg-[#1e293b] px-2 py-0.5 text-[9px] font-black text-white">
+                2d 40m
+              </span>
+            </div>
+
+            {/* Camera Snap Path Action */}
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <button
+                  type="button"
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#f43f5e] shadow-[0_5px_0_#1e293b] text-white transition-transform hover:scale-105 active:scale-95"
+                  title="Snap Path"
+                >
+                  <Camera size={26} strokeWidth={2.5} />
+                </button>
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400 text-[10px] font-black text-[#1e293b] border border-[#1e293b]">
+                  12
+                </span>
+              </div>
+              <span className="mt-1 text-[10px] font-black text-white drop-shadow">
+                Snap Path
+              </span>
+            </div>
+
+            {/* Puzzle Action */}
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#f59e0b] shadow-[0_5px_0_#1e293b] text-white transition-transform hover:scale-105 active:scale-95"
+                title="Puzzle Quests"
+              >
+                <Puzzle size={26} strokeWidth={2.5} />
+              </button>
+              <span className="mt-1 rounded-full bg-[#1e293b] px-2 py-0.5 text-[9px] font-black text-white">
+                1d 21m
+              </span>
+            </div>
+          </aside>
+
+          {/* CENTER WINDING PATH MAP CONTAINER */}
+          <main className="w-full">
+            <DashboardPath onPointsChange={(pts) => setPoints(pts)} />
+          </main>
+
+          {/* RIGHT FLOATING GAME TOOLBAR */}
+          <aside className="hidden lg:flex flex-col gap-4 z-20">
+            {/* Sailboat Event Action */}
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#0284c7] shadow-[0_5px_0_#1e293b] text-white transition-transform hover:scale-105 active:scale-95"
+                title="Sailing Event"
+              >
+                <Sailboat size={26} strokeWidth={2.5} />
+              </button>
+              <span className="mt-1 rounded-full bg-[#1e293b] px-2 py-0.5 text-[9px] font-black text-white">
+                2h 21m
+              </span>
+            </div>
+
+            {/* Rank Card Badge */}
+            <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-2xl border-[3px] border-[#1e293b] bg-[#ec4899] shadow-[0_5px_0_#1e293b] text-white">
+                <span className="text-[9px] font-black uppercase tracking-wider">RANK</span>
+                <span className="text-sm font-black">#3</span>
+              </div>
+              <span className="mt-1 text-[9px] font-extrabold text-white bg-[#1e293b] px-1.5 py-0.5 rounded-full">
+                ↑ 6 places
+              </span>
+            </div>
+
+            {/* Buddies Card Action */}
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-[#1e293b] bg-[#10b981] shadow-[0_5px_0_#1e293b] text-white transition-transform hover:scale-105 active:scale-95"
+                title="Buddies"
+              >
+                <Users size={26} strokeWidth={2.5} />
+              </button>
+              <span className="mt-1 text-[10px] font-black text-white drop-shadow">
+                Buddies
+              </span>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {/* ==================== BOTTOM FLOATING NAVIGATION DOCK ==================== */}
+      <footer className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-[720px]">
+        <nav className="flex items-center justify-between gap-2 rounded-full border-[4px] border-[#1e293b] bg-[#581c87] px-3 sm:px-6 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.35)] text-white">
+          {/* Challenges */}
+          <button
+            type="button"
+            className="flex flex-col items-center gap-0.5 text-purple-200 transition-colors hover:text-white"
+          >
+            <Target size={20} strokeWidth={2.5} />
+            <span className="text-[10px] font-black">Challenges</span>
+          </button>
+
+          {/* Tournaments */}
+          <button
+            type="button"
+            className="flex flex-col items-center gap-0.5 text-purple-200 transition-colors hover:text-white"
+          >
+            <Trophy size={20} strokeWidth={2.5} />
+            <span className="text-[10px] font-black">Tournaments</span>
+          </button>
+
+          {/* CENTER PROMINENT ACTION BUTTON */}
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('dashboard-path-container')
+              el?.scrollIntoView({ behavior: 'smooth' })
+            }}
+            className="-mt-5 flex items-center gap-2 rounded-full border-[3px] border-[#1e293b] bg-[#22c55e] px-5 sm:px-6 py-2.5 shadow-[0_6px_0_#1e293b] transition-transform hover:scale-105 active:scale-95 text-white"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+              <Footprints size={18} strokeWidth={3} />
+            </div>
+            <div className="flex flex-col text-left leading-none">
+              <span className="text-[9px] font-black tracking-widest text-emerald-100 uppercase">
+                LEVEL 9 • TODAY
+              </span>
+              <span className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">
+                START STEPPING →
+              </span>
+            </div>
+          </button>
+
+          {/* My Goal */}
+          <button
+            type="button"
+            className="flex flex-col items-center gap-0.5 text-purple-200 transition-colors hover:text-white"
+          >
+            <Settings size={20} strokeWidth={2.5} />
+            <span className="text-[10px] font-black">My Goal</span>
+          </button>
+
+          {/* Buddies */}
+          <button
+            type="button"
+            className="flex flex-col items-center gap-0.5 text-purple-200 transition-colors hover:text-white"
+          >
+            <Users size={20} strokeWidth={2.5} />
+            <span className="text-[10px] font-black">Buddies</span>
+          </button>
+        </nav>
+      </footer>
+    </div>
+  )
 }
-
-function MissionCard({ mission, onStart }: { mission: Mission; onStart: (m: Mission) => void }) { return <article className={`mission-card ${mission.color}`}><div className="mission-top"><Pill tone={mission.color}>{mission.kind}</Pill><span className="move-value"><Zap size={14} fill="currentColor"/> +{mission.move}</span></div><h3>{mission.title}</h3><p>{mission.description}</p><div className="mission-meta"><span><MapPin size={14}/> {mission.zone}</span><span><Activity size={14}/> {mission.minutes} min</span><span><Footprints size={14}/> {mission.distance}</span></div><button className="primary-button" onClick={() => onStart(mission)}><Play size={15} fill="currentColor"/> Start mission</button></article> }
-
-function MissionModal({ mission, onClose, onComplete }: { mission: Mission; onClose: () => void; onComplete: () => void }) {
-  const [step, setStep] = useState(0)
-  const steps = ['Start mission', 'Reach zone', 'Verify QR', 'Complete']
-  return <div className="modal-backdrop"><div className="modal"><button className="close-button" onClick={onClose}><X size={18}/></button><div className="modal-kicker"><Target size={15}/> MISSION BRIEF</div><h2>{mission.title}</h2><p>{mission.description} Make your way to {mission.zone} and check in at the mission marker.</p><div className="stepper">{steps.map((s, i) => <div className={`step ${i <= step ? 'active' : ''}`} key={s}><span>{i < step ? <Check size={13}/> : i + 1}</span><small>{s}</small></div>)}</div>{step === 0 && <div className="modal-panel"><MapPin size={22}/><div><strong>Head to {mission.zone}</strong><span>{mission.distance} away · GPS zone active</span></div></div>}{step === 1 && <div className="qr-panel"><div className="qr-art"><QrCode size={92}/><div className="scan-line"/></div><strong>Scan the demo checkpoint</strong><span>In a real mission, this QR lives at the zone marker.</span></div>}{step === 2 && <div className="verified"><div className="verified-icon"><ShieldCheck size={30}/></div><strong>Checkpoint verified</strong><span>Zone confirmed. Finish the challenge to earn your MOVE.</span></div>}{step === 3 && <div className="verified success"><div className="verified-icon"><Sparkles size={30}/></div><strong>Mission complete</strong><span>+{mission.move} MOVE · +{mission.minutes} active minutes</span></div>}<button className="primary-button full" onClick={() => step < 3 ? setStep(step + 1) : onComplete()}>{step === 0 ? 'I’m on my way' : step === 1 ? 'Verify demo QR' : step === 2 ? 'Complete challenge' : 'Claim reward'} <ArrowRight size={16}/></button></div></div>
-}
-
-function StudentView({ onAdmin }: { onAdmin: () => void }) {
-  const [activeTab, setActiveTab] = useState('Home'); const [selected, setSelected] = useState<Mission | null>(null); const [move, setMove] = useState(2480); const [complete, setComplete] = useState(false); const [redeemed, setRedeemed] = useState(false)
-  const start = (m: Mission) => setSelected(m)
-  const finish = () => { setMove(v => v + (selected?.move || 0)); setSelected(null); setComplete(true); setTimeout(() => setComplete(false), 3000) }
-  return <div className="app-shell"><header className="topbar"><Brand/><nav className="desktop-nav">{['Home','Missions','Fitness','Leaderboard','Squads','Rewards'].map(t => t === 'Fitness' ? <a className={activeTab === t ? 'nav-active' : ''} href="/fitness" key={t}>{t}</a> : t === 'Leaderboard' ? <a className={activeTab === t ? 'nav-active' : ''} href="/leaderboard" key={t}>{t}</a> : t === 'Rewards' ? <a className={activeTab === t ? 'nav-active' : ''} href="/rewards" key={t}>{t}</a> : <button className={activeTab === t ? 'nav-active' : ''} onClick={() => setActiveTab(t)} key={t}>{t}</button>)}</nav><div className="top-actions"><button className="icon-button"><Bell size={18}/><i/></button><div className="avatar">AM</div><button className="admin-switch" onClick={onAdmin}>Admin view <ArrowRight size={14}/></button><button className="mobile-menu"><Menu size={20}/></button></div></header><main className="main-content"><div className="welcome"><div><p className="eyebrow">THURSDAY, OCTOBER 24, 2024</p><h1>Keep the grid moving, <span>Alex.</span></h1><p className="subhead">You&apos;re on a roll. There are fresh missions waiting nearby.</p></div><div className="streak-badge"><Flame size={20} fill="currentColor"/><div><strong>7 day streak</strong><span>Best: 14 days</span></div></div></div><section className="stats-grid"><StatCard icon={<Zap size={19}/>} label="MOVE points" value={move.toLocaleString()} detail="+120 today" tone="lime"/><StatCard icon={<Flame size={19}/>} label="Current streak" value="7 days" detail="2 days to badge" tone="orange"/><StatCard icon={<Activity size={19}/>} label="Active minutes" value="86" detail="of 150 weekly" tone="blue"/><StatCard icon={<Trophy size={19}/>} label="Campus rank" value="#24" detail="↑ 6 places" tone="purple"/></section><div className="dashboard-grid"><div className="content-col"><div className="section-heading"><div><p className="eyebrow">RECOMMENDED FOR YOU</p><h2>Make your next move</h2></div><button className="text-button">View all <ArrowRight size={14}/></button></div><div className="recommendation"><div className="rec-copy"><Pill tone="lime"><Sparkles size={12}/> Perfect match</Pill><h2>Library Loop</h2><p>A quick reset between classes. Walk the north quad, hit three checkpoints, and stack your streak.</p><div className="rec-meta"><span><ClockIcon/> 12 min</span><span><Zap size={14}/> +120 MOVE</span><span><MapPin size={14}/> 0.2 mi</span></div><button className="primary-button" onClick={() => start(missions[0])}>Start mission <ArrowRight size={16}/></button></div><div className="rec-visual"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="rec-icon"><Footprints size={38}/></div><span>01</span></div></div><div className="section-heading compact"><div><p className="eyebrow">NEARBY NOW</p><h2>Pick a mission</h2></div><button className="filter-button"><Compass size={15}/> Nearby <ChevronRight size={14}/></button></div><div className="mission-list">{missions.slice(1).map(m => <MissionCard mission={m} onStart={start} key={m.id}/>)}</div><div className="section-heading compact"><div><p className="eyebrow">YOUR PROGRESS</p><h2>Keep showing up</h2></div></div><div className="progress-card"><div className="progress-ring"><strong>57%</strong><span>weekly goal</span></div><div><h3>150 active minutes</h3><p>You&apos;re 64 minutes in. Two more missions gets you there.</p><div className="progress-bar"><span style={{width: '43%'}}/></div></div><button className="circle-button"><ArrowRight size={17}/></button></div></div><aside className="side-col"><CampusMap onSelect={start}/><div className="side-card leaderboard-card"><div className="section-heading compact"><div><p className="eyebrow">CAMPUS LEADERBOARD</p><h2>Top movers</h2></div><Trophy size={20} className="gold-icon"/></div><div className="leaderboard-list">{leaderboard.map((row, i) => <div className={`leader-row ${row[3] ? 'highlight' : ''}`} key={row[0] as string}><b>{i + 1}</b><div className="mini-avatar">{row[2] as string}</div><span>{row[0] as string}{row[3] && <Pill tone="blue">you</Pill>}</span><strong>{row[1] as string}</strong></div>)}</div><a className="outline-button full" href="/leaderboard">See full leaderboard <ArrowRight size={15}/></a></div><div className="side-card squad-card"><div className="squad-avatars"><div>JD</div><div>SR</div><div>+4</div></div><p className="eyebrow">ACTIVE SQUAD</p><h3>Late Night Legends</h3><p>6 movers · 4,280 MOVE this week</p><button className="outline-button">Open squad <ArrowRight size={15}/></button></div></aside></div></main>{complete && <div className="toast"><div><Check size={18}/></div><span><strong>Mission complete!</strong><small>+120 MOVE added to your account</small></span></div>}{selected && <MissionModal mission={selected} onClose={() => setSelected(null)} onComplete={finish}/>}<footer className="mobile-nav">{[['Home', LayoutDashboard], ['Missions', Target], ['Fitness', Activity], ['Rewards', Gift]].map(([label, Icon]: any) => label === 'Fitness' ? <a className={activeTab === label ? 'active' : ''} href="/fitness" key={label}><Icon size={19}/><span>{label}</span></a> : label === 'Rewards' ? <a className={activeTab === label ? 'active' : ''} href="/rewards" key={label}><Icon size={19}/><span>{label}</span></a> : <button className={activeTab === label ? 'active' : ''} onClick={() => setActiveTab(label)} key={label}><Icon size={19}/><span>{label}</span></button>)}</footer><div className="demo-note">DEMO PROTOTYPE · <button onClick={onAdmin}>Switch to admin</button></div></div>
-}
-function ClockIcon() { return <span className="clock-icon">◷</span> }
-
-function AdminView({ onStudent }: { onStudent: () => void }) { const [tab, setTab] = useState('Overview'); return <div className="admin-shell"><aside className="admin-sidebar"><Brand/><div className="admin-label">WORKSPACE</div>{[['Overview', LayoutDashboard], ['Challenges', Target], ['Campus zones', MapPin], ['Rewards', Gift], ['Students', Users], ['Analytics', BarChart3]].map(([n, I]: any) => <button className={tab === n ? 'selected' : ''} onClick={() => setTab(n)} key={n}><I size={17}/>{n}{n === 'Challenges' && <span className="sidebar-count">12</span>}</button>)}<div className="sidebar-spacer"/><button><CircleHelp size={17}/>Help center</button><div className="admin-user"><div className="avatar">AD</div><div><strong>Admin Demo</strong><span>Campus ops</span></div><ChevronRight size={15}/></div></aside><main className="admin-main"><header className="admin-header"><div><p className="eyebrow">CAMPUS OPERATIONS / OVERVIEW</p><h1>Good morning, Admin.</h1><p className="subhead">Here&apos;s what&apos;s moving across campus today.</p></div><div className="admin-header-actions"><button className="date-button">Oct 21 – Oct 27, 2024 <ChevronRight size={15}/></button><button className="primary-button" onClick={() => setTab('Challenges')}><Target size={15}/> Create challenge</button><button className="icon-button"><Bell size={18}/></button><button className="admin-switch" onClick={onStudent}>Student view <ArrowRight size={14}/></button></div></header><div className="admin-kpi"><div><p className="eyebrow">PRIMARY KPI</p><h2>Movement Generated</h2><div className="big-kpi">38,492 <small>MOVE</small></div><span className="positive"><ArrowRight size={13}/> 18.6% vs last week</span></div><div className="kpi-chart"><div className="chart-bars">{[40,62,47,72,55,84,68,92,74,88,80,100].map((h, i) => <i key={i} style={{height: `${h}%`}} className={i > 9 ? 'current' : ''}/>)}</div><div className="chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div></div><div className="admin-stat-grid"><StatCard icon={<Users size={18}/>} label="Total students" value="4,286" detail="↑ 8.2% this month" tone="blue"/><StatCard icon={<Activity size={18}/>} label="Active students" value="1,842" detail="43% of total" tone="lime"/><StatCard icon={<Target size={18}/>} label="Missions completed" value="12,648" detail="↑ 24.5% this week" tone="orange"/><StatCard icon={<BarChart3 size={18}/>} label="Participation rate" value="68.4%" detail="↑ 4.1% vs last week" tone="purple"/></div><div className="admin-grid"><div className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">ENGAGEMENT TREND</p><h2>Active minutes</h2></div><Pill tone="blue">This week</Pill></div><div className="line-chart"><svg viewBox="0 0 700 220" preserveAspectRatio="none"><path d="M0 190 C80 175 90 145 155 160 S230 120 280 140 S345 85 405 118 S470 80 520 95 S610 35 700 54"/><path className="chart-fill" d="M0 190 C80 175 90 145 155 160 S230 120 280 140 S345 85 405 118 S470 80 520 95 S610 35 700 54 L700 220 L0 220Z"/></svg><div className="axis"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div></div><div className="admin-panel zones-panel"><div className="panel-heading"><div><p className="eyebrow">CAMPUS HEATMAP</p><h2>Most active zones</h2></div><MapPin size={18}/></div>{[['Central Quad','2,840 min','92%'],['Athletics District','2,120 min','74%'],['North Quad','1,680 min','58%'],['Arts Center','1,240 min','43%']].map(([a,b,c], i) => <div className="zone-row" key={a}><span className={`zone-dot z${i}`}/><div><strong>{a}</strong><small>{b}</small></div><div className="zone-progress"><span style={{width: c}}/></div><b>{c}</b></div>)}</div></div><div className="admin-panel table-panel"><div className="panel-heading"><div><p className="eyebrow">LIVE MANAGEMENT</p><h2>{tab === 'Overview' ? 'Active challenges' : tab}</h2></div><button className="outline-button">View all <ArrowRight size={14}/></button></div><div className="challenge-table"><div className="table-head"><span>CHALLENGE</span><span>ZONE</span><span>COMPLETIONS</span><span>STATUS</span><span/></div>{missions.map(m => <div className="table-row" key={m.id}><div><div className={`table-icon ${m.color}`}><Target size={16}/></div><strong>{m.title}</strong></div><span>{m.zone}</span><span>{[482, 318, 264][m.id - 1]}</span><Pill tone="lime">Live</Pill><button className="kebab">•••</button></div>)}</div></div></main></div> }
-
-export default function Page() { const [mode, setMode] = useState<'student' | 'admin'>('student'); return mode === 'student' ? <StudentView onAdmin={() => setMode('admin')}/> : <AdminView onStudent={() => setMode('student')}/> }
