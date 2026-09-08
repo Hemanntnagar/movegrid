@@ -57,7 +57,9 @@ export type ApiLeaderboard = {
 export type ApiCompetition = {
   id: number
   name: string
+  company_name?: string
   description: string
+  reward?: string
   eligibility: string
   min_points: number
   min_streak: number
@@ -68,6 +70,18 @@ export type ApiCompetition = {
   eligible: boolean
   is_participating: boolean
   participant_count: number | null
+}
+
+export type ApiCompetitionCreate = {
+  company_name?: string
+  name: string
+  description?: string
+  reward?: string
+  eligibility?: string
+  starts_at?: string
+  ends_at?: string | null
+  min_points?: number
+  min_streak?: number
 }
 
 export type ApiParticipateResult = {
@@ -282,6 +296,14 @@ export const movegridApi = {
       ? asPromise(demoApi.competitions(token))
       : request<ApiCompetition[]>('/competitions', {
           headers: token ? authHeaders(token) : undefined,
+        }),
+  createCompetition: (data: ApiCompetitionCreate, token?: string | null) =>
+    isDemoMode
+      ? asPromise(demoApi.createCompetition(data))
+      : request<ApiCompetition>('/competitions', {
+          method: 'POST',
+          headers: token ? authHeaders(token) : { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
         }),
   participateCompetition: (token: string, id: number) =>
     isDemoMode

@@ -13,7 +13,9 @@ class Competition(Base):
     __tablename__ = "competitions"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(160))
+    company_name: Mapped[str] = mapped_column(String(160), default="")
     description: Mapped[str] = mapped_column(Text, default="")
+    reward: Mapped[str] = mapped_column(String(255), default="")
     eligibility: Mapped[str] = mapped_column(String(255), default="Open to all members")
     min_points: Mapped[int] = mapped_column(Integer, default=0)
     min_streak: Mapped[int] = mapped_column(Integer, default=0)

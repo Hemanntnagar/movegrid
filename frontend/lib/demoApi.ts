@@ -1,5 +1,6 @@
 import type {
   ApiCompetition,
+  ApiCompetitionCreate,
   ApiCompleteFitness,
   ApiDailyAssignment,
   ApiFitnessHistory,
@@ -23,6 +24,7 @@ const DEMO_DAY_KEY = 'movegrid_demo_day'
 const DEMO_REDEEM_KEY = 'movegrid_demo_redeems'
 const DEMO_PRESENCE_KEY = 'movegrid_demo_presence'
 const DEMO_COMPETE_KEY = 'movegrid_demo_competitions'
+const DEMO_CUSTOM_COMPETITIONS_KEY = 'movegrid_demo_custom_competitions'
 
 const DEMO_REWARDS: ApiReward[] = [
   {
@@ -468,7 +470,10 @@ export const demoApi = {
       },
     ]
 
-    return specs.map((comp) => {
+    const customComps = readJson<Omit<ApiCompetition, 'eligible' | 'is_participating' | 'participant_count'>[]>(DEMO_CUSTOM_COMPETITIONS_KEY, [])
+    const allSpecs = [...customComps, ...specs]
+
+    return allSpecs.map((comp) => {
       const start = new Date(comp.starts_at).getTime()
       const end = comp.ends_at ? new Date(comp.ends_at).getTime() : null
       let status: ApiCompetition['status'] = 'live'
@@ -485,6 +490,34 @@ export const demoApi = {
         participant_count: 12 + comp.id * 3 + (joined.has(comp.id) ? 1 : 0),
       }
     })
+  },
+
+  createCompetition(data: ApiCompetitionCreate): ApiCompetition {
+    const existingCustom = readJson<any[]>(DEMO_CUSTOM_COMPETITIONS_KEY, [])
+    const newId = 100 + existingCustom.length + Math.floor(Math.random() * 1000)
+    const now = Date.now()
+    const newCompSpec = {
+      id: newId,
+      name: data.name,
+      company_name: data.company_name || '',
+      description: data.description || '',
+      reward: data.reward || '',
+      eligibility: data.eligibility || 'Open to all members',
+      min_points: data.min_points || 0,
+      min_streak: data.min_streak || 0,
+      starts_at: data.starts_at || new Date(now).toISOString(),
+      ends_at: data.ends_at || new Date(now + 14 * 86400000).toISOString(),
+      is_active: true,
+      status: 'live',
+    }
+    existingCustom.unshift(newCompSpec)
+    writeJson(DEMO_CUSTOM_COMPETITIONS_KEY, existingCustom)
+    return {
+      ...newCompSpec,
+      eligible: true,
+      is_participating: false,
+      participant_count: 1,
+    }
   },
 
   participateCompetition(_token: string, id: number): ApiParticipateResult {

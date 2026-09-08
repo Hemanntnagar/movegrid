@@ -49,10 +49,24 @@ class LeaderboardResponse(BaseModel):
     me: LeaderboardEntry | None = None
 
 
+class CompetitionCreate(BaseModel):
+    company_name: str | None = ""
+    name: str
+    description: str = ""
+    reward: str = ""
+    eligibility: str = "Open to all members"
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    min_points: int = 0
+    min_streak: int = 0
+
+
 class CompetitionRead(BaseModel):
     id: int
     name: str
+    company_name: str | None = ""
     description: str
+    reward: str | None = ""
     eligibility: str
     min_points: int = 0
     min_streak: int = 0

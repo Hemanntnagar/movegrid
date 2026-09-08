@@ -8,6 +8,7 @@ from app.models.entities import Activity, Challenge, Squad, SquadMember, User, Z
 from app.schemas.common import (
     ActivityRead,
     CompleteAssignmentResponse,
+    CompetitionCreate,
     CompetitionRead,
     FitnessHistoryResponse,
     LeaderboardResponse,
@@ -27,7 +28,7 @@ from app.schemas.common import (
     UserRead,
     VerifyRequest,
 )
-from app.services.competition_service import list_competitions, participate
+from app.services.competition_service import create_competition, list_competitions, participate
 from app.services.fitness_assignment_service import complete_assignment, get_assignment_history, get_today_assignments
 from app.services.leaderboard_service import (
     get_competition_leaderboard,
@@ -155,6 +156,15 @@ async def nearby_presence(
 @api_router.get("/competitions", response_model=list[CompetitionRead])
 async def competitions(user: User | None = Depends(optional_user), db: AsyncSession = Depends(get_db)):
     return await list_competitions(db, user)
+
+
+@api_router.post("/competitions", response_model=CompetitionRead, status_code=201)
+async def create_new_competition(
+    payload: CompetitionCreate,
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await create_competition(db, payload, user=user)
 
 
 @api_router.post("/competitions/{competition_id}/participate", response_model=ParticipateResponse)

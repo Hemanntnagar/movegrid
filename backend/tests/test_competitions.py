@@ -95,3 +95,34 @@ async def test_participate_respects_eligibility(comp_client):
 
     blocked = await http.post(f"/api/v1/competitions/{streak_id}/participate", headers=headers)
     assert blocked.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_create_company_competition(comp_client):
+    http = comp_client
+    login = await http.post("/api/v1/auth/login", json={"email": "comp@movegrid.demo", "password": "movegrid-demo"})
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    payload = {
+        "company_name": "Nike Fitness",
+        "name": "Nike 10K Step Challenge",
+        "description": "Compete with movers globally to win exclusive gear.",
+        "reward": "$500 Gift Card + Nike Running Shoes",
+        "eligibility": "Open to all members",
+        "min_points": 0,
+        "min_streak": 0,
+    }
+
+    res = await http.post("/api/v1/competitions", json=payload, headers=headers)
+    assert res.status_code == 201
+    created = res.json()
+    assert created["name"] == "Nike 10K Step Challenge"
+    assert created["company_name"] == "Nike Fitness"
+    assert created["reward"] == "$500 Gift Card + Nike Running Shoes"
+
+    # Verify it shows up in the competition listing
+    list_res = await http.get("/api/v1/competitions", headers=headers)
+    assert list_res.status_code == 200
+    listed_names = [c["name"] for c in list_res.json()]
+    assert "Nike 10K Step Challenge" in listed_names

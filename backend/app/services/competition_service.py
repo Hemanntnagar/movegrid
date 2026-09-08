@@ -9,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.entities import Competition, CompetitionParticipant, User
 
 
+from app.schemas.common import CompetitionCreate
+
+
 def _status_for(comp: Competition, now: datetime) -> str:
     if comp.ends_at and now > comp.ends_at:
         return "ended"
@@ -40,7 +43,9 @@ def serialize_competition(
     return {
         "id": comp.id,
         "name": comp.name,
+        "company_name": getattr(comp, "company_name", "") or "",
         "description": comp.description,
+        "reward": getattr(comp, "reward", "") or "",
         "eligibility": comp.eligibility,
         "min_points": comp.min_points,
         "min_streak": comp.min_streak,
@@ -52,6 +57,31 @@ def serialize_competition(
         "is_participating": comp.id in participating_ids,
         "participant_count": None,
     }
+
+
+async def create_competition(db: AsyncSession, payload: CompetitionCreate, user: User | None = None) -> dict:
+    now = datetime.utcnow()
+    starts_at = payload.starts_at or now
+    comp = Competition(
+        name=payload.name,
+        company_name=payload.company_name or "",
+        description=payload.description or "",
+        reward=payload.reward or "",
+        eligibility=payload.eligibility or "Open to all members",
+        min_points=payload.min_points,
+        min_streak=payload.min_streak,
+        starts_at=starts_at,
+        ends_at=payload.ends_at,
+        is_active=True,
+    )
+    db.add(comp)
+    await db.commit()
+    await db.refresh(comp)
+
+    participating_ids: set[int] = set()
+    item = serialize_competition(comp, user=user, participating_ids=participating_ids, now=now)
+    item["participant_count"] = 0
+    return item
 
 
 async def list_competitions(db: AsyncSession, user: User | None = None) -> list[dict]:
