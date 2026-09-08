@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
-import { Check, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, ChevronDown, ChevronUp, Lock } from 'lucide-react'
+import { daysInIstMonth, getIstParts, monthLabelIst } from '../lib/ist'
 import type { DayLevelStatus } from '../lib/monthProgress'
 
 export type PathLevel = {
@@ -9,342 +10,421 @@ export type PathLevel = {
   status: DayLevelStatus
 }
 
+type Point = { x: number; y: number }
+
 type PenguinPathMapProps = {
-  levels?: PathLevel[]
-  todayDay?: number
-  onSelectDay?: (day: number) => void
-  currentSteps?: number
+  levels: PathLevel[]
+  todayDay: number
+  onSelectDay: (day: number) => void
   compact?: boolean
 }
 
-export function PenguinPathMap({
-  todayDay = 9,
-  onSelectDay,
-  currentSteps = 6420,
-}: PenguinPathMapProps) {
+const MAP_W = 360
+const PAD_Y = 70
+const GAP_Y = 100
+const NODE_R = 26
+const AMP = 98
+/** Exactly 3 levels fit in the viewport (top · middle · bottom). */
+const VISIBLE_LEVELS = 3
+const VIEWPORT_H = (VISIBLE_LEVELS - 1) * GAP_Y + PAD_Y * 2
+
+function layoutPoints(dayCount: number): Point[] {
+  const height = PAD_Y * 2 + Math.max(0, dayCount - 1) * GAP_Y
+  const centerX = MAP_W / 2
+  const points: Point[] = []
+  for (let day = 1; day <= dayCount; day += 1) {
+    const index = day - 1
+    // Level 1 at bottom → end of month at top
+    const y = height - PAD_Y - index * GAP_Y
+    const x = centerX + Math.sin(index * 0.95) * AMP
+    points.push({ x, y })
+  }
+  return points
+}
+
+function pathRibbon(points: Point[], width: number) {
+  if (points.length < 2) return ''
+  const half = width / 2
+  const left: string[] = []
+  const right: string[] = []
+
+  for (let i = 0; i < points.length; i += 1) {
+    const prev = points[i - 1] ?? points[i]
+    const next = points[i + 1] ?? points[i]
+    const dx = next.x - prev.x
+    const dy = next.y - prev.y
+    const len = Math.hypot(dx, dy) || 1
+    const nx = (-dy / len) * half
+    const ny = (dx / len) * half
+    left.push(`${points[i].x + nx},${points[i].y + ny}`)
+    right.push(`${points[i].x - nx},${points[i].y - ny}`)
+  }
+
+  return `M ${left[0]} L ${left.slice(1).join(' L ')} L ${right.reverse().join(' L ')} Z`
+}
+
+function smoothStroke(points: Point[]) {
+  if (points.length === 0) return ''
+  let d = `M ${points[0].x} ${points[0].y}`
+  for (let i = 1; i < points.length; i += 1) {
+    const prev = points[i - 1]
+    const curr = points[i]
+    const cx = (prev.x + curr.x) / 2
+    const cy = (prev.y + curr.y) / 2
+    d += ` Q ${prev.x} ${prev.y - 8} ${cx} ${cy}`
+    d += ` Q ${curr.x} ${curr.y + 8} ${curr.x} ${curr.y}`
+  }
+  return d
+}
+
+function Pine({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
   return (
-    <div className="relative w-full overflow-hidden rounded-[24px] border-[4px] border-[#1e293b] bg-gradient-to-b from-[#7dd3fc] via-[#6ee7b7] to-[#4ade80] shadow-[0_12px_0_rgba(15,23,42,0.18)] select-none">
-      {/* Top Left Header Badge inside Map */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1 rounded-2xl bg-[#0f172a]/80 px-4 py-2.5 backdrop-blur-md border border-white/10 shadow-lg text-white">
-        <span className="text-[10px] font-black tracking-widest text-sky-400 uppercase">
-          MONTHLY PATH • IST
-        </span>
-        <h3 className="text-sm font-extrabold tracking-tight text-white m-0">
-          September 2026 Trail
-        </h3>
-      </div>
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <ellipse cx="0" cy="18" rx="14" ry="5" fill="rgba(24,61,89,0.12)" />
+      <path d="M0,-28 L18,8 L-18,8 Z" fill="#2f7a45" stroke="#183d59" strokeWidth="2.5" />
+      <path d="M0,-42 L14,-8 L-14,-8 Z" fill="#3f9a55" stroke="#183d59" strokeWidth="2.5" />
+      <path d="M0,-54 L10,-28 L-10,-28 Z" fill="#5cbc6e" stroke="#183d59" strokeWidth="2.2" />
+      <rect x="-3" y="8" width="6" height="12" rx="2" fill="#8b5a2b" stroke="#183d59" strokeWidth="1.5" />
+      <ellipse cx="-6" cy="-20" rx="5" ry="3" fill="#fffdf0" opacity="0.9" />
+      <ellipse cx="5" cy="-36" rx="4" ry="2.5" fill="#fffdf0" opacity="0.9" />
+    </g>
+  )
+}
 
-      {/* Top Center Level Badge */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-        <div className="flex items-center gap-1.5 rounded-full bg-[#fbbf24] px-4 py-1.5 border-[3px] border-[#1e293b] shadow-[0_4px_0_#1e293b] text-[#1e293b] font-black text-xs">
-          <span>Levels 8-10 • Day {todayDay}</span>
+function Cabin({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <ellipse cx="28" cy="42" rx="36" ry="8" fill="rgba(24,61,89,0.1)" />
+      <rect x="4" y="10" width="48" height="32" rx="4" fill="#c47a3a" stroke="#183d59" strokeWidth="2.5" />
+      <path d="M0,14 L28,-10 L56,14 Z" fill="#fffdf0" stroke="#183d59" strokeWidth="2.5" />
+      <rect x="22" y="22" width="12" height="20" rx="2" fill="#183d59" />
+      <rect x="10" y="18" width="10" height="10" rx="2" fill="#8bd4f4" stroke="#183d59" strokeWidth="1.5" />
+      <rect x="36" y="18" width="10" height="10" rx="2" fill="#8bd4f4" stroke="#183d59" strokeWidth="1.5" />
+    </g>
+  )
+}
+
+function Bridge({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <path d="M0,18 Q40,-8 80,18" fill="none" stroke="#6b7c8a" strokeWidth="10" strokeLinecap="round" />
+      <path d="M0,18 Q40,-8 80,18" fill="none" stroke="#183d59" strokeWidth="2.5" />
+      <rect x="6" y="16" width="6" height="18" rx="2" fill="#8a96a1" stroke="#183d59" strokeWidth="1.5" />
+      <rect x="68" y="16" width="6" height="18" rx="2" fill="#8a96a1" stroke="#183d59" strokeWidth="1.5" />
+    </g>
+  )
+}
+
+function Deer({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <ellipse cx="16" cy="28" rx="14" ry="5" fill="rgba(24,61,89,0.1)" />
+      <ellipse cx="18" cy="18" rx="14" ry="9" fill="#c48a4a" stroke="#183d59" strokeWidth="2" />
+      <circle cx="30" cy="10" r="7" fill="#c48a4a" stroke="#183d59" strokeWidth="2" />
+      <path d="M28,4 L24,-6 M32,4 L36,-6" stroke="#183d59" strokeWidth="2" strokeLinecap="round" />
+      <rect x="8" y="24" width="4" height="10" rx="1" fill="#8b5a2b" />
+      <rect x="22" y="24" width="4" height="10" rx="1" fill="#8b5a2b" />
+    </g>
+  )
+}
+
+function Dog({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <ellipse cx="14" cy="24" rx="12" ry="4" fill="rgba(24,61,89,0.1)" />
+      <ellipse cx="14" cy="14" rx="12" ry="8" fill="#d4a574" stroke="#183d59" strokeWidth="2" />
+      <circle cx="24" cy="8" r="6" fill="#d4a574" stroke="#183d59" strokeWidth="2" />
+      <circle cx="26" cy="7" r="1.2" fill="#183d59" />
+      <ellipse cx="4" cy="8" rx="3" ry="5" fill="#d4a574" stroke="#183d59" strokeWidth="1.5" />
+    </g>
+  )
+}
+
+function MiniPenguin({ x, y, scale = 0.55 }: { x: number; y: number; scale?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+      <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+      <circle cx="50" cy="32" r="24" fill="#0f172a" />
+      <circle cx="42" cy="28" r="4" fill="#ffffff" />
+      <circle cx="43" cy="28" r="2" fill="#000" />
+      <circle cx="58" cy="28" r="4" fill="#ffffff" />
+      <circle cx="57" cy="28" r="2" fill="#000" />
+      <polygon points="50,32 44,38 56,38" fill="#ff7b3d" />
+      <ellipse cx="38" cy="102" rx="10" ry="5" fill="#ff7b3d" />
+      <ellipse cx="62" cy="102" rx="10" ry="5" fill="#ff7b3d" />
+    </g>
+  )
+}
+
+function HeroPenguin({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="58" height="66" viewBox="0 0 100 110" fill="none" aria-hidden>
+      <ellipse cx="50" cy="106" rx="28" ry="6" fill="rgba(24,61,89,0.18)" />
+      <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+      <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+      <circle cx="50" cy="32" r="24" fill="#0f172a" />
+      <circle cx="42" cy="28" r="4" fill="#ffffff" />
+      <circle cx="43" cy="28" r="2" fill="#000" />
+      <circle cx="58" cy="28" r="4" fill="#ffffff" />
+      <circle cx="57" cy="28" r="2" fill="#000" />
+      <polygon points="50,32 44,38 56,38" fill="#ff7b3d" />
+      <circle cx="36" cy="34" r="3" fill="#f3a8c7" opacity="0.7" />
+      <circle cx="64" cy="34" r="3" fill="#f3a8c7" opacity="0.7" />
+      <rect x="30" y="48" width="40" height="8" rx="4" fill="#8bd4f4" />
+      <ellipse cx="14" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(20 14 65)" />
+      <ellipse cx="86" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(-20 86 65)" />
+      <ellipse cx="38" cy="102" rx="10" ry="5" fill="#ff7b3d" />
+      <ellipse cx="62" cy="102" rx="10" ry="5" fill="#ff7b3d" />
+    </svg>
+  )
+}
+
+export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: PenguinPathMapProps) {
+  const dayCount = levels.length || daysInIstMonth()
+  const points = useMemo(() => layoutPoints(dayCount), [dayCount])
+  const height = PAD_Y * 2 + Math.max(0, dayCount - 1) * GAP_Y
+  const ribbon = useMemo(() => pathRibbon(points, 46), [points])
+  const stroke = useMemo(() => smoothStroke(points), [points])
+  const penguinTarget = points[Math.max(0, Math.min(todayDay, dayCount) - 1)] ?? points[0]
+  const [penguinPos, setPenguinPos] = useState(penguinTarget)
+  const [waddle, setWaddle] = useState(false)
+  /** Day number currently centered in the 3-level window */
+  const [focusDay, setFocusDay] = useState(todayDay)
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const skipScrollSync = useRef(false)
+
+  const scrollToDay = (day: number, behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollerRef.current
+    const point = points[Math.max(0, Math.min(day, dayCount) - 1)]
+    if (!el || !point || height <= 0) return
+    const yRatio = point.y / height
+    const targetTop = yRatio * el.scrollHeight - el.clientHeight / 2
+    skipScrollSync.current = true
+    el.scrollTo({ top: Math.max(0, targetTop), behavior })
+    window.setTimeout(() => {
+      skipScrollSync.current = false
+    }, behavior === 'smooth' ? 450 : 50)
+  }
+
+  useEffect(() => {
+    setFocusDay(todayDay)
+    scrollToDay(todayDay, 'auto')
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only recenter when today changes
+  }, [todayDay, dayCount])
+
+  useEffect(() => {
+    setWaddle(true)
+    const id = window.setTimeout(() => setPenguinPos(penguinTarget), 40)
+    const done = window.setTimeout(() => setWaddle(false), 900)
+    return () => {
+      window.clearTimeout(id)
+      window.clearTimeout(done)
+    }
+  }, [penguinTarget.x, penguinTarget.y])
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+
+    const onScroll = () => {
+      if (skipScrollSync.current || points.length === 0 || height <= 0) return
+      const centerY = ((el.scrollTop + el.clientHeight / 2) / el.scrollHeight) * height
+      let nearest = 1
+      let best = Infinity
+      points.forEach((point, index) => {
+        const dist = Math.abs(point.y - centerY)
+        if (dist < best) {
+          best = dist
+          nearest = index + 1
+        }
+      })
+      setFocusDay(nearest)
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [points, height])
+
+  const canSlideUp = focusDay < dayCount
+  const canSlideDown = focusDay > 1
+
+  const label = monthLabelIst()
+  const { month, year } = getIstParts()
+  const windowStart = Math.max(1, focusDay - 1)
+  const windowEnd = Math.min(dayCount, focusDay + 1)
+
+  return (
+    <section className={`trail-map ${compact ? 'is-compact' : ''}`} aria-label={`${label} movement path`}>
+      <div className="trail-map-head">
+        <div>
+          <p className="eyebrow">MONTHLY PATH · IST</p>
+          <h2>
+            {label} <span>trail</span>
+          </h2>
+        </div>
+        <div className="trail-map-badge">
+          Levels {windowStart}–{windowEnd} · Day {todayDay}
         </div>
       </div>
 
-      {/* SVG Map Canvas */}
-      <svg
-        viewBox="0 0 800 460"
-        className="w-full h-auto block min-h-[340px] sm:min-h-[400px]"
-        preserveAspectRatio="xMidYMid slice"
-        role="img"
-        aria-label="Winding path trail with level nodes and penguin character"
-      >
-        <defs>
-          {/* Gradients */}
-          <linearGradient id="hillGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#86efac" />
-            <stop offset="100%" stopColor="#4ade80" />
-          </linearGradient>
-          <linearGradient id="backHill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#a7f3d0" />
-            <stop offset="100%" stopColor="#6ee7b7" />
-          </linearGradient>
-          <radialGradient id="pondGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#bae6fd" />
-            <stop offset="70%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#0284c7" />
-          </radialGradient>
-          <linearGradient id="node7Grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#a855f7" />
-            <stop offset="100%" stopColor="#7e22ce" />
-          </linearGradient>
-          <linearGradient id="node8Grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ec4899" />
-            <stop offset="100%" stopColor="#be185d" />
-          </linearGradient>
-          <linearGradient id="node9Grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fb923c" />
-            <stop offset="50%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#ea580c" />
-          </linearGradient>
-          <filter id="glow9" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
-        {/* Background Sky & Distant Clouds */}
-        <g opacity="0.35">
-          <ellipse cx="140" cy="50" rx="45" ry="18" fill="#ffffff" />
-          <ellipse cx="180" cy="55" rx="30" ry="14" fill="#ffffff" />
-          <ellipse cx="640" cy="65" rx="55" ry="20" fill="#ffffff" />
-          <ellipse cx="680" cy="70" rx="35" ry="15" fill="#ffffff" />
-        </g>
-
-        {/* Background Rolling Green Hills */}
-        <path d="M 0,260 Q 200,180 400,240 T 800,200 L 800,460 L 0,460 Z" fill="url(#backHill)" />
-        <path d="M 0,310 Q 250,230 500,290 T 800,250 L 800,460 L 0,460 Z" fill="url(#hillGrad)" />
-
-        {/* Pond Water Patch under Node 7 */}
-        <g transform="translate(180, 295)">
-          <ellipse cx="35" cy="20" rx="65" ry="32" fill="url(#pondGrad)" stroke="#0369a1" strokeWidth="3" />
-          <ellipse cx="35" cy="20" rx="48" ry="20" fill="#e0f2fe" opacity="0.5" />
-          <ellipse cx="25" cy="15" rx="20" ry="8" fill="#ffffff" opacity="0.4" />
-        </g>
-
-        {/* 3D Decorative Trees */}
-        {/* Tree Left */}
-        <g transform="translate(140, 130)">
-          <rect x="-4" y="20" width="8" height="18" rx="2" fill="#78350f" />
-          <circle cx="0" cy="12" r="16" fill="#15803d" />
-          <circle cx="-6" cy="6" r="12" fill="#22c55e" />
-          <circle cx="6" cy="8" r="11" fill="#16a34a" />
-        </g>
-        {/* Small Tree Center Background */}
-        <g transform="translate(380, 150)">
-          <rect x="-3" y="15" width="6" height="14" rx="2" fill="#78350f" />
-          <polygon points="0,0 -14,18 14,18" fill="#166534" />
-          <polygon points="0,-8 -11,10 11,10" fill="#22c55e" />
-        </g>
-        {/* Tree Right Background */}
-        <g transform="translate(620, 120)">
-          <rect x="-4" y="20" width="8" height="18" rx="2" fill="#78350f" />
-          <circle cx="0" cy="10" r="18" fill="#166534" />
-          <circle cx="-6" cy="4" r="13" fill="#4ade80" />
-        </g>
-        {/* Palm Tree Right */}
-        <g transform="translate(710, 150)">
-          <path d="M 0,35 Q 12,18 8,0" fill="none" stroke="#78350f" strokeWidth="6" strokeLinecap="round" />
-          <path d="M 8,0 C -12,-15 -25,-5 -28,-2" fill="none" stroke="#15803d" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 8,0 C 25,-15 35,-2 38,4" fill="none" stroke="#16a34a" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 8,0 C 0,-25 15,-30 18,-32" fill="none" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" />
-        </g>
-        {/* Pink Flower Bottom Right */}
-        <g transform="translate(680, 340)">
-          <circle cx="-6" cy="0" r="6" fill="#f43f5e" />
-          <circle cx="6" cy="0" r="6" fill="#f43f5e" />
-          <circle cx="0" cy="-6" r="6" fill="#f43f5e" />
-          <circle cx="0" cy="6" r="6" fill="#f43f5e" />
-          <circle cx="0" cy="0" r="5" fill="#fde047" />
-        </g>
-
-        {/* ==================== THE WINDING S-CURVE DIRT ROAD ==================== */}
-        {/* Road Path Coordinates */}
-        {/* Outer Dark Border Stroke */}
-        <path
-          d="M 210,340 C 290,340 300,270 360,260 C 430,250 380,165 470,150 C 530,140 580,115 620,115"
-          fill="none"
-          stroke="#422006"
-          strokeWidth="62"
-          strokeLinecap="round"
-        />
-        {/* Inner Dirt Fill */}
-        <path
-          d="M 210,340 C 290,340 300,270 360,260 C 430,250 380,165 470,150 C 530,140 580,115 620,115"
-          fill="none"
-          stroke="#a16207"
-          strokeWidth="50"
-          strokeLinecap="round"
-        />
-        {/* Dashed White Center Line */}
-        <path
-          d="M 210,340 C 290,340 300,270 360,260 C 430,250 380,165 470,150 C 530,140 580,115 620,115"
-          fill="none"
-          stroke="#fef08a"
-          strokeWidth="4"
-          strokeDasharray="14 12"
-          strokeLinecap="round"
-        />
-
-        {/* ==================== LEVEL NODE 7 (DONE) ==================== */}
-        <g
-          transform="translate(210, 310)"
-          className="cursor-pointer transition-transform hover:scale-105"
-          onClick={() => onSelectDay?.(7)}
+      <div className="trail-slide-chrome">
+        <button
+          type="button"
+          className="trail-slide-btn"
+          disabled={!canSlideUp}
+          aria-label="Slide to higher levels"
+          onClick={() => {
+            const next = Math.min(dayCount, focusDay + 1)
+            setFocusDay(next)
+            scrollToDay(next)
+          }}
         >
-          {/* Shadow */}
-          <ellipse cx="0" cy="24" rx="24" ry="8" fill="#0f172a" opacity="0.3" />
-          {/* Node Badge Outer Ring */}
-          <circle cx="0" cy="0" r="28" fill="#1e293b" />
-          <circle cx="0" cy="0" r="24" fill="url(#node7Grad)" />
-          <circle cx="0" cy="-2" r="20" fill="none" stroke="#f472b6" strokeWidth="1.5" opacity="0.5" />
-          {/* Text */}
-          <text
-            x="0"
-            y="7"
-            textAnchor="middle"
-            fill="#ffffff"
-            fontSize="22"
-            fontWeight="900"
-            fontFamily="sans-serif"
-          >
-            7
-          </text>
-          {/* Status Badge below */}
-          <g transform="translate(0, 30)">
-            <rect x="-24" y="-8" width="48" height="16" rx="8" fill="#15803d" stroke="#1e293b" strokeWidth="2" />
-            <path d="M -12,0 L -8,4 L -2,-4" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
-            <text x="4" y="3" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="900">
-              DONE
-            </text>
-          </g>
-        </g>
+          <ChevronUp size={20} />
+        </button>
 
-        {/* ==================== LEVEL NODE 8 (DONE) ==================== */}
-        <g
-          transform="translate(360, 240)"
-          className="cursor-pointer transition-transform hover:scale-105"
-          onClick={() => onSelectDay?.(8)}
+        <div
+          className="trail-map-scroll"
+          ref={scrollerRef}
+          style={{ height: VIEWPORT_H }}
         >
-          {/* Shadow */}
-          <ellipse cx="0" cy="24" rx="24" ry="8" fill="#0f172a" opacity="0.3" />
-          {/* Node Badge Outer Ring */}
-          <circle cx="0" cy="0" r="28" fill="#1e293b" />
-          <circle cx="0" cy="0" r="24" fill="url(#node8Grad)" />
-          <circle cx="0" cy="-2" r="20" fill="none" stroke="#fbcfe8" strokeWidth="1.5" opacity="0.5" />
-          {/* Text */}
-          <text
-            x="0"
-            y="7"
-            textAnchor="middle"
-            fill="#ffffff"
-            fontSize="22"
-            fontWeight="900"
-            fontFamily="sans-serif"
-          >
-            8
-          </text>
-          {/* Status Badge below */}
-          <g transform="translate(0, 30)">
-            <rect x="-24" y="-8" width="48" height="16" rx="8" fill="#15803d" stroke="#1e293b" strokeWidth="2" />
-            <path d="M -12,0 L -8,4 L -2,-4" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
-            <text x="4" y="3" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="900">
-              DONE
-            </text>
-          </g>
-        </g>
+          <div className="trail-map-canvas" style={{ aspectRatio: `${MAP_W} / ${height}` }}>
+            <svg
+              className="trail-map-svg"
+              viewBox={`0 0 ${MAP_W} ${height}`}
+              width="100%"
+              role="img"
+              aria-label={`Movement path for ${month}/${year}`}
+            >
+              <defs>
+                <linearGradient id="pathGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#5eb8e8" />
+                  <stop offset="100%" stopColor="#8bd4f4" />
+                </linearGradient>
+              </defs>
 
-        {/* ==================== LEVEL NODE 9 (ACTIVE TODAY) ==================== */}
-        <g
-          transform="translate(460, 170)"
-          className="cursor-pointer transition-transform hover:scale-105"
-          onClick={() => onSelectDay?.(9)}
-        >
-          {/* Glow Shadow */}
-          <ellipse cx="0" cy="28" rx="36" ry="12" fill="#f59e0b" opacity="0.4" />
-          <ellipse cx="0" cy="28" rx="28" ry="9" fill="#0f172a" opacity="0.35" />
+              <ellipse cx="70" cy={height * 0.18} rx="48" ry="22" fill="#fff" opacity="0.35" />
+              <ellipse cx="290" cy={height * 0.42} rx="56" ry="26" fill="#fff" opacity="0.3" />
+              <ellipse cx="90" cy={height * 0.72} rx="52" ry="24" fill="#fff" opacity="0.28" />
 
-          {/* Large Outer Golden Ring */}
-          <circle cx="0" cy="0" r="38" fill="#1e293b" />
-          <circle cx="0" cy="0" r="34" fill="#fbbf24" filter="url(#glow9)" />
-          <circle cx="0" cy="0" r="30" fill="url(#node9Grad)" />
-          <circle cx="0" cy="-3" r="25" fill="none" stroke="#fef08a" strokeWidth="2" opacity="0.7" />
+              <Pine x={42} y={height * 0.12} scale={0.85} />
+              <Pine x={310} y={height * 0.22} scale={1} />
+              <Pine x={48} y={height * 0.38} scale={0.7} />
+              <Pine x={318} y={height * 0.55} scale={0.9} />
+              <Pine x={56} y={height * 0.68} scale={0.75} />
+              <Pine x={300} y={height * 0.82} scale={0.8} />
 
-          {/* Node Number */}
-          <text
-            x="0"
-            y="10"
-            textAnchor="middle"
-            fill="#ffffff"
-            fontSize="30"
-            fontWeight="900"
-            fontFamily="sans-serif"
-            className="drop-shadow-md"
-          >
-            9
-          </text>
+              {dayCount > 5 && (
+                <Bridge x={MAP_W / 2 - 40} y={(points[Math.min(dayCount - 1, 6)]?.y ?? 90) - 10} />
+              )}
+              <Cabin x={268} y={height - 110} />
+              <Deer x={36} y={height - 100} />
+              {points[2] && <Dog x={points[2].x + 48} y={points[2].y - 10} />}
+              <MiniPenguin x={28} y={height - 160} scale={0.38} />
+              <MiniPenguin x={280} y={height * 0.08} scale={0.32} />
 
-          {/* Steps Pill Badge Below Node 9 */}
-          <g transform="translate(0, 44)">
-            <rect x="-38" y="-10" width="76" height="20" rx="10" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
-            <text x="0" y="3" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="900">
-              {currentSteps.toLocaleString()} steps
-            </text>
-          </g>
+              <path d={ribbon} fill="url(#pathGrad)" stroke="#183d59" strokeWidth="3" opacity="0.95" />
+              <path d={stroke} fill="none" stroke="#fffdf0" strokeWidth="3" strokeDasharray="6 10" opacity="0.55" />
 
-          {/* ==================== PENGUIN AVATAR CHARACTER PIN ==================== */}
-          <g transform="translate(0, -56)">
-            {/* Speech Bubble Above Penguin */}
-            <g transform="translate(0, -32)">
-              {/* Bubble Background */}
-              <rect x="-36" y="-12" width="72" height="24" rx="12" fill="#ffffff" stroke="#1e293b" strokeWidth="2.5" />
-              {/* Bubble Pointer Tail */}
-              <polygon points="-4,12 4,12 0,17" fill="#ffffff" stroke="#1e293b" strokeWidth="2.5" />
-              <polygon points="-3,12 3,12 0,15" fill="#ffffff" />
-              {/* Bubble Text */}
-              <text x="0" y="4" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="900">
-                LET&apos;S GO! 🔥
-              </text>
-            </g>
+              {levels.map((level, index) => {
+                const point = points[index]
+                if (!point) return null
+                const isToday = level.day === todayDay
+                const inWindow = level.day >= windowStart && level.day <= windowEnd
+                return (
+                  <g
+                    key={level.day}
+                    className={`trail-level-group ${inWindow ? 'is-visible' : 'is-hidden'}`}
+                    transform={`translate(${point.x}, ${point.y})`}
+                  >
+                    <ellipse cx="0" cy={NODE_R + 6} rx="22" ry="7" fill="rgba(24,61,89,0.14)" />
+                    <circle
+                      className={`trail-node node-${level.status} ${isToday ? 'is-today' : ''}`}
+                      r={NODE_R}
+                    />
+                    <text className={`trail-node-label status-${level.status}`} textAnchor="middle" dy="7">
+                      {level.day}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
 
-            {/* Penguin Character Body */}
-            <rect x="-10" y="-18" width="20" height="4" rx="2" fill="#ef4444" />
-            <ellipse cx="0" cy="0" rx="16" ry="18" fill="#1e1b4b" stroke="#0f172a" strokeWidth="2" />
-            <ellipse cx="0" cy="2" rx="11" ry="13" fill="#ffffff" />
-            <circle cx="-4" cy="-4" r="2.5" fill="#0f172a" />
-            <circle cx="4" cy="-4" r="2.5" fill="#0f172a" />
-            <circle cx="-3" cy="-5" r="0.8" fill="#ffffff" />
-            <circle cx="5" cy="-5" r="0.8" fill="#ffffff" />
-            <polygon points="0,-1 -3,3 3,3" fill="#f97316" />
-            <ellipse cx="-6" cy="18" rx="4" ry="2" fill="#f97316" />
-            <ellipse cx="6" cy="18" rx="4" ry="2" fill="#f97316" />
-          </g>
-        </g>
+            {/* Snap anchors — one per level, centered in the 3-level viewport */}
+            <div className="trail-snap-rail" aria-hidden>
+              {points.map((point, index) => (
+                <div
+                  key={`snap-${index + 1}`}
+                  className="trail-snap-point"
+                  style={{
+                    top: `${((point.y - VIEWPORT_H / 2) / height) * 100}%`,
+                    height: `${(VIEWPORT_H / height) * 100}%`,
+                  }}
+                />
+              ))}
+            </div>
 
-        {/* Legend Bar inside Map at Bottom */}
-      </svg>
+            <div className="trail-hotspots">
+              {levels.map((level, index) => {
+                const point = points[index]
+                if (!point) return null
+                const inWindow = level.day >= windowStart && level.day <= windowEnd
+                return (
+                  <button
+                    key={`hot-${level.day}`}
+                    type="button"
+                    className={`trail-hotspot ${inWindow ? '' : 'is-offscreen'}`}
+                    style={{
+                      left: `${(point.x / MAP_W) * 100}%`,
+                      top: `${(point.y / height) * 100}%`,
+                    }}
+                    tabIndex={inWindow ? 0 : -1}
+                    aria-hidden={!inWindow}
+                    aria-label={`Level ${level.day}, ${level.status}`}
+                    onClick={() => onSelectDay(level.day)}
+                  />
+                )
+              })}
+            </div>
 
-      {/* Map Pan Navigation Arrows */}
-      <button
-        type="button"
-        onClick={() => onSelectDay?.(Math.max(1, todayDay - 1))}
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-[#1e293b] bg-white/90 text-[#1e293b] shadow-md transition-transform hover:scale-110 active:scale-95"
-        aria-label="Previous level"
-      >
-        <ChevronLeft size={22} strokeWidth={3} />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onSelectDay?.(todayDay + 1)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-[#1e293b] bg-white/90 text-[#1e293b] shadow-md transition-transform hover:scale-110 active:scale-95"
-        aria-label="Next level"
-      >
-        <ChevronRight size={22} strokeWidth={3} />
-      </button>
-
-      {/* Bottom Legend Bar inside Map Frame */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 w-[92%] max-w-[560px]">
-        <div className="flex flex-wrap items-center justify-center gap-3 rounded-full bg-[#0f172a]/80 px-4 py-2 text-white backdrop-blur-md border border-white/10 text-[11px] font-extrabold shadow-lg">
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-amber-500 border border-white" />
-            <span>Today</span>
+            {penguinPos && (
+              <div
+                className={`trail-penguin ${waddle ? 'waddling' : ''}`}
+                style={{
+                  left: `calc(${(penguinPos.x / MAP_W) * 100}% - 29px)`,
+                  top: `calc(${(penguinPos.y / height) * 100}% - 78px)`,
+                }}
+              >
+                <div className="trail-ice-floe" />
+                <HeroPenguin />
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-emerald-500 border border-white" />
-            <span>Done</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-slate-400 border border-white flex items-center justify-center">
-              <Lock size={7} className="text-slate-900" />
-            </span>
-            <span>Locked</span>
-          </div>
-          <span className="text-slate-300 font-medium hidden sm:inline">
-            • Swipe or tap arrows to pan month trail
-          </span>
         </div>
+
+        <button
+          type="button"
+          className="trail-slide-btn"
+          disabled={!canSlideDown}
+          aria-label="Slide to lower levels"
+          onClick={() => {
+            const next = Math.max(1, focusDay - 1)
+            setFocusDay(next)
+            scrollToDay(next)
+          }}
+        >
+          <ChevronDown size={20} />
+        </button>
       </div>
-    </div>
+
+      <p className="trail-slide-hint">Swipe or tap arrows · only 3 levels on screen</p>
+
+      <div className="trail-legend">
+        <span><i className="dot active" /> Today</span>
+        <span><i className="dot completed" /><Check size={12} /> Done</span>
+        <span><i className="dot locked" /><Lock size={12} /> Locked</span>
+        <span><i className="dot missed" /> Missed</span>
+      </div>
+    </section>
   )
 }

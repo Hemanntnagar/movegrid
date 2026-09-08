@@ -1,100 +1,77 @@
-// Helper module for month level progress tracking
+import { istMonthKey } from './ist'
 
-export type DayLevelStatus = 'completed' | 'active' | 'missed' | 'locked' | 'closed'
+const PREFIX = 'movegrid_month_levels_'
+
+export type DayLevelStatus = 'locked' | 'active' | 'completed' | 'missed' | 'closed'
 
 export type MonthProgress = {
-  monthKey: string
+  month: string
   completedDays: number[]
   missedDays: number[]
 }
 
-const STORAGE_KEY = 'movegrid_month_progress'
+function storageKey(month = istMonthKey()) {
+  return `${PREFIX}${month}`
+}
 
-export function getMonthProgress(): MonthProgress {
+export function getMonthProgress(month = istMonthKey()): MonthProgress {
   if (typeof window === 'undefined') {
-    return { monthKey: '', completedDays: [], missedDays: [] }
+    return { month, completedDays: [], missedDays: [] }
   }
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { monthKey: '', completedDays: [], missedDays: [] }
-    const parsed = JSON.parse(raw)
+    const raw = localStorage.getItem(storageKey(month))
+    if (!raw) return { month, completedDays: [], missedDays: [] }
+    const parsed = JSON.parse(raw) as MonthProgress
+    if (parsed.month !== month) return { month, completedDays: [], missedDays: [] }
     return {
-      monthKey: parsed.monthKey || '',
+      month,
       completedDays: Array.isArray(parsed.completedDays) ? parsed.completedDays : [],
       missedDays: Array.isArray(parsed.missedDays) ? parsed.missedDays : [],
     }
   } catch {
-    return { monthKey: '', completedDays: [], missedDays: [] }
+    return { month, completedDays: [], missedDays: [] }
   }
 }
 
-export function saveMonthProgress(progress: MonthProgress): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
-  } catch {
-    // Ignore storage errors
-  }
+function saveMonthProgress(progress: MonthProgress) {
+  localStorage.setItem(storageKey(progress.month), JSON.stringify(progress))
 }
 
-export function markDayCompleted(day: number, monthKey: string): MonthProgress {
-  const current = getMonthProgress()
-  const isSameMonth = current.monthKey === monthKey
-  const completed = new Set(isSameMonth ? current.completedDays : [])
-  const missed = new Set((isSameMonth ? current.missedDays : []).filter((d) => d !== day))
-
-  completed.add(day)
-
-  const updated: MonthProgress = {
-    monthKey,
-    completedDays: Array.from(completed),
-    missedDays: Array.from(missed),
+export function markDayCompleted(day: number, month = istMonthKey()) {
+  const progress = getMonthProgress(month)
+  if (!progress.completedDays.includes(day)) {
+    progress.completedDays = [...progress.completedDays, day].sort((a, b) => a - b)
   }
-  saveMonthProgress(updated)
-  return updated
+  progress.missedDays = progress.missedDays.filter((d) => d !== day)
+  saveMonthProgress(progress)
+  return progress
 }
 
-export function markDayMissed(day: number, monthKey: string): MonthProgress {
-  const current = getMonthProgress()
-  const isSameMonth = current.monthKey === monthKey
-  const completed = new Set(isSameMonth ? current.completedDays : [])
-  const missed = new Set(isSameMonth ? current.missedDays : [])
-
-  if (!completed.has(day)) {
-    missed.add(day)
+export function markDayMissed(day: number, month = istMonthKey()) {
+  const progress = getMonthProgress(month)
+  if (progress.completedDays.includes(day)) return progress
+  if (!progress.missedDays.includes(day)) {
+    progress.missedDays = [...progress.missedDays, day].sort((a, b) => a - b)
   }
-
-  const updated: MonthProgress = {
-    monthKey,
-    completedDays: Array.from(completed),
-    missedDays: Array.from(missed),
-  }
-  saveMonthProgress(updated)
-  return updated
+  saveMonthProgress(progress)
+  return progress
 }
 
 export function mergeHistoryIntoProgress(
-  completedFromApi: number[],
-  missedFromApi: number[],
-  monthKey: string
-): MonthProgress {
-  const current = getMonthProgress()
-  const isSameMonth = current.monthKey === monthKey
-
-  const completed = new Set([
-    ...(isSameMonth ? current.completedDays : []),
-    ...completedFromApi,
-  ])
-  const missed = new Set([
-    ...(isSameMonth ? current.missedDays : []).filter((d) => !completed.has(d)),
-    ...missedFromApi.filter((d) => !completed.has(d)),
-  ])
-
-  const updated: MonthProgress = {
-    monthKey,
-    completedDays: Array.from(completed),
-    missedDays: Array.from(missed),
+  completedDayNumbers: number[],
+  missedDayNumbers: number[],
+  month = istMonthKey(),
+) {
+  const progress = getMonthProgress(month)
+  const completed = new Set([...progress.completedDays, ...completedDayNumbers])
+  const missed = new Set(
+    [...progress.missedDays, ...missedDayNumbers].filter((d) => !completed.has(d)),
+  )
+  const next: MonthProgress = {
+    month,
+    completedDays: [...completed].sort((a, b) => a - b),
+    missedDays: [...missed].sort((a, b) => a - b),
   }
-  saveMonthProgress(updated)
-  return updated
+  saveMonthProgress(next)
+  return next
 }
