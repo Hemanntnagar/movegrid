@@ -1448,6 +1448,35 @@ h1 { font-size:clamp(32px,5vw,58px); text-shadow:3px 3px 0 #fffdf0; }
   transform: translateY(-1px);
   filter: brightness(1.05);
 }
+.challenge-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.challenge-status-chip.success {
+  background: #27ae60;
+  color: #fff;
+}
+.challenge-status-chip.active {
+  background: #183d59;
+  color: #a3e635;
+  border: 1px solid #a3e635;
+}
+.challenge-status-chip.expired {
+  background: #e74c3c;
+  color: #fff;
+}
+.notification-progress-fill.complete {
+  background: #27ae60 !important;
+}
+.spin-slow {
+  animation: spin 2.5s linear infinite;
+}
 
 @media (max-width: 640px) {
   .daily-challenge-notification {
