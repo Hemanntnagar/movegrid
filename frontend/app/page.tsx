@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ArrowRight, Bell, Flame, Footprints, Gift, LayoutDashboard, Lock,
-  Target, Trophy, Unlock, Users, Zap
+  Play, Target, Trophy, Unlock, Users, Zap
 } from 'lucide-react'
 import {
   ApiTodayFitness, ApiUser, clearToken, getStoredToken, movegridApi
@@ -55,53 +56,40 @@ function DailyChallengeBar({
   stepActive: boolean
   onStartCounting: () => void
 }) {
+  const router = useRouter()
+
   return (
-    <div className={`daily-challenge-bar ${unlocked ? 'unlocked' : 'locked'}`}>
-      <div className="daily-challenge-copy">
-        <p className="eyebrow">DAILY CHALLENGE · 24H</p>
-        <strong>{challengeTitle}</strong>
+    <div className={`daily-challenge-notification ${unlocked ? 'unlocked' : 'locked'}`}>
+      <div className="notification-badge">
+        <Bell size={14} className="bell-ring" />
+        <span>DAILY CHALLENGE</span>
+      </div>
 
-        {/* Live step progress row */}
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
-          <Footprints size={13} />
-          <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {steps.toLocaleString()}
-          </strong>
-          <span style={{ opacity: 0.6 }}>/ {stepGoal.toLocaleString()} steps · {stepPercent}%</span>
-        </span>
-
-        {/* Progress bar */}
-        <div style={{ marginTop: '0.4rem', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${stepPercent}%`, background: '#a3e635', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+      <div className="notification-content">
+        <div className="notification-text">
+          <strong className="notification-title">{challengeTitle}</strong>
+          <span className="notification-meta">
+            <Footprints size={12} /> {steps.toLocaleString()} / {stepGoal.toLocaleString()} ({stepPercent}%)
+            · <Zap size={12} fill="currentColor" style={{ color: '#eab308' }} /> +{challengeMove} MOVE
+            · ⏱ {formatCountdown(secondsRemaining)}
+          </span>
         </div>
 
-        <span>
-          {unlocked
-            ? `Unlocked · +${challengeMove} MOVE · expires in ${formatCountdown(secondsRemaining)}`
-            : `Finish today's path level to unlock · expires in ${formatCountdown(secondsRemaining)}`}
-        </span>
-        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-          {unlocked ? (
-            <Link href="/challenges" className="daily-challenge-inline">
-              Open challenge <ArrowRight size={14} />
-            </Link>
-          ) : (
-            <span className="daily-challenge-inline">Tap today&apos;s level on the trail below</span>
-          )}
-          {!stepActive && (
-            <button
-              type="button"
-              className="daily-challenge-inline"
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-              onClick={onStartCounting}
-            >
-              Start counting steps ↗
-            </button>
-          )}
+        <div className="notification-progress-track">
+          <div className="notification-progress-fill" style={{ width: `${stepPercent}%` }} />
         </div>
       </div>
-      <div className="daily-challenge-lock" aria-label={unlocked ? 'Challenge unlocked' : 'Challenge locked'}>
-        {unlocked ? <Unlock size={22} /> : <Lock size={22} />}
+
+      <div className="notification-actions">
+        <button
+          type="button"
+          className="primary-button start-challenge-btn"
+          onClick={stepActive || unlocked ? () => router.push('/challenges') : onStartCounting}
+          title={stepActive ? 'Open challenge page' : 'Start counting steps for today\'s challenge'}
+        >
+          <Play size={13} fill="currentColor" />
+          <span>{stepActive ? 'Continue' : 'Start'}</span>
+        </button>
       </div>
     </div>
   )

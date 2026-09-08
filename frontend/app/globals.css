@@ -1337,81 +1337,128 @@ h1 { font-size:clamp(32px,5vw,58px); text-shadow:3px 3px 0 #fffdf0; }
   }
 }
 
-/* Daily challenge lock bar (home) */
-.daily-challenge-bar {
+/* Daily challenge notification bar (compact vertical height) */
+.daily-challenge-notification {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
-  min-height: 92px;
-  margin: 0 0 28px;
-  padding: 18px 20px 18px 24px;
-  border: 4px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
+  padding: 10px 16px;
+  border: 3px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 0 var(--border);
   background: #fffdf0;
   position: relative;
   overflow: hidden;
+  margin-top: 16px;
+  margin-bottom: 20px;
 }
-.daily-challenge-bar.locked {
-  background: linear-gradient(90deg, #fffdf0 0%, #e8f4f8 100%);
+.daily-challenge-notification.locked {
+  background: linear-gradient(90deg, #fffdf0 0%, #edf7fa 100%);
 }
-.daily-challenge-bar.unlocked {
-  background: linear-gradient(90deg, #fff6c8 0%, #d7f0a8 100%);
+.daily-challenge-notification.unlocked {
+  background: linear-gradient(90deg, #fbf2c0 0%, #e1f5be 100%);
+  border-color: #79d27f;
 }
-.daily-challenge-copy {
-  min-width: 0;
-  flex: 1;
-}
-.daily-challenge-copy .eyebrow {
-  margin-bottom: 4px;
-}
-.daily-challenge-copy strong {
-  display: block;
-  font-size: 18px;
-  letter-spacing: -0.6px;
-  color: var(--ink);
-}
-.daily-challenge-copy > span {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #2e6177;
-}
-.daily-challenge-inline {
+.notification-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
-  color: #ff633d;
-  font-size: 12px;
-  font-weight: 900;
-  text-decoration: none;
-}
-.daily-challenge-lock {
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  border: 3px solid var(--border);
-  border-radius: 16px;
   background: #183d59;
   color: #ffd447;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 4px 0 var(--border);
-  transition: transform 0.2s ease, background 0.2s ease;
 }
-.daily-challenge-bar.unlocked .daily-challenge-lock {
-  background: #79d27f;
-  color: #183d59;
-  animation: lock-pop 0.45s ease;
+.bell-ring {
+  animation: bellPulse 2s infinite ease-in-out;
 }
-@keyframes lock-pop {
-  0% { transform: scale(0.85) rotate(-8deg); }
-  60% { transform: scale(1.08) rotate(4deg); }
-  100% { transform: scale(1) rotate(0); }
+@keyframes bellPulse {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-14deg); }
+  45% { transform: rotate(8deg); }
+  60% { transform: rotate(0); }
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.notification-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.notification-title {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.notification-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2e6177;
+  white-space: nowrap;
+}
+.notification-progress-track {
+  height: 4px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.notification-progress-fill {
+  height: 100%;
+  background: #657a17;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.start-challenge-btn {
+  padding: 8px 16px !important;
+  font-size: 11px !important;
+  border-radius: 10px !important;
+  background: #9caf30 !important;
+  color: var(--ink) !important;
+  box-shadow: 0 2px 0 var(--border) !important;
+}
+.start-challenge-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+@media (max-width: 640px) {
+  .daily-challenge-notification {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+  .notification-text {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
 }
 .home-quick-links {
   display: flex;
