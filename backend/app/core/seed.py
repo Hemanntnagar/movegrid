@@ -70,13 +70,64 @@ async def seed_demo_data(db: AsyncSession) -> None:
         else:
             competition = Competition(
                 name="Monthly Move Cup",
-                description="Team competition for MOVE earned this month.",
+                description="Team competition for MOVE earned this month. Stack points with your squad.",
+                eligibility="Open to all members",
+                min_points=0,
+                min_streak=0,
                 starts_at=datetime.utcnow() - timedelta(days=10),
                 ends_at=datetime.utcnow() + timedelta(days=20),
                 is_active=True,
             )
             db.add(competition)
             await db.flush()
+
+    competition.eligibility = competition.eligibility or "Open to all members"
+    competition.description = competition.description or "Team competition for MOVE earned this month."
+    if not competition.ends_at:
+        competition.ends_at = datetime.utcnow() + timedelta(days=20)
+
+    extra_competitions = [
+        {
+            "name": "Weekend Step Sprint",
+            "description": "Hit your step goals all weekend and climb the live standings.",
+            "eligibility": "500+ MOVE points",
+            "min_points": 500,
+            "min_streak": 0,
+            "starts_at": datetime.utcnow() + timedelta(days=2),
+            "ends_at": datetime.utcnow() + timedelta(days=4),
+            "is_active": True,
+        },
+        {
+            "name": "Streak Keepers Challenge",
+            "description": "Protect a multi-day streak while completing daily missions.",
+            "eligibility": "3+ day streak",
+            "min_points": 0,
+            "min_streak": 3,
+            "starts_at": datetime.utcnow() - timedelta(days=1),
+            "ends_at": datetime.utcnow() + timedelta(days=13),
+            "is_active": True,
+        },
+        {
+            "name": "Sunrise 5K Relay",
+            "description": "Early-bird relay — run or walk a 5K window before noon.",
+            "eligibility": "Open to all members",
+            "min_points": 0,
+            "min_streak": 0,
+            "starts_at": datetime.utcnow() + timedelta(days=7),
+            "ends_at": datetime.utcnow() + timedelta(days=8),
+            "is_active": True,
+        },
+    ]
+    for spec in extra_competitions:
+        existing = (
+            await db.execute(select(Competition).where(Competition.name == spec["name"]))
+        ).scalar_one_or_none()
+        if existing:
+            for key, value in spec.items():
+                setattr(existing, key, value)
+        else:
+            db.add(Competition(**spec))
+    await db.flush()
 
     team_specs = [
         ("Late Night Legends", 6120, "LL", "#ffd447"),

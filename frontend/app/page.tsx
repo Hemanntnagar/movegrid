@@ -215,8 +215,8 @@ export default function Page() {
           <Link href="/challenges" className="outline-button">
             <Target size={15} /> Challenges
           </Link>
-          <Link href="/leaderboard" className="outline-button">
-            <Trophy size={15} /> Standings
+          <Link href="/competitions" className="outline-button">
+            <Trophy size={15} /> Competitions
           </Link>
           <Link href="/assistant" className="outline-button">
             Customize plan
@@ -234,7 +234,7 @@ export default function Page() {
           [
             ['Home', LayoutDashboard, '/'],
             ['Challenges', Target, '/challenges'],
-            ['Standings', Trophy, '/leaderboard'],
+            ['Competitions', Trophy, '/competitions'],
             ['Rewards', Gift, '/rewards'],
           ] as const
         ).map(([label, Icon, path]) => (

@@ -13,14 +13,12 @@ import {
   Users,
   UserRound,
   X,
-  Medal,
 } from 'lucide-react'
 import { ApiUser, clearToken, getStoredToken, movegridApi } from '../lib/api'
 
 export type MenuAction =
   | 'buddies'
   | 'competitions'
-  | 'standings'
   | 'challenges'
   | 'reward-hub'
   | 'assistant'
@@ -33,8 +31,7 @@ const MENU_ITEMS: {
   tone: string
 }[] = [
   { id: 'buddies', label: 'Buddies', icon: Users, tone: 'lime', href: '/buddies' },
-  { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/leaderboard' },
-  { id: 'standings', label: 'Standings', icon: Medal, tone: 'blue', href: '/leaderboard' },
+  { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
   { id: 'challenges', label: 'Challenges', icon: Target, tone: 'purple', href: '/challenges' },
   { id: 'reward-hub', label: 'Reward Hub', icon: Gift, tone: 'lime', href: '/rewards' },
   { id: 'assistant', label: 'Assistant', icon: Bot, tone: 'blue', href: '/assistant' },

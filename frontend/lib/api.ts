@@ -53,6 +53,27 @@ export type ApiLeaderboard = {
   entries: ApiLeaderboardEntry[]
   me: ApiLeaderboardEntry | null
 }
+
+export type ApiCompetition = {
+  id: number
+  name: string
+  description: string
+  eligibility: string
+  min_points: number
+  min_streak: number
+  starts_at: string
+  ends_at: string | null
+  is_active: boolean
+  status: 'upcoming' | 'live' | 'ended' | string
+  eligible: boolean
+  is_participating: boolean
+  participant_count: number | null
+}
+
+export type ApiParticipateResult = {
+  status: string
+  competition: ApiCompetition
+}
 export type ApiToken = { access_token: string; token_type: string }
 
 export type ApiExercise = {
@@ -255,6 +276,19 @@ export const movegridApi = {
       ? asPromise(demoApi.leaderboardCompetition(limit))
       : request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
           headers: token ? authHeaders(token) : undefined,
+        }),
+  competitions: (token?: string | null) =>
+    isDemoMode
+      ? asPromise(demoApi.competitions(token))
+      : request<ApiCompetition[]>('/competitions', {
+          headers: token ? authHeaders(token) : undefined,
+        }),
+  participateCompetition: (token: string, id: number) =>
+    isDemoMode
+      ? asPromise(demoApi.participateCompetition(token, id))
+      : request<ApiParticipateResult>(`/competitions/${id}/participate`, {
+          method: 'POST',
+          headers: authHeaders(token),
         }),
   completeMission: (id: number, code = 'movegrid-demo') =>
     isDemoMode

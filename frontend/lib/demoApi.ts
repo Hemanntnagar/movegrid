@@ -1,9 +1,11 @@
 import type {
+  ApiCompetition,
   ApiCompleteFitness,
   ApiDailyAssignment,
   ApiFitnessHistory,
   ApiLeaderboard,
   ApiNearbyPresence,
+  ApiParticipateResult,
   ApiPresence,
   ApiRedeemResult,
   ApiReward,
@@ -20,6 +22,7 @@ const DEMO_USER_KEY = 'movegrid_demo_user'
 const DEMO_DAY_KEY = 'movegrid_demo_day'
 const DEMO_REDEEM_KEY = 'movegrid_demo_redeems'
 const DEMO_PRESENCE_KEY = 'movegrid_demo_presence'
+const DEMO_COMPETE_KEY = 'movegrid_demo_competitions'
 
 const DEMO_REWARDS: ApiReward[] = [
   {
@@ -342,17 +345,61 @@ export const demoApi = {
   },
 
   leaderboardStreak(limit = 20): ApiLeaderboard {
-    const board = this.leaderboardMove(limit)
+    const me = toApiUser(getUser())
+    const entries = [
+      {
+        rank: 1,
+        id: 2,
+        name: 'Maya Chen',
+        avatar: 'initials:MC:#ffd447',
+        points: 12,
+        movement: 1,
+        is_current_user: false,
+        meta: { streak: 12 },
+      },
+      {
+        rank: 2,
+        id: 3,
+        name: 'Jordan Lee',
+        avatar: 'initials:JL:#ff9a61',
+        points: 9,
+        movement: 0,
+        is_current_user: false,
+        meta: { streak: 9 },
+      },
+      {
+        rank: 3,
+        id: me.id,
+        name: me.name,
+        avatar: me.avatar,
+        points: me.streak,
+        movement: 2,
+        is_current_user: true,
+        meta: { streak: me.streak },
+      },
+      {
+        rank: 4,
+        id: 4,
+        name: 'Sam Rivera',
+        avatar: 'initials:SR:#b7e88f',
+        points: 5,
+        movement: -1,
+        is_current_user: false,
+        meta: { streak: 5 },
+      },
+    ]
+      .sort((a, b) => b.points - a.points)
+      .map((entry, index) => ({ ...entry, rank: index + 1 }))
+      .slice(0, limit)
+    const meEntry = entries.find((entry) => entry.is_current_user) ?? null
     return {
-      ...board,
       board: 'streak',
       title: 'Streak leaders',
-      metric_label: 'Streak score',
-      entries: board.entries.map((entry) => ({
-        ...entry,
-        points: entry.is_current_user ? getUser().streak_score : entry.points - 400,
-      })),
-      me: board.me ? { ...board.me, points: getUser().streak_score } : null,
+      metric_label: 'STREAK',
+      limit,
+      total_participants: entries.length,
+      entries,
+      me: meEntry,
     }
   },
 
@@ -364,6 +411,93 @@ export const demoApi = {
       title: 'Team competition',
       metric_label: 'Team MOVE',
     }
+  },
+
+  competitions(_token?: string | null): ApiCompetition[] {
+    const me = toApiUser(getUser())
+    const joined = new Set(readJson<number[]>(DEMO_COMPETE_KEY, []))
+    const now = Date.now()
+    const specs: Omit<ApiCompetition, 'eligible' | 'is_participating' | 'participant_count'>[] = [
+      {
+        id: 1,
+        name: 'Monthly Move Cup',
+        description: 'Team competition for MOVE earned this month. Stack points with your squad.',
+        eligibility: 'Open to all members',
+        min_points: 0,
+        min_streak: 0,
+        starts_at: new Date(now - 10 * 86400000).toISOString(),
+        ends_at: new Date(now + 20 * 86400000).toISOString(),
+        is_active: true,
+        status: 'live',
+      },
+      {
+        id: 2,
+        name: 'Weekend Step Sprint',
+        description: 'Hit your step goals all weekend and climb the live standings.',
+        eligibility: '500+ MOVE points',
+        min_points: 500,
+        min_streak: 0,
+        starts_at: new Date(now + 2 * 86400000).toISOString(),
+        ends_at: new Date(now + 4 * 86400000).toISOString(),
+        is_active: true,
+        status: 'upcoming',
+      },
+      {
+        id: 3,
+        name: 'Streak Keepers Challenge',
+        description: 'Protect a multi-day streak while completing daily missions.',
+        eligibility: '3+ day streak',
+        min_points: 0,
+        min_streak: 3,
+        starts_at: new Date(now - 1 * 86400000).toISOString(),
+        ends_at: new Date(now + 13 * 86400000).toISOString(),
+        is_active: true,
+        status: 'live',
+      },
+      {
+        id: 4,
+        name: 'Sunrise 5K Relay',
+        description: 'Early-bird relay — run or walk a 5K window before noon.',
+        eligibility: 'Open to all members',
+        min_points: 0,
+        min_streak: 0,
+        starts_at: new Date(now + 7 * 86400000).toISOString(),
+        ends_at: new Date(now + 8 * 86400000).toISOString(),
+        is_active: true,
+        status: 'upcoming',
+      },
+    ]
+
+    return specs.map((comp) => {
+      const start = new Date(comp.starts_at).getTime()
+      const end = comp.ends_at ? new Date(comp.ends_at).getTime() : null
+      let status: ApiCompetition['status'] = 'live'
+      if (end && now > end) status = 'ended'
+      else if (now < start) status = 'upcoming'
+      const meetsPoints = me.total_points >= comp.min_points
+      const meetsStreak = me.streak >= comp.min_streak
+      const eligible = meetsPoints && meetsStreak && status !== 'ended' && comp.is_active
+      return {
+        ...comp,
+        status,
+        eligible,
+        is_participating: joined.has(comp.id),
+        participant_count: 12 + comp.id * 3 + (joined.has(comp.id) ? 1 : 0),
+      }
+    })
+  },
+
+  participateCompetition(_token: string, id: number): ApiParticipateResult {
+    const list = this.competitions(_token)
+    const target = list.find((item) => item.id === id)
+    if (!target) throw new Error('Competition not found')
+    if (target.status === 'ended') throw new Error('This competition has ended')
+    if (!target.eligible) throw new Error(`You are not eligible yet — ${target.eligibility}`)
+    const joined = new Set(readJson<number[]>(DEMO_COMPETE_KEY, []))
+    joined.add(id)
+    writeJson(DEMO_COMPETE_KEY, [...joined])
+    const updated = this.competitions(_token).find((item) => item.id === id)!
+    return { status: 'joined', competition: { ...updated, is_participating: true } }
   },
 
   todayFitness(_token: string): ApiTodayFitness {

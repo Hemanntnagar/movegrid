@@ -116,16 +116,19 @@ async def test_move_leaderboard_orders_by_total_points(lb_client):
 
 
 @pytest.mark.asyncio
-async def test_streak_leaderboard_orders_by_streak_score(lb_client):
+async def test_streak_leaderboard_orders_by_highest_streak_days(lb_client):
     http, _ = lb_client
     token = await _login(http)
     response = await http.get("/api/v1/leaderboard/streak", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     body = response.json()
     assert body["board"] == "streak"
-    assert body["entries"][0]["name"] == "Maya Chen"
-    assert body["entries"][0]["points"] == 300
-    assert body["me"]["points"] == 100
+    assert body["metric_label"] == "STREAK"
+    names = [entry["name"] for entry in body["entries"]]
+    assert names[:3] == ["Maya Chen", "Sam Rivera", "Alex Morgan"]
+    assert body["entries"][0]["points"] == 10
+    assert body["entries"][1]["points"] == 7
+    assert body["me"]["points"] == 5
 
 
 @pytest.mark.asyncio

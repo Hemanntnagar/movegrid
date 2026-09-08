@@ -80,16 +80,16 @@ async def refresh_all_leaderboard_ranks(db: AsyncSession) -> None:
 
     streak_users = (
         await db.execute(
-            select(User.id, User.streak_score)
+            select(User.id, User.streak)
             .where(User.role == "member")
-            .order_by(User.streak_score.desc(), User.streak.desc(), User.id.asc())
+            .order_by(User.streak.desc(), User.id.asc())
         )
     ).all()
     await refresh_board_ranks(
         db,
         board=BOARD_STREAK,
         subject_type=SUBJECT_USER,
-        ordered_ids_and_points=[(row.id, row.streak_score) for row in streak_users],
+        ordered_ids_and_points=[(row.id, row.streak) for row in streak_users],
     )
 
     teams = (
@@ -183,7 +183,7 @@ async def get_streak_leaderboard(
         await db.execute(
             select(User)
             .where(User.role == "member")
-            .order_by(User.streak_score.desc(), User.streak.desc(), User.id.asc())
+            .order_by(User.streak.desc(), User.id.asc())
         )
     ).scalars().all()
     ranks = await _rank_lookup(db, BOARD_STREAK, SUBJECT_USER)
@@ -197,7 +197,7 @@ async def get_streak_leaderboard(
             "id": user.id,
             "name": user.name,
             "avatar": user.avatar,
-            "points": user.streak_score,
+            "points": user.streak,
             "movement": _movement(index, rank_row.previous_rank if rank_row else None),
             "is_current_user": bool(current_user and current_user.id == user.id),
             "meta": {"streak": user.streak, "streak_month": user.streak_month},
@@ -209,8 +209,8 @@ async def get_streak_leaderboard(
 
     return {
         "board": BOARD_STREAK,
-        "title": "Monthly streak leaderboard",
-        "metric_label": "STREAK SCORE",
+        "title": "Streak leaderboard",
+        "metric_label": "STREAK",
         "limit": limit,
         "total_participants": len(users),
         "entries": entries,

@@ -48,6 +48,27 @@ class LeaderboardResponse(BaseModel):
     entries: list[LeaderboardEntry]
     me: LeaderboardEntry | None = None
 
+
+class CompetitionRead(BaseModel):
+    id: int
+    name: str
+    description: str
+    eligibility: str
+    min_points: int = 0
+    min_streak: int = 0
+    starts_at: datetime
+    ends_at: datetime | None = None
+    is_active: bool = True
+    status: str
+    eligible: bool = False
+    is_participating: bool = False
+    participant_count: int | None = None
+
+
+class ParticipateResponse(BaseModel):
+    status: str
+    competition: CompetitionRead
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

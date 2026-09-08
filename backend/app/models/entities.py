@@ -14,9 +14,21 @@ class Competition(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(160))
     description: Mapped[str] = mapped_column(Text, default="")
+    eligibility: Mapped[str] = mapped_column(String(255), default="Open to all members")
+    min_points: Mapped[int] = mapped_column(Integer, default=0)
+    min_streak: Mapped[int] = mapped_column(Integer, default=0)
     starts_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     ends_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CompetitionParticipant(Base):
+    __tablename__ = "competition_participants"
+    __table_args__ = (UniqueConstraint("competition_id", "user_id", name="uq_competition_participant"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    competition_id: Mapped[int] = mapped_column(ForeignKey("competitions.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Team(Base):
     __tablename__ = "teams"

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, HeartHandshake, MapPin, UserPlus, Users } from 'lucide-react'
+import { ArrowLeft, HeartHandshake, MapPin, MessageSquare, UserPlus, Users, X } from 'lucide-react'
 import { getStoredToken } from '../../lib/api'
 import { NearbyLiveMap } from '../../components/NearbyLiveMap'
 import { AppChrome } from '../../components/AppChrome'
@@ -18,6 +18,8 @@ type Buddy = {
   color: string
 }
 
+const DEFAULT_INVITE_MESSAGE = "Heyy!! Let's burn some calories."
+
 const NEARBY_BUDDIES: Buddy[] = [
   { id: 101, name: 'Maya Chen', distance: '0.2 mi away', activity: '5K Trail Run', level: 'Advanced', status: 'Active now', avatar: 'MC', color: '#ffd447' },
   { id: 102, name: 'Jordan Lee', distance: '0.4 mi away', activity: '10k Steps Walk', level: 'Intermediate', status: 'Walking nearby', avatar: 'JL', color: '#8bd4f4' },
@@ -28,9 +30,23 @@ const NEARBY_BUDDIES: Buddy[] = [
 export default function BuddiesPage() {
   const token = getStoredToken()
   const [inviteToast, setInviteToast] = useState('')
+  const [inviteTarget, setInviteTarget] = useState<Buddy | null>(null)
+  const [inviteMessage, setInviteMessage] = useState(DEFAULT_INVITE_MESSAGE)
 
-  const invite = (buddy: Buddy) => {
-    setInviteToast(`Workout invitation sent to ${buddy.name}!`)
+  const openInvite = (buddy: Buddy) => {
+    setInviteTarget(buddy)
+    setInviteMessage(DEFAULT_INVITE_MESSAGE)
+  }
+
+  const closeInvite = () => {
+    setInviteTarget(null)
+  }
+
+  const sendInvite = () => {
+    if (!inviteTarget) return
+    const message = inviteMessage.trim() || DEFAULT_INVITE_MESSAGE
+    setInviteToast(`Invitation sent to ${inviteTarget.name}: "${message}"`)
+    setInviteTarget(null)
     window.setTimeout(() => setInviteToast(''), 3500)
   }
 
@@ -85,7 +101,7 @@ export default function BuddiesPage() {
                     </small>
                     <small className="buddy-status">{buddy.status} · {buddy.level}</small>
                   </div>
-                  <button type="button" className="outline-button" onClick={() => invite(buddy)}>
+                  <button type="button" className="outline-button" onClick={() => openInvite(buddy)}>
                     <UserPlus size={14} /> Invite
                   </button>
                 </li>
@@ -94,6 +110,41 @@ export default function BuddiesPage() {
           </section>
         </div>
       </main>
+
+      {inviteTarget && (
+        <div className="modal-backdrop" onClick={closeInvite}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="close-button" onClick={closeInvite} aria-label="Close">
+              <X size={18} />
+            </button>
+            <div className="modal-kicker">
+              <MessageSquare size={15} /> WORKOUT INVITE
+            </div>
+            <h2>Invite {inviteTarget.name}</h2>
+            <p>Add a short note before you send the invite. You can edit the default message.</p>
+            <label className="invite-message-label" htmlFor="invite-message">
+              Message
+            </label>
+            <textarea
+              id="invite-message"
+              className="invite-message-input"
+              value={inviteMessage}
+              onChange={(e) => setInviteMessage(e.target.value)}
+              rows={3}
+              maxLength={200}
+              autoFocus
+            />
+            <div className="invite-message-actions">
+              <button type="button" className="outline-button" onClick={closeInvite}>
+                Cancel
+              </button>
+              <button type="button" className="primary-button" onClick={sendInvite}>
+                <UserPlus size={14} /> Send invite
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {inviteToast && (
         <div className="toast" style={{ background: '#0284c7', color: '#fff' }}>
