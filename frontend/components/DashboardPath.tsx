@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity,
+  Camera,
   Check,
   Clock3,
   Info,
@@ -19,6 +20,7 @@ import {
   getStoredToken,
   movegridApi,
 } from '../lib/api'
+import { AIExerciseTrackerModal } from './AIExerciseTrackerModal'
 import { PenguinPathMap, PathLevel } from './PenguinPathMap'
 import {
   daysInIstMonth,
@@ -56,11 +58,13 @@ function ExerciseGuideModal({
   onClose,
   onComplete,
   completing,
+  onStartAiTracker,
 }: {
   assignment: ApiDailyAssignment
   onClose: () => void
   onComplete: (id: number) => void
   completing: boolean
+  onStartAiTracker?: (assignment: ApiDailyAssignment) => void
 }) {
   const exercise = assignment.exercise
   return (
@@ -91,17 +95,31 @@ function ExerciseGuideModal({
           )}
         </div>
         {assignment.status === 'ASSIGNED' ? (
-          <button
-            className="primary-button full"
-            disabled={completing}
-            onClick={() => {
-              onComplete(assignment.id)
-              onClose()
-            }}
-          >
-            {completing ? <LoaderCircle size={15} className="spin" /> : <Sparkles size={15} />}
-            {completing ? 'Logging…' : 'Complete & Claim MOVE'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button
+              type="button"
+              className="primary-button full"
+              style={{ background: '#0284c7', color: '#fff' }}
+              onClick={() => {
+                onClose()
+                onStartAiTracker?.(assignment)
+              }}
+            >
+              <Camera size={16} /> Start Camera AI Tracker
+            </button>
+            <button
+              type="button"
+              className="outline-button full"
+              disabled={completing}
+              onClick={() => {
+                onComplete(assignment.id)
+                onClose()
+              }}
+            >
+              {completing ? <LoaderCircle size={15} className="spin" /> : <Check size={15} />}
+              {completing ? 'Logging…' : 'Manual Complete'}
+            </button>
+          </div>
         ) : (
           <button className="outline-button full" onClick={onClose}>
             Close guide
@@ -122,6 +140,7 @@ function DayLevelModal({
   completingId,
   justCompletedId,
   onInspect,
+  onStartAiTracker,
   levelClosed,
 }: {
   day: number
@@ -133,6 +152,7 @@ function DayLevelModal({
   completingId: number | null
   justCompletedId: number | null
   onInspect: (assignment: ApiDailyAssignment) => void
+  onStartAiTracker: (assignment: ApiDailyAssignment) => void
   levelClosed: boolean
 }) {
   const allDone = today.progress.total > 0 && today.progress.completed >= today.progress.total
@@ -202,14 +222,28 @@ function DayLevelModal({
                     <Info size={16} />
                   </button>
                   {assignment.status === 'ASSIGNED' && !levelClosed && (
-                    <button
-                      className="primary-button"
-                      disabled={completingId === assignment.id}
-                      onClick={() => onComplete(assignment.id)}
-                    >
-                      {completingId === assignment.id ? <LoaderCircle size={14} className="spin" /> : <Check size={14} />}
-                      Done
-                    </button>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="primary-button"
+                        style={{ background: '#0284c7', color: '#fff', fontSize: '11px', padding: '8px 12px' }}
+                        onClick={() => {
+                          onClose()
+                          onStartAiTracker(assignment)
+                        }}
+                      >
+                        <Camera size={13} /> Camera AI
+                      </button>
+                      <button
+                        className="outline-button"
+                        disabled={completingId === assignment.id}
+                        onClick={() => onComplete(assignment.id)}
+                        style={{ fontSize: '11px', padding: '8px 12px' }}
+                      >
+                        {completingId === assignment.id ? <LoaderCircle size={13} className="spin" /> : <Check size={13} />}
+                        Manual
+                      </button>
+                    </div>
                   )}
                   {done && (
                     <span className="day-exercise-status ok">
@@ -291,6 +325,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   const [toast, setToast] = useState('')
   const [justCompletedId, setJustCompletedId] = useState<number | null>(null)
   const [inspectAssignment, setInspectAssignment] = useState<ApiDailyAssignment | null>(null)
+  const [aiTrackingAssignment, setAiTrackingAssignment] = useState<ApiDailyAssignment | null>(null)
   const [tick, setTick] = useState(0)
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [gateDay, setGateDay] = useState<{ day: number; reason: 'locked' | 'missed' | 'closed' | 'completed' } | null>(
@@ -456,21 +491,10 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     )
   }
 
-  if (!getStoredToken()) {
-    return (
-      <div className="trail-map-guest">
-        <p>Sign in to walk Pebble’s monthly trail and unlock today’s exercises.</p>
-      </div>
-    )
-  }
-
   return (
     <>
       {error && <p className="form-error">{error}</p>}
       <PenguinPathMap levels={levels} todayDay={todayDay} onSelectDay={handleSelectDay} />
-      <p className="trail-expiry-note">
-        Today expires in <strong>{formatCountdown(secondsRemaining)}</strong> · IST · fresh map each month
-      </p>
 
       {selectedDay === todayDay && today && (
         <DayLevelModal
@@ -483,6 +507,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           completingId={completingId}
           justCompletedId={justCompletedId}
           onInspect={setInspectAssignment}
+          onStartAiTracker={setAiTrackingAssignment}
           levelClosed={todayLevelClosed && today.progress.completed >= today.progress.total}
         />
       )}
@@ -495,6 +520,20 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           onClose={() => setInspectAssignment(null)}
           onComplete={handleComplete}
           completing={completingId === inspectAssignment.id}
+          onStartAiTracker={setAiTrackingAssignment}
+        />
+      )}
+
+      {aiTrackingAssignment && (
+        <AIExerciseTrackerModal
+          exerciseName={aiTrackingAssignment.exercise.name}
+          targetReps={aiTrackingAssignment.exercise.target_reps || 10}
+          pointsReward={aiTrackingAssignment.points}
+          onClose={() => setAiTrackingAssignment(null)}
+          onComplete={() => {
+            handleComplete(aiTrackingAssignment.id)
+            setAiTrackingAssignment(null)
+          }}
         />
       )}
 
