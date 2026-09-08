@@ -17,6 +17,7 @@ import {
 import { ApiUser, clearToken, getStoredToken, movegridApi } from '../lib/api'
 
 export type MenuAction =
+  | 'standings'
   | 'buddies'
   | 'competitions'
   | 'challenges'
@@ -30,6 +31,7 @@ const MENU_ITEMS: {
   icon: typeof Users
   tone: string
 }[] = [
+  { id: 'standings', label: 'Standings', icon: Trophy, tone: 'orange', href: '/standings' },
   { id: 'buddies', label: 'Buddies', icon: Users, tone: 'lime', href: '/buddies' },
   { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
   { id: 'challenges', label: 'Challenges', icon: Target, tone: 'purple', href: '/challenges' },

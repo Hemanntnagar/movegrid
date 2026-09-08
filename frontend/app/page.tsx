@@ -207,16 +207,20 @@ export default function Page() {
             detail={`${stepPercent}% of ${stepGoal.toLocaleString()} goal`}
             tone="blue"
           />
-          <StatCard icon={<Trophy size={19} />} label="Global rank" value={rankLabel} detail="↑ 6 places" tone="purple" />
+          <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+            <StatCard icon={<Trophy size={19} />} label="Global rank" value={rankLabel} detail="↑ 6 places" tone="purple" />
+          </Link>
         </section>
 
-
         <div className="home-quick-links">
+          <Link href="/standings" className="outline-button">
+            <Trophy size={15} /> Standings
+          </Link>
           <Link href="/challenges" className="outline-button">
             <Target size={15} /> Challenges
           </Link>
           <Link href="/competitions" className="outline-button">
-            <Trophy size={15} /> Competitions
+            Competitions
           </Link>
           <Link href="/assistant" className="outline-button">
             Customize plan

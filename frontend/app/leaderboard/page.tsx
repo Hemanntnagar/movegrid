@@ -3,11 +3,11 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-/** Leaderboard removed — competitions list lives at /competitions. */
+/** Leaderboard page moved to /standings */
 export default function LeaderboardRedirect() {
   const router = useRouter()
   useEffect(() => {
-    router.replace('/competitions')
+    router.replace('/standings')
   }, [router])
   return null
 }
