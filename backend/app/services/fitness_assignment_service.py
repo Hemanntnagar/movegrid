@@ -1,12 +1,14 @@
 """Daily personalized fitness assignment engine.
 
-Assignments always expire after exactly 24 hours. Call expire_due_assignments()
+Assignments always expire after exactly 24 hours (IST clock). Day levels and
+assignment seeding use Asia/Kolkata calendar dates. Call expire_due_assignments()
 from request paths and from a future scheduled background job.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from random import Random
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -14,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.entities import DailyAssignment, Exercise, User
 from app.services.progress_service import record_activity_progress
 
+IST = ZoneInfo("Asia/Kolkata")
 ASSIGNMENT_TTL = timedelta(hours=24)
 ASSIGNMENTS_PER_DAY = 3
 RECENT_LOOKBACK_DAYS = 7
@@ -32,7 +35,19 @@ LEVEL_ALIASES = {
 
 
 def _utcnow() -> datetime:
-    return datetime.utcnow()
+    """Naive UTC timestamp for DB storage (matches existing columns)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _ist_now(now: datetime | None = None) -> datetime:
+    moment = now or _utcnow()
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(IST)
+
+
+def _ist_date_key(now: datetime | None = None) -> str:
+    return _ist_now(now).date().isoformat()
 
 
 def _normalize_level(raw: str | None) -> str:
@@ -142,7 +157,7 @@ async def _select_exercises(
     fresh = [ex for ex in pool if ex.id not in recent]
     candidates = fresh or pool
 
-    rng = Random(f"{user_id}:{now.date().isoformat()}:{level}")
+    rng = Random(f"{user_id}:{_ist_date_key(now)}:{level}")
     rng.shuffle(candidates)
 
     selected: list[Exercise] = []

@@ -26,10 +26,10 @@ async def client():
         session.add_all(
             [
                 User(
-                    email="student@movegrid.demo",
+                    email="demo@movegrid.demo",
                     name="Alex Morgan",
                     password_hash=hash_password("movegrid-demo"),
-                    role="student",
+                    role="member",
                     fitness_level="Beginner",
                     total_points=1000,
                 ),
@@ -71,7 +71,7 @@ async def test_daily_fitness_flow_awards_move(client):
     http, _ = client
     login = await http.post(
         "/api/v1/auth/login",
-        json={"email": "student@movegrid.demo", "password": "movegrid-demo"},
+        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
     )
     assert login.status_code == 200
     token = login.json()["access_token"]
@@ -110,7 +110,7 @@ async def test_expired_assignment_cannot_complete(client):
     http, session_factory = client
     login = await http.post(
         "/api/v1/auth/login",
-        json={"email": "student@movegrid.demo", "password": "movegrid-demo"},
+        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
     )
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}

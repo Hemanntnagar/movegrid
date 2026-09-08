@@ -13,10 +13,24 @@ class Competition(Base):
     __tablename__ = "competitions"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(160))
+    company_name: Mapped[str] = mapped_column(String(160), default="")
     description: Mapped[str] = mapped_column(Text, default="")
+    reward: Mapped[str] = mapped_column(String(255), default="")
+    eligibility: Mapped[str] = mapped_column(String(255), default="Open to all members")
+    min_points: Mapped[int] = mapped_column(Integer, default=0)
+    min_streak: Mapped[int] = mapped_column(Integer, default=0)
     starts_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     ends_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CompetitionParticipant(Base):
+    __tablename__ = "competition_participants"
+    __table_args__ = (UniqueConstraint("competition_id", "user_id", name="uq_competition_participant"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    competition_id: Mapped[int] = mapped_column(ForeignKey("competitions.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Team(Base):
     __tablename__ = "teams"
@@ -30,10 +44,10 @@ class Team(Base):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), default="MOVEGRID Student")
+    name: Mapped[str] = mapped_column(String(120), default="MOVEGRID Mover")
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[str] = mapped_column(String(20), default="student")
+    role: Mapped[str] = mapped_column(String(20), default="member")
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id"), nullable=True)
     team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True, index=True)
     fitness_level: Mapped[str] = mapped_column(String(30), default="Beginner")
@@ -43,7 +57,7 @@ class User(Base):
     streak_month: Mapped[str] = mapped_column(String(7), default="")
     last_activity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active_minutes: Mapped[int] = mapped_column(Integer, default=0)
-    avatar: Mapped[str] = mapped_column(String(255), default="/avatars/student.png")
+    avatar: Mapped[str] = mapped_column(String(255), default="/avatars/mover.png")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     @property
@@ -53,10 +67,6 @@ class User(Base):
     @property
     def move_points(self) -> int:
         return self.total_points
-
-    @property
-    def is_admin(self) -> bool:
-        return self.role == "admin"
 
 class LeaderboardRank(Base):
     __tablename__ = "leaderboard_ranks"
@@ -132,8 +142,8 @@ class Squad(Base):
     __tablename__ = "squads"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    activity: Mapped[str] = mapped_column(String(120), default="Campus walk")
-    location: Mapped[str] = mapped_column(String(120), default="Campus")
+    activity: Mapped[str] = mapped_column(String(120), default="Neighborhood walk")
+    location: Mapped[str] = mapped_column(String(120), default="City")
     scheduled_time: Mapped[str] = mapped_column(String(80), default="Today")
     max_members: Mapped[int] = mapped_column(Integer, default=8)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
@@ -215,3 +225,13 @@ class DailyAssignment(Base):
     status: Mapped[str] = mapped_column(String(20), default="ASSIGNED", index=True)
     points: Mapped[int] = mapped_column(Integer, default=0)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class UserPresence(Base):
+    __tablename__ = "user_presence"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+    latitude: Mapped[float] = mapped_column(default=0)
+    longitude: Mapped[float] = mapped_column(default=0)
+    is_sharing: Mapped[bool] = mapped_column(Boolean, default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

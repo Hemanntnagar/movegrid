@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Gift,
   LoaderCircle,
   Package,
+  QrCode,
   ShoppingBag,
   Sparkles,
   Ticket,
@@ -27,6 +28,7 @@ import {
   getStoredToken,
   movegridApi,
 } from '../../lib/api'
+import { AppChrome } from '../../components/AppChrome'
 
 function Brand() {
   return (
@@ -41,22 +43,53 @@ function Brand() {
   )
 }
 
+function PenguinMascot({ message = "Treat yourself! You earned these MOVE rewards!" }: { message?: string }) {
+  return (
+    <div className="penguin-mascot-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '0.6rem 0.9rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <svg className="penguin-svg" width="38" height="42" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
+        <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
+        <circle cx="50" cy="32" r="24" fill="#0f172a" />
+        <circle cx="42" cy="28" r="4" fill="#ffffff" />
+        <circle cx="43" cy="28" r="2" fill="#000000" />
+        <circle cx="58" cy="28" r="4" fill="#ffffff" />
+        <circle cx="57" cy="28" r="2" fill="#000000" />
+        <polygon points="50,32 44,38 56,38" fill="#f97316" />
+        <circle cx="36" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <circle cx="64" cy="34" r="3" fill="#f43f5e" opacity="0.6" />
+        <rect x="30" y="48" width="40" height="8" rx="4" fill="#38bdf8" />
+        <rect x="58" y="52" width="10" height="20" rx="3" fill="#0284c7" />
+        <ellipse cx="14" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(20 14 65)" />
+        <ellipse cx="86" cy="65" rx="7" ry="18" fill="#0f172a" transform="rotate(-20 86 65)" />
+        <ellipse cx="38" cy="102" rx="10" ry="5" fill="#f97316" />
+        <ellipse cx="62" cy="102" rx="10" ry="5" fill="#f97316" />
+      </svg>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          <span>🐧 Pebble the Mascot</span>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', fontStyle: 'italic' }}>&quot;{message}&quot;</p>
+      </div>
+    </div>
+  )
+}
+
 function rewardTone(category: string) {
   const key = category.toLowerCase()
-  if (key.includes('food') || key.includes('canteen')) return 'mint'
+  if (key.includes('food') || key.includes('canteen') || key.includes('dining') || key.includes('smoothie')) return 'mint'
   if (key.includes('event')) return 'orange'
-  if (key.includes('sport')) return 'blue'
-  if (key.includes('sponsor')) return 'purple'
+  if (key.includes('sport') || key.includes('gym')) return 'blue'
+  if (key.includes('sponsor') || key.includes('merch') || key.includes('gear')) return 'purple'
   return 'mint'
 }
 
 function RewardIcon({ category }: { category: string }) {
   const key = category.toLowerCase()
-  if (key.includes('food') || key.includes('canteen')) return <Utensils size={28} />
+  if (key.includes('food') || key.includes('canteen') || key.includes('dining') || key.includes('smoothie')) return <Utensils size={28} />
   if (key.includes('event')) return <Ticket size={28} />
-  if (key.includes('sport')) return <Trophy size={28} />
+  if (key.includes('sport') || key.includes('gym')) return <Trophy size={28} />
   if (key.includes('sponsor')) return <Gift size={28} />
-  if (key.includes('merch')) return <ShoppingBag size={28} />
+  if (key.includes('merch') || key.includes('gear')) return <ShoppingBag size={28} />
   return <Package size={28} />
 }
 
@@ -107,7 +140,7 @@ function RewardCard({
           {!canAfford && available && <span>Need {(reward.points_required - balance).toLocaleString()} more MOVE</span>}
         </div>
         <button className="primary-button full" disabled={disabled} onClick={() => onRedeem(reward)}>
-          {!available ? 'Unavailable' : !canAfford ? 'Not enough MOVE' : 'Redeem'}
+          {!available ? 'Unavailable' : !canAfford ? 'Not enough MOVE' : 'Redeem reward'}
         </button>
       </div>
     </article>
@@ -120,6 +153,7 @@ export default function RewardsPage() {
   const [user, setUser] = useState<ApiUser | null>(null)
   const [rewards, setRewards] = useState<ApiReward[]>([])
   const [history, setHistory] = useState<ApiRewardRedemption[]>([])
+  const [categoryFilter, setCategoryFilter] = useState('All')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [confirmReward, setConfirmReward] = useState<ApiReward | null>(null)
@@ -153,6 +187,11 @@ export default function RewardsPage() {
       .finally(() => setLoading(false))
   }, [load, router])
 
+  const filteredRewards = useMemo(() => {
+    if (categoryFilter === 'All') return rewards
+    return rewards.filter((r) => r.category.toLowerCase().includes(categoryFilter.toLowerCase()))
+  }, [rewards, categoryFilter])
+
   async function confirmRedeem() {
     if (!token || !confirmReward) return
     setRedeeming(true)
@@ -162,7 +201,6 @@ export default function RewardsPage() {
       setConfirmReward(null)
       setSuccess(result)
       await load(token)
-      window.setTimeout(() => setSuccess(null), 3200)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not redeem reward')
       setConfirmReward(null)
@@ -187,59 +225,59 @@ export default function RewardsPage() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <Brand />
-        <nav className="desktop-nav">
-          <Link href="/">Home</Link>
-          <Link href="/fitness">Fitness</Link>
-          <Link href="/leaderboard">Leaderboard</Link>
-          <Link href="/rewards" className="nav-active">
-            Rewards
-          </Link>
-        </nav>
-        <div className="top-actions">
-          <div className="move-chip">
-            <Zap size={14} fill="currentColor" />
-            {user.total_points.toLocaleString()} MOVE
-          </div>
-          <div className="avatar">{user.name.slice(0, 2).toUpperCase()}</div>
-          <button className="outline-button" onClick={logout}>
-            Log out
-          </button>
-        </div>
-      </header>
+      <AppChrome
+        rightSlot={
+          <>
+            <div className="move-chip">
+              <Zap size={14} fill="currentColor" />
+              {user.total_points.toLocaleString()} MOVE
+            </div>
+            <button className="outline-button" onClick={logout}>
+              Log out
+            </button>
+          </>
+        }
+      />
 
       <main className="main-content rewards-page">
-        <div className="welcome">
+        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <Link className="text-button" href="/">
-              <ArrowLeft size={14} /> Back to campus
+              <ArrowLeft size={14} /> Back to dashboard
             </Link>
-            <p className="eyebrow">MOVE STORE</p>
+            <p className="eyebrow">MOVE REWARD STORE</p>
             <h1>
               Spend your MOVE, <span>{user.name.split(' ')[0]}.</span>
             </h1>
-            <p className="subhead">Campus rewards only — no real payment. Earn MOVE from fitness, spend it here.</p>
+            <p className="subhead">Trade your movement and fitness points for healthy drinks, gear, and passes.</p>
           </div>
-          <div className="rewards-balance-badge">
-            <Zap size={22} fill="currentColor" />
-            <div>
-              <strong>{user.total_points.toLocaleString()}</strong>
-              <span>Current MOVE balance</span>
-            </div>
-          </div>
+          <PenguinMascot message="Spend your hard-earned MOVE on awesome rewards!" />
         </div>
 
         {error && <p className="form-error">{error}</p>}
 
         <section className="section-heading compact">
           <div>
-            <p className="eyebrow">CATALOG</p>
-            <h2>Pick a reward</h2>
+            <p className="eyebrow">REWARD CATALOG</p>
+            <h2>Pick your perk</h2>
+          </div>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            {['All', 'Food', 'Events', 'Sports', 'Merch'].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className={`pill ${categoryFilter === cat ? 'lime' : 'neutral'}`}
+                style={{ cursor: 'pointer', border: 'none', padding: '0.3rem 0.75rem' }}
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </section>
+
         <div className="rewards-grid">
-          {rewards.map((reward) => (
+          {filteredRewards.map((reward) => (
             <RewardCard
               key={reward.id}
               reward={reward}
@@ -248,18 +286,18 @@ export default function RewardsPage() {
               busy={redeeming}
             />
           ))}
-          {rewards.length === 0 && (
+          {filteredRewards.length === 0 && (
             <div className="fitness-empty">
               <Gift size={22} />
-              <strong>No rewards listed yet</strong>
-              <span>Check back after the next campus drop.</span>
+              <strong>No rewards found in this category</strong>
+              <span>Try selecting another category or check back later.</span>
             </div>
           )}
         </div>
 
-        <section className="section-heading compact">
+        <section className="section-heading compact" style={{ marginTop: '2rem' }}>
           <div>
-            <p className="eyebrow">HISTORY</p>
+            <p className="eyebrow">RETIRED & REDEEMED</p>
             <h2>Your redemptions</h2>
           </div>
         </section>
@@ -297,7 +335,7 @@ export default function RewardsPage() {
             <h2>{confirmReward.title}</h2>
             <p>
               Spend {confirmReward.points_required.toLocaleString()} MOVE from your balance of{' '}
-              {user.total_points.toLocaleString()}. This is an internal campus reward — no payment is charged.
+              {user.total_points.toLocaleString()}.
             </p>
             <div className="modal-panel">
               <Zap size={22} />
@@ -317,16 +355,27 @@ export default function RewardsPage() {
       )}
 
       {success && (
-        <div className="toast rewards-success-toast">
-          <div>
-            <Check size={18} />
+        <div className="modal-backdrop">
+          <div className="modal" style={{ textAlign: 'center' }}>
+            <button className="close-button" onClick={() => setSuccess(null)} aria-label="Close">
+              <X size={18} />
+            </button>
+            <div className="modal-kicker" style={{ justifyContent: 'center' }}>
+              <Sparkles size={15} /> VOUCHER UNLOCKED
+            </div>
+            <h2>{success.reward_title}</h2>
+            <p>Show this digital voucher code at the partner store or venue.</p>
+            <div className="qr-panel" style={{ margin: '1rem 0' }}>
+              <div className="qr-art">
+                <QrCode size={110} />
+              </div>
+              <strong>VOUCHER #{success.redemption_id}-MOVEGRID</strong>
+              <span>Redeemed for {success.points_spent} MOVE</span>
+            </div>
+            <button className="primary-button full" onClick={() => setSuccess(null)}>
+              Done
+            </button>
           </div>
-          <span>
-            <strong>Redeemed!</strong>
-            <small>
-              {success.reward_title} · −{success.points_spent} MOVE · balance {success.total_points.toLocaleString()}
-            </small>
-          </span>
         </div>
       )}
     </div>

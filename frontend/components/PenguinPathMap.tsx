@@ -2,10 +2,11 @@
 
 import React from 'react'
 import { Check, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
+import type { DayLevelStatus } from '../lib/monthProgress'
 
 export type PathLevel = {
   day: number
-  status: 'completed' | 'active' | 'missed' | 'locked' | 'closed'
+  status: DayLevelStatus
 }
 
 type PenguinPathMapProps = {
@@ -13,6 +14,7 @@ type PenguinPathMapProps = {
   todayDay?: number
   onSelectDay?: (day: number) => void
   currentSteps?: number
+  compact?: boolean
 }
 
 export function PenguinPathMap({
@@ -138,7 +140,6 @@ export function PenguinPathMap({
 
         {/* ==================== THE WINDING S-CURVE DIRT ROAD ==================== */}
         {/* Road Path Coordinates */}
-        {/* Path starts bottom-left (200,340), curves up to middle (350,260), curves to top (460,160), extends right (580,120) */}
         {/* Outer Dark Border Stroke */}
         <path
           d="M 210,340 C 290,340 300,270 360,260 C 430,250 380,165 470,150 C 530,140 580,115 620,115"
@@ -287,20 +288,14 @@ export function PenguinPathMap({
             </g>
 
             {/* Penguin Character Body */}
-            {/* Red Bar / Headphones Tag */}
             <rect x="-10" y="-18" width="20" height="4" rx="2" fill="#ef4444" />
-            {/* Outer Navy Body */}
             <ellipse cx="0" cy="0" rx="16" ry="18" fill="#1e1b4b" stroke="#0f172a" strokeWidth="2" />
-            {/* White Belly */}
             <ellipse cx="0" cy="2" rx="11" ry="13" fill="#ffffff" />
-            {/* Eyes */}
             <circle cx="-4" cy="-4" r="2.5" fill="#0f172a" />
             <circle cx="4" cy="-4" r="2.5" fill="#0f172a" />
             <circle cx="-3" cy="-5" r="0.8" fill="#ffffff" />
             <circle cx="5" cy="-5" r="0.8" fill="#ffffff" />
-            {/* Orange Beak */}
             <polygon points="0,-1 -3,3 3,3" fill="#f97316" />
-            {/* Orange Feet */}
             <ellipse cx="-6" cy="18" rx="4" ry="2" fill="#f97316" />
             <ellipse cx="6" cy="18" rx="4" ry="2" fill="#f97316" />
           </g>

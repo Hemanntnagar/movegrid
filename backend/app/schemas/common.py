@@ -48,6 +48,41 @@ class LeaderboardResponse(BaseModel):
     entries: list[LeaderboardEntry]
     me: LeaderboardEntry | None = None
 
+
+class CompetitionCreate(BaseModel):
+    company_name: str | None = ""
+    name: str
+    description: str = ""
+    reward: str = ""
+    eligibility: str = "Open to all members"
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    min_points: int = 0
+    min_streak: int = 0
+
+
+class CompetitionRead(BaseModel):
+    id: int
+    name: str
+    company_name: str | None = ""
+    description: str
+    reward: str | None = ""
+    eligibility: str
+    min_points: int = 0
+    min_streak: int = 0
+    starts_at: datetime
+    ends_at: datetime | None = None
+    is_active: bool = True
+    status: str
+    eligible: bool = False
+    is_participating: bool = False
+    participant_count: int | None = None
+
+
+class ParticipateResponse(BaseModel):
+    status: str
+    competition: CompetitionRead
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -61,40 +96,13 @@ class MissionRead(BaseModel):
     minutes: int
     kind: str
 
-class ChallengeCreate(BaseModel):
-    title: str
-    description: str
-    type: str = "Walk"
-    difficulty: str = "Medium"
-    duration_minutes: int = Field(default=15, gt=0)
-    reward_points: int = Field(default=100, ge=0)
-    zone_id: int
-    is_active: bool = True
-
-class ZoneCreate(BaseModel):
-    name: str
-    description: str = ""
-    latitude: float = 0
-    longitude: float = 0
-    qr_token: str = "movegrid-demo"
-    is_active: bool = True
-
-class RewardCreate(BaseModel):
-    title: str
-    description: str = ""
-    category: str = "General"
-    points_required: int = Field(gt=0)
-    stock: int = Field(default=0, ge=0)
-    image: str = "/rewards/default.png"
-    active: bool = True
-
 class VerifyRequest(BaseModel):
     code: str = Field(min_length=1)
 
 class SquadCreate(BaseModel):
     name: str
-    activity: str = "Campus walk"
-    location: str = "Campus"
+    activity: str = "Neighborhood walk"
+    location: str = "City"
     scheduled_time: str = "Today"
     max_members: int = Field(default=8, gt=0)
 
@@ -198,3 +206,41 @@ class FitnessHistoryResponse(BaseModel):
     completed: list[DailyAssignmentRead]
     expired: list[DailyAssignmentRead]
     assigned: list[DailyAssignmentRead]
+
+
+class PresenceUpdate(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    is_sharing: bool = True
+
+
+class PresenceRead(BaseModel):
+    user_id: int
+    latitude: float
+    longitude: float
+    is_sharing: bool
+    updated_at: datetime
+
+
+class NearbyUserRead(BaseModel):
+    id: int
+    name: str
+    avatar: str
+    initials: str
+    latitude: float
+    longitude: float
+    distance_m: float
+    distance_label: str
+    total_points: int = 0
+    streak: int = 0
+    updated_at: datetime
+    is_current_user: bool = False
+
+
+class NearbyPresenceResponse(BaseModel):
+    latitude: float
+    longitude: float
+    radius_m: float
+    count: int
+    me: NearbyUserRead | None = None
+    nearby: list[NearbyUserRead]

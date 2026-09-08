@@ -1,21 +1,24 @@
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_access_token, decode_subject, hash_password, verify_password
-from app.models.entities import Activity, Challenge, Reward, Squad, SquadMember, User, Zone
+from app.models.entities import Activity, Challenge, Squad, SquadMember, User, Zone
 from app.schemas.common import (
     ActivityRead,
-    ChallengeCreate,
     CompleteAssignmentResponse,
+    CompetitionCreate,
+    CompetitionRead,
     FitnessHistoryResponse,
     LeaderboardResponse,
     LoginRequest,
     MissionRead,
+    NearbyPresenceResponse,
+    ParticipateResponse,
+    PresenceRead,
+    PresenceUpdate,
     RedeemResponse,
-    RewardCreate,
     RewardRead,
     RewardRedemptionRead,
     SquadCreate,
@@ -24,8 +27,8 @@ from app.schemas.common import (
     UserCreate,
     UserRead,
     VerifyRequest,
-    ZoneCreate,
 )
+from app.services.competition_service import create_competition, list_competitions, participate
 from app.services.fitness_assignment_service import complete_assignment, get_assignment_history, get_today_assignments
 from app.services.leaderboard_service import (
     get_competition_leaderboard,
@@ -33,6 +36,7 @@ from app.services.leaderboard_service import (
     get_streak_leaderboard,
 )
 from app.services.mission_service import list_missions, verify_and_complete
+from app.services.presence_service import list_nearby, upsert_presence
 from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
 
 api_router = APIRouter()
@@ -54,16 +58,11 @@ async def optional_user(token: str | None = Depends(oauth2_optional), db: AsyncS
         return None
     return await db.get(User, int(subject))
 
-async def admin_user(user: User = Depends(current_user)) -> User:
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
-
 @api_router.post("/auth/register", response_model=UserRead, status_code=201)
 async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
     if (await db.execute(select(User).where(User.email == payload.email))).scalar_one_or_none():
         raise HTTPException(409, "Email already registered")
-    user = User(email=payload.email, name=payload.name or payload.full_name or "MOVEGRID Student", password_hash=hash_password(payload.password), role="student")
+    user = User(email=payload.email, name=payload.name or payload.full_name or "MOVEGRID Mover", password_hash=hash_password(payload.password), role="member")
     db.add(user); await db.commit(); await db.refresh(user); return user
 
 @api_router.post("/auth/login", response_model=Token)
@@ -128,6 +127,54 @@ async def zone(zone_id: int, db: AsyncSession = Depends(get_db)):
     item = await db.get(Zone, zone_id)
     if not item: raise HTTPException(404, "Zone not found")
     return item
+
+@api_router.post("/presence", response_model=PresenceRead)
+async def update_presence(
+    payload: PresenceUpdate,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await upsert_presence(db, user, payload)
+
+@api_router.get("/presence/nearby", response_model=NearbyPresenceResponse)
+async def nearby_presence(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_m: float = Query(800, ge=50, le=5000),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_nearby(
+        db,
+        latitude=latitude,
+        longitude=longitude,
+        radius_m=radius_m,
+        current_user=user,
+        include_demo=True,
+    )
+
+@api_router.get("/competitions", response_model=list[CompetitionRead])
+async def competitions(user: User | None = Depends(optional_user), db: AsyncSession = Depends(get_db)):
+    return await list_competitions(db, user)
+
+
+@api_router.post("/competitions", response_model=CompetitionRead, status_code=201)
+async def create_new_competition(
+    payload: CompetitionCreate,
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await create_competition(db, payload, user=user)
+
+
+@api_router.post("/competitions/{competition_id}/participate", response_model=ParticipateResponse)
+async def join_competition(
+    competition_id: int,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await participate(db, user, competition_id)
+
 
 @api_router.get("/leaderboard", response_model=LeaderboardResponse)
 @api_router.get("/leaderboard/move", response_model=LeaderboardResponse)
@@ -194,46 +241,3 @@ async def reward_detail(reward_id: int, db: AsyncSession = Depends(get_db)):
 @api_router.post("/rewards/{reward_id}/redeem", response_model=RedeemResponse)
 async def redeem(reward_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     return await redeem_reward(db, user, reward_id)
-
-@api_router.get("/admin/analytics")
-async def analytics(_: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    users = (await db.execute(select(User))).scalars().all()
-    completed = (await db.execute(select(func.count(Activity.id)).where(Activity.status == "completed"))).scalar_one()
-    return {"movement_generated": sum(u.total_points for u in users), "active_students": sum(u.role == "student" for u in users), "missions_completed": completed, "engagement_rate": 78.4}
-
-@api_router.get("/admin/students")
-async def admin_students(_: User = Depends(admin_user), db: AsyncSession = Depends(get_db)): return (await db.execute(select(User).where(User.role == "student"))).scalars().all()
-
-@api_router.get("/admin/challenges")
-async def admin_challenges(_: User = Depends(admin_user), db: AsyncSession = Depends(get_db)): return (await db.execute(select(Challenge))).scalars().all()
-
-@api_router.post("/challenges", status_code=201)
-async def create_challenge(payload: ChallengeCreate, _: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    item = Challenge(**payload.model_dump()); db.add(item); await db.commit(); await db.refresh(item); return item
-
-@api_router.put("/challenges/{challenge_id}")
-async def update_challenge(challenge_id: int, payload: ChallengeCreate, _: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    item = await db.get(Challenge, challenge_id)
-    if not item: raise HTTPException(404, "Challenge not found")
-    for key, value in payload.model_dump().items(): setattr(item, key, value)
-    await db.commit(); await db.refresh(item); return item
-
-@api_router.delete("/challenges/{challenge_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_challenge(challenge_id: int, _: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    item = await db.get(Challenge, challenge_id)
-    if not item: raise HTTPException(404, "Challenge not found")
-    await db.delete(item); await db.commit()
-
-@api_router.get("/admin/zones")
-async def admin_zones(_: User = Depends(admin_user), db: AsyncSession = Depends(get_db)): return (await db.execute(select(Zone))).scalars().all()
-
-@api_router.post("/zones", status_code=201)
-async def create_zone(payload: ZoneCreate, _: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    item = Zone(**payload.model_dump()); db.add(item); await db.commit(); await db.refresh(item); return item
-
-@api_router.get("/admin/rewards")
-async def admin_rewards(_: User = Depends(admin_user), db: AsyncSession = Depends(get_db)): return (await db.execute(select(Reward))).scalars().all()
-
-@api_router.post("/rewards", status_code=201)
-async def create_reward(payload: RewardCreate, _: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    item = Reward(**payload.model_dump()); db.add(item); await db.commit(); await db.refresh(item); return item

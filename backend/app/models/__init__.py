@@ -10,6 +10,7 @@ from app.models.entities import (
     Squad,
     Team,
     User,
+    UserPresence,
     Zone,
 )
 
@@ -25,5 +26,6 @@ __all__ = [
     "Squad",
     "Team",
     "User",
+    "UserPresence",
     "Zone",
 ]

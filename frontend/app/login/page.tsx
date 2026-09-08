@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn } from 'lucide-react'
-import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
+import { clearToken, getStoredToken, isDemoMode, movegridApi, storeToken } from '../../lib/api'
+import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter } from 'next/navigation'
 
 function Brand() {
@@ -21,7 +22,7 @@ function Brand() {
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('student@movegrid.demo')
+  const [email, setEmail] = useState('demo@movegrid.demo')
   const [password, setPassword] = useState('movegrid-demo')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -31,7 +32,7 @@ export default function LoginPage() {
     if (!token) return
     movegridApi
       .me(token)
-      .then(() => router.replace('/fitness'))
+      .then(() => router.replace(hasCompletedOnboarding() ? '/' : '/onboarding'))
       .catch(() => clearToken())
   }, [router])
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
     try {
       const token = await movegridApi.login(email, password)
       storeToken(token.access_token)
-      router.push('/fitness')
+      router.push(hasCompletedOnboarding() ? '/' : '/onboarding')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -60,7 +61,7 @@ export default function LoginPage() {
       </header>
       <main className="login-main">
         <form className="login-card" onSubmit={onSubmit}>
-          <p className="eyebrow">STUDENT ACCESS</p>
+          <p className="eyebrow">WELCOME BACK</p>
           <h1>
             Jump into <span>daily fitness</span>
           </h1>
@@ -84,7 +85,11 @@ export default function LoginPage() {
             {loading ? <LoaderCircle size={16} className="spin" /> : <LogIn size={16} />}
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
-          <p className="login-hint">Demo: student@movegrid.demo / movegrid-demo</p>
+          <p className="login-hint">
+            {isDemoMode
+              ? 'Offline demo — any email/password works (no API env needed).'
+              : 'Demo: demo@movegrid.demo / movegrid-demo'}
+          </p>
         </form>
       </main>
     </div>

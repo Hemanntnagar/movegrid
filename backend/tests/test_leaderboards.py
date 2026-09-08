@@ -25,22 +25,22 @@ async def lb_client():
     password = hash_password("movegrid-demo")
 
     async with session_factory() as session:
-        competition = Competition(name="Fall Campus Cup", description="Test cup", is_active=True)
+        competition = Competition(name="Monthly Move Cup", description="Test cup", is_active=True)
         session.add(competition)
         await session.flush()
 
         legends = Team(name="Late Night Legends", competition_id=competition.id, competition_points=1000, avatar="initials:LL:#ffd447")
-        dashers = Team(name="Quad Dashers", competition_id=competition.id, competition_points=800, avatar="initials:QD:#8bd4f4")
+        dashers = Team(name="Park Dashers", competition_id=competition.id, competition_points=800, avatar="initials:PD:#8bd4f4")
         session.add_all([legends, dashers])
         await session.flush()
 
         session.add_all(
             [
                 User(
-                    email="student@movegrid.demo",
+                    email="demo@movegrid.demo",
                     name="Alex Morgan",
                     password_hash=password,
-                    role="student",
+                    role="member",
                     team_id=legends.id,
                     total_points=1200,
                     streak=5,
@@ -53,7 +53,7 @@ async def lb_client():
                     email="maya@movegrid.demo",
                     name="Maya Chen",
                     password_hash=password,
-                    role="student",
+                    role="member",
                     team_id=legends.id,
                     total_points=2000,
                     streak=10,
@@ -65,21 +65,13 @@ async def lb_client():
                     email="sam@movegrid.demo",
                     name="Sam Rivera",
                     password_hash=password,
-                    role="student",
+                    role="member",
                     team_id=dashers.id,
                     total_points=1500,
                     streak=7,
                     streak_score=200,
                     streak_month=month,
                     avatar="initials:SR:#8bd4f4",
-                ),
-                User(
-                    email="admin@movegrid.demo",
-                    name="Admin",
-                    password_hash=password,
-                    role="admin",
-                    total_points=99999,
-                    streak_score=99999,
                 ),
             ]
         )
@@ -101,7 +93,7 @@ async def lb_client():
     await engine.dispose()
 
 
-async def _login(http: AsyncClient, email="student@movegrid.demo") -> str:
+async def _login(http: AsyncClient, email="demo@movegrid.demo") -> str:
     response = await http.post("/api/v1/auth/login", json={"email": email, "password": "movegrid-demo"})
     assert response.status_code == 200
     return response.json()["access_token"]
@@ -117,7 +109,6 @@ async def test_move_leaderboard_orders_by_total_points(lb_client):
     assert body["board"] == "move"
     names = [entry["name"] for entry in body["entries"]]
     assert names[:3] == ["Maya Chen", "Sam Rivera", "Alex Morgan"]
-    assert "Admin" not in names
     assert body["me"]["name"] == "Alex Morgan"
     assert body["me"]["is_current_user"] is True
     assert body["me"]["rank"] == 3
@@ -125,16 +116,19 @@ async def test_move_leaderboard_orders_by_total_points(lb_client):
 
 
 @pytest.mark.asyncio
-async def test_streak_leaderboard_orders_by_streak_score(lb_client):
+async def test_streak_leaderboard_orders_by_highest_streak_days(lb_client):
     http, _ = lb_client
     token = await _login(http)
     response = await http.get("/api/v1/leaderboard/streak", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     body = response.json()
     assert body["board"] == "streak"
-    assert body["entries"][0]["name"] == "Maya Chen"
-    assert body["entries"][0]["points"] == 300
-    assert body["me"]["points"] == 100
+    assert body["metric_label"] == "STREAK"
+    names = [entry["name"] for entry in body["entries"]]
+    assert names[:3] == ["Maya Chen", "Sam Rivera", "Alex Morgan"]
+    assert body["entries"][0]["points"] == 10
+    assert body["entries"][1]["points"] == 7
+    assert body["me"]["points"] == 5
 
 
 @pytest.mark.asyncio
@@ -160,7 +154,7 @@ async def test_activity_updates_rankings_and_team_points(lb_client):
     async with session_factory() as session:
         from sqlalchemy import select
 
-        user = (await session.execute(select(User).where(User.email == "student@movegrid.demo"))).scalar_one()
+        user = (await session.execute(select(User).where(User.email == "demo@movegrid.demo"))).scalar_one()
         await record_activity_progress(session, user, move_awarded=500, active_minutes=10)
         await session.commit()
 

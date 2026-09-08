@@ -24,7 +24,7 @@ SEED_EXERCISES = [
     },
     {
         "name": "Walking",
-        "description": "A brisk campus walk with no equipment.",
+        "description": "A brisk outdoor walk with no equipment.",
         "category": "Walking",
         "difficulty": "Beginner",
         "duration_minutes": 10,
@@ -95,7 +95,7 @@ SEED_EXERCISES = [
     },
     {
         "name": "Running",
-        "description": "A short continuous run around campus.",
+        "description": "A short continuous run in your neighborhood.",
         "category": "Cardio",
         "difficulty": "Intermediate",
         "duration_minutes": 12,

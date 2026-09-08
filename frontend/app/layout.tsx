@@ -1,10 +1,11 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { OnboardingGate } from '../components/OnboardingGate'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'MOVEGRID — Move & Play',
-  description: 'A playful cartoon campus where every walk, challenge, and checkpoint becomes a game.',
+  description: 'A playful movement game where every walk, challenge, and checkpoint becomes progress.',
   generator: 'MOVEGRID',
 }
 
@@ -16,5 +17,12 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className="bg-background"><body className="antialiased">{children}{process.env.NODE_ENV === 'production' && <Analytics />}</body></html>
+  return (
+    <html lang="en" className="bg-background">
+      <body className="antialiased">
+        <OnboardingGate>{children}</OnboardingGate>
+        {process.env.NODE_ENV === 'production' && <Analytics />}
+      </body>
+    </html>
+  )
 }
