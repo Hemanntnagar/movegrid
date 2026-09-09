@@ -103,6 +103,93 @@ function ClockIcon() {
   return <span className="clock-icon">◷</span>
 }
 
+function formatCountdown(totalSeconds: number) {
+  const safe = Math.max(0, totalSeconds)
+  const hours = Math.floor(safe / 3600)
+  const minutes = Math.floor((safe % 3600) / 60)
+  const seconds = safe % 60
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':')
+}
+
+// ─── 24-Hour Daily Gyro Challenge Widget ────────────────────────────────────
+
+function DailyGyroChallengeWidget() {
+  const { steps, goal, percent, active, startTracking, addSteps } = useStepCounter()
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(0)
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date()
+      const endOfDay = new Date()
+      endOfDay.setHours(24, 0, 0, 0)
+      const diff = Math.max(0, Math.floor((endOfDay.getTime() - now.getTime()) / 1000))
+      setSecondsRemaining(diff)
+    }
+    updateTime()
+    const timer = setInterval(updateTime, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="challenges-daily-banner">
+      <div className="daily-banner-header">
+        <div className="daily-banner-badge">
+          <ClockIcon /> 24-HOUR DAILY QUEST
+        </div>
+        <span className="daily-timer-chip">
+          ⏱ Resets in {formatCountdown(secondsRemaining)}
+        </span>
+      </div>
+
+      <div className="daily-banner-body">
+        <div>
+          <h2>10,000 Daily Steps Challenge</h2>
+          <p className="daily-banner-sub">
+            Powered by your phone&apos;s gyroscope & accelerometer motion sensors. Keep moving to complete the 24-hour goal!
+          </p>
+        </div>
+
+        <div className="daily-banner-reward">
+          <Zap size={16} fill="currentColor" /> +150 MOVE
+        </div>
+      </div>
+
+      <div className="daily-banner-progress">
+        <div className="progress-labels">
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Footprints size={14} /> <strong>{steps.toLocaleString()}</strong> / {goal.toLocaleString()} steps ({percent}%)
+          </span>
+          <span className={`gyro-status-chip ${active ? 'active' : ''}`}>
+            <Sparkles size={12} className={active ? 'spin-slow' : ''} />
+            {active ? 'Gyro & Motion Sensors Active' : 'Gyro Sensors Ready'}
+          </span>
+        </div>
+        <div className="progress-track-bar">
+          <div className="progress-fill-bar" style={{ width: `${percent}%` }} />
+        </div>
+      </div>
+
+      <div className="daily-banner-actions">
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() => startTracking()}
+        >
+          <Play size={14} fill="currentColor" /> {active ? 'Sensors Tracking Live' : 'Start 24H Gyro Challenge'}
+        </button>
+        <button
+          type="button"
+          className="outline-button"
+          onClick={() => addSteps(100)}
+          title="Simulate step motion (useful for testing on desktop)"
+        >
+          +100 Steps (Test Motion)
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function MissionCard({ mission, onStart }: { mission: Mission; onStart: (m: Mission) => void }) {
   return (
     <article className={`mission-card ${mission.color}`}>
@@ -404,50 +491,8 @@ export default function ChallengesPage() {
           </div>
         </div>
 
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">FEATURED HIGHLIGHT</p>
-            <h2>Featured Health Goal</h2>
-          </div>
-          <button type="button" className="text-button" onClick={() => start(apiMissions[0])}>
-            View details <ArrowRight size={14} />
-          </button>
-        </div>
-
-        <div className="recommendation">
-          <div className="rec-copy">
-            <Pill tone="lime">
-              <Sparkles size={12} /> Top Challenge
-            </Pill>
-            <h2>{apiMissions[0]?.title || '10,000 Daily Steps Goal'}</h2>
-            <p>
-              {apiMissions[0]?.description ||
-                'Complete 10,000 steps today to boost cardiovascular energy and stack your streak.'}
-            </p>
-            <div className="rec-meta">
-              <span>
-                <ClockIcon /> {apiMissions[0]?.minutes || 45} min
-              </span>
-              <span>
-                <Zap size={14} /> +{apiMissions[0]?.move || 150} MOVE
-              </span>
-              <span>
-                <MapPin size={14} /> {apiMissions[0]?.distance || '4.8 mi'}
-              </span>
-            </div>
-            <button type="button" className="primary-button" onClick={() => start(apiMissions[0])}>
-              Start challenge <ArrowRight size={16} />
-            </button>
-          </div>
-          <div className="rec-visual">
-            <div className="orbit orbit-one" />
-            <div className="orbit orbit-two" />
-            <div className="rec-icon">
-              <Footprints size={38} />
-            </div>
-            <span>01</span>
-          </div>
-        </div>
+        {/* 24-Hour Daily Gyro Challenge Banner */}
+        <DailyGyroChallengeWidget />
 
         <div className="section-heading compact">
           <div>
