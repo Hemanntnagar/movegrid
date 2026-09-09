@@ -9,9 +9,7 @@ import {
   Gift,
   LayoutDashboard,
   LogIn,
-  MapPin,
   Swords,
-  Target,
   Trophy,
   UserRound,
   Users,
@@ -21,13 +19,10 @@ import { ApiUser, clearToken, getStoredToken, movegridApi } from '../lib/api'
 
 export type MenuAction =
   | 'dashboard'
-  | 'standings'
   | 'buddies'
   | 'competitions'
-  | 'challenges'
   | 'reward-hub'
   | 'assistant'
-  | 'map'
   | 'leaderboard'
 
 const MENU_ITEMS: {
@@ -38,11 +33,8 @@ const MENU_ITEMS: {
   tone: string
 }[] = [
   { id: 'dashboard', label: 'Dashboard Trail', icon: LayoutDashboard, tone: 'lime', href: '/' },
-  { id: 'challenges', label: 'Challenges & Missions', icon: Target, tone: 'purple', href: '/challenges' },
   { id: 'leaderboard', label: 'Leaderboards', icon: Flame, tone: 'orange', href: '/leaderboard' },
-  { id: 'standings', label: 'Standings', icon: Trophy, tone: 'orange', href: '/standings' },
   { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
-  { id: 'map', label: 'Live Map', icon: MapPin, tone: 'blue', href: '/map' },
   { id: 'buddies', label: 'Buddies & Nearby', icon: Users, tone: 'lime', href: '/buddies' },
   { id: 'reward-hub', label: 'Reward Store', icon: Gift, tone: 'lime', href: '/rewards' },
   { id: 'assistant', label: 'AI Coach Assistant', icon: Bot, tone: 'blue', href: '/assistant' },
