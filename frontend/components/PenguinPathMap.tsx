@@ -345,6 +345,14 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
                     <text className={`trail-node-label status-${level.status}`} textAnchor="middle" dy="7">
                       {level.day}
                     </text>
+                    {isToday && level.status === 'active' && (
+                      <g transform="translate(0, -36)">
+                        <rect x="-26" y="-10" width="52" height="18" rx="9" fill="#183d59" stroke="#ffd447" strokeWidth="1.5" />
+                        <text textAnchor="middle" dy="2" fill="#ffd447" fontSize="9" fontWeight="900">
+                          ▶ START
+                        </text>
+                      </g>
+                    )}
                   </g>
                 )
               })}

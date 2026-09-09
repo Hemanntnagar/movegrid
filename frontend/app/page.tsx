@@ -62,55 +62,61 @@ function DailyChallengeBar({
 
   return (
     <div className={`daily-challenge-notification ${isCompleted ? 'unlocked' : isExpired ? 'expired' : isActive ? 'active' : 'locked'}`}>
-      <div className="notification-badge">
-        <Bell size={14} className={isActive ? 'bell-ring' : ''} />
-        <span>
-          {isCompleted ? 'CHALLENGE COMPLETED' : isExpired ? 'CHALLENGE EXPIRED' : isActive ? 'CHALLENGE ACTIVE' : 'DAILY CHALLENGE'}
+      <div className="challenge-box-header">
+        <div className="notification-badge">
+          <Bell size={13} className={isActive ? 'bell-ring' : ''} />
+          <span>
+            {isCompleted ? 'COMPLETED' : isExpired ? 'EXPIRED' : isActive ? 'TRACKING LIVE' : 'DAILY QUEST'}
+          </span>
+        </div>
+        <strong className="notification-title">{challengeTitle}</strong>
+        <span className="notification-timer-chip">
+          {isCompleted ? '✓ Done' : isExpired ? '⌛ Expired' : `⏱ ${formatCountdown(secondsRemaining)}`}
         </span>
       </div>
 
-      <div className="notification-content">
-        <div className="notification-text">
-          <strong className="notification-title">{challengeTitle}</strong>
-          <span className="notification-meta">
+      <div className="challenge-box-body">
+        <div className="notification-meta-pills">
+          <span className="meta-pill">
             <Footprints size={12} /> {steps.toLocaleString()} / {stepGoal.toLocaleString()} ({stepPercent}%)
-            · <Zap size={12} fill="currentColor" style={{ color: '#eab308' }} /> +{challengeMove} MOVE
-            · {isCompleted ? '✓ Completed' : isExpired ? '⌛ Expired' : `⏱ ${formatCountdown(secondsRemaining)}`}
+          </span>
+          <span className="meta-pill reward">
+            <Zap size={12} fill="currentColor" /> +{challengeMove} MOVE
           </span>
         </div>
 
-        <div className="notification-progress-track">
-          <div
-            className={`notification-progress-fill ${isCompleted ? 'complete' : ''}`}
-            style={{ width: `${Math.min(100, stepPercent)}%` }}
-          />
+        <div className="notification-actions">
+          {isCompleted ? (
+            <span className="challenge-status-chip success">
+              <CheckCircle2 size={14} /> +{challengeMove} MOVE
+            </span>
+          ) : isExpired ? (
+            <span className="challenge-status-chip expired">
+              Expired
+            </span>
+          ) : isActive ? (
+            <span className="challenge-status-chip active">
+              <Sparkles size={14} className="spin-slow" /> Active
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="primary-button start-challenge-btn"
+              onClick={onStartChallenge}
+              title="Click to start continuous live tracking for today's challenge"
+            >
+              <Play size={12} fill="currentColor" />
+              <span>Start Challenge</span>
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="notification-actions">
-        {isCompleted ? (
-          <span className="challenge-status-chip success">
-            <CheckCircle2 size={14} /> Completed (+{challengeMove})
-          </span>
-        ) : isExpired ? (
-          <span className="challenge-status-chip expired">
-            Expired
-          </span>
-        ) : isActive ? (
-          <span className="challenge-status-chip active">
-            <Sparkles size={14} className="spin-slow" /> Tracking Live…
-          </span>
-        ) : (
-          <button
-            type="button"
-            className="primary-button start-challenge-btn"
-            onClick={onStartChallenge}
-            title="Click to start continuous live tracking for today's challenge"
-          >
-            <Play size={13} fill="currentColor" />
-            <span>Start Challenge</span>
-          </button>
-        )}
+      <div className="notification-progress-track">
+        <div
+          className={`notification-progress-fill ${isCompleted ? 'complete' : ''}`}
+          style={{ width: `${Math.min(100, stepPercent)}%` }}
+        />
       </div>
     </div>
   )

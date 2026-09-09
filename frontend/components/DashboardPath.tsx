@@ -8,6 +8,10 @@ import {
   Info,
   LoaderCircle,
   Lock,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
   Sparkles,
   Timer,
   X,
@@ -51,7 +55,7 @@ function taskTitle(assignment: ApiDailyAssignment) {
   return exercise.name
 }
 
-function ExerciseGuideModal({
+function ActiveExerciseModal({
   assignment,
   onClose,
   onComplete,
@@ -59,8 +63,178 @@ function ExerciseGuideModal({
 }: {
   assignment: ApiDailyAssignment
   onClose: () => void
+  onComplete: (id: number) => Promise<void>
+  completing: boolean
+}) {
+  const exercise = assignment.exercise
+  const isTimeBased =
+    exercise.duration_minutes > 0 ||
+    exercise.name.toLowerCase().includes('plank') ||
+    exercise.name.toLowerCase().includes('hold')
+
+  const totalTimeSeconds = useMemo(() => {
+    if (exercise.duration_minutes > 0) return exercise.duration_minutes * 60
+    if (exercise.target_reps > 0 && isTimeBased) return exercise.target_reps
+    return 30
+  }, [exercise, isTimeBased])
+
+  const targetReps = useMemo(() => {
+    if (!isTimeBased && exercise.target_reps > 0) return exercise.target_reps
+    return 0
+  }, [exercise, isTimeBased])
+
+  const [secondsLeft, setSecondsLeft] = useState(totalTimeSeconds)
+  const [isRunning, setIsRunning] = useState(true)
+  const [repsDone, setRepsDone] = useState(0)
+
+  useEffect(() => {
+    if (!isTimeBased || !isRunning || secondsLeft <= 0) return
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [isTimeBased, isRunning, secondsLeft])
+
+  const isFinished = isTimeBased ? secondsLeft === 0 : repsDone >= targetReps && targetReps > 0
+
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60)
+    const s = secs % 60
+    return `${m > 0 ? String(m).padStart(2, '0') + ':' : ''}${String(s).padStart(2, '0')}`
+  }
+
+  return (
+    <div className="modal-backdrop" style={{ zIndex: 45 }} onClick={onClose}>
+      <div className="modal active-exercise-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="close-button" onClick={onClose} aria-label="Close">
+          <X size={18} />
+        </button>
+
+        <div className="modal-kicker">
+          <Sparkles size={15} className="spin-slow" /> ACTIVE EXERCISE SESSION
+        </div>
+
+        <div className="exercise-header-badge">
+          <span className="pill lime">{exercise.category}</span>
+          <span className="move-value">
+            <Zap size={13} fill="currentColor" /> +{assignment.points} MOVE
+          </span>
+        </div>
+
+        <h2 style={{ marginTop: '6px', marginBottom: '2px' }}>{taskTitle(assignment)}</h2>
+        <p style={{ fontSize: '0.85rem', color: '#183d59', opacity: 0.85, marginBottom: '14px' }}>
+          {exercise.description}
+        </p>
+
+        <div className="exercise-runner-box">
+          {isTimeBased ? (
+            <div className="exercise-timer-container">
+              <div className={`exercise-timer-ring ${isRunning ? 'active' : ''} ${isFinished ? 'finished' : ''}`}>
+                <span className="timer-big-text">{formatTimer(secondsLeft)}</span>
+                <span className="timer-sub-text">
+                  {isFinished ? 'TIME UP! EXERCISE COMPLETE' : isRunning ? 'TIMING LIVE' : 'PAUSED'}
+                </span>
+              </div>
+
+              <div className="exercise-timer-controls">
+                {!isFinished && (
+                  <button
+                    type="button"
+                    className="outline-button compact-btn"
+                    onClick={() => setIsRunning(!isRunning)}
+                  >
+                    {isRunning ? <Pause size={15} /> : <Play size={15} fill="currentColor" />}
+                    {isRunning ? 'Pause' : 'Resume'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="outline-button compact-btn"
+                  onClick={() => {
+                    setSecondsLeft(totalTimeSeconds)
+                    setIsRunning(true)
+                  }}
+                >
+                  <RotateCcw size={15} />
+                  Reset
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="exercise-reps-container">
+              <div className="rep-counter-display">
+                <span className="rep-big-num">{repsDone}</span>
+                <span className="rep-slash">/</span>
+                <span className="rep-target-num">{targetReps || '10'} REPS</span>
+              </div>
+
+              <div className="exercise-rep-controls">
+                <button
+                  type="button"
+                  className="primary-button add-rep-btn"
+                  onClick={() => setRepsDone((prev) => Math.min(targetReps || 99, prev + 1))}
+                >
+                  <Plus size={16} /> +1 Rep
+                </button>
+                <button
+                  type="button"
+                  className="outline-button"
+                  onClick={() => setRepsDone(targetReps || 10)}
+                >
+                  <Check size={15} /> Finish All
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {exercise.instructions && (
+          <div className="exercise-technique-card">
+            <strong>
+              <Activity size={13} /> Technique & Form Guide:
+            </strong>
+            <p>{exercise.instructions}</p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          className={`primary-button full complete-exercise-claim-btn ${isFinished ? 'pulse-gold' : ''}`}
+          disabled={completing}
+          onClick={async () => {
+            await onComplete(assignment.id)
+            onClose()
+          }}
+        >
+          {completing ? (
+            <>
+              <LoaderCircle size={16} className="spin" />
+              <span>Logging Exercise...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={16} />
+              <span>Complete & Claim +{assignment.points} MOVE</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ExerciseGuideModal({
+  assignment,
+  onClose,
+  onComplete,
+  completing,
+  onStartExercise,
+}: {
+  assignment: ApiDailyAssignment
+  onClose: () => void
   onComplete: (id: number) => void
   completing: boolean
+  onStartExercise: (assignment: ApiDailyAssignment) => void
 }) {
   const exercise = assignment.exercise
   return (
@@ -91,17 +265,30 @@ function ExerciseGuideModal({
           )}
         </div>
         {assignment.status === 'ASSIGNED' ? (
-          <button
-            className="primary-button full"
-            disabled={completing}
-            onClick={() => {
-              onComplete(assignment.id)
-              onClose()
-            }}
-          >
-            {completing ? <LoaderCircle size={15} className="spin" /> : <Sparkles size={15} />}
-            {completing ? 'Logging…' : 'Complete & Claim MOVE'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button
+              className="primary-button"
+              style={{ flex: 1.4 }}
+              onClick={() => {
+                onClose()
+                onStartExercise(assignment)
+              }}
+            >
+              <Play size={15} fill="currentColor" /> Start Exercise
+            </button>
+            <button
+              className="outline-button"
+              style={{ flex: 1 }}
+              disabled={completing}
+              onClick={() => {
+                onComplete(assignment.id)
+                onClose()
+              }}
+            >
+              {completing ? <LoaderCircle size={15} className="spin" /> : <Check size={15} />}
+              Done
+            </button>
+          </div>
         ) : (
           <button className="outline-button full" onClick={onClose}>
             Close guide
@@ -123,6 +310,7 @@ function DayLevelModal({
   justCompletedId,
   onInspect,
   levelClosed,
+  onStartExercise,
 }: {
   day: number
   monthLabel: string
@@ -134,8 +322,10 @@ function DayLevelModal({
   justCompletedId: number | null
   onInspect: (assignment: ApiDailyAssignment) => void
   levelClosed: boolean
+  onStartExercise: (assignment: ApiDailyAssignment) => void
 }) {
   const allDone = today.progress.total > 0 && today.progress.completed >= today.progress.total
+  const firstAssigned = today.assignments.find((a) => a.status === 'ASSIGNED')
 
   return (
     <div className="modal-backdrop day-level-backdrop" onClick={onClose}>
@@ -155,6 +345,19 @@ function DayLevelModal({
             ? 'This level is closed. Come back tomorrow for the next date.'
             : `Finish before the 24-hour IST timer ends · ${today.fitness_level}`}
         </p>
+
+        {!allDone && !levelClosed && firstAssigned && (
+          <div className="day-level-header-actions">
+            <button
+              type="button"
+              className="primary-button start-level-workout-btn"
+              onClick={() => onStartExercise(firstAssigned)}
+            >
+              <Play size={16} fill="currentColor" />
+              <span>Start Exercise</span>
+            </button>
+          </div>
+        )}
 
         {!allDone && !levelClosed && (
           <div className="day-level-timer">
@@ -203,12 +406,12 @@ function DayLevelModal({
                   </button>
                   {assignment.status === 'ASSIGNED' && !levelClosed && (
                     <button
-                      className="primary-button"
-                      disabled={completingId === assignment.id}
-                      onClick={() => onComplete(assignment.id)}
+                      type="button"
+                      className="primary-button start-exercise-row-btn"
+                      onClick={() => onStartExercise(assignment)}
                     >
-                      {completingId === assignment.id ? <LoaderCircle size={14} className="spin" /> : <Check size={14} />}
-                      Done
+                      <Play size={14} fill="currentColor" />
+                      Start Exercise
                     </button>
                   )}
                   {done && (
@@ -291,6 +494,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   const [toast, setToast] = useState('')
   const [justCompletedId, setJustCompletedId] = useState<number | null>(null)
   const [inspectAssignment, setInspectAssignment] = useState<ApiDailyAssignment | null>(null)
+  const [activeExerciseAssignment, setActiveExerciseAssignment] = useState<ApiDailyAssignment | null>(null)
   const [tick, setTick] = useState(0)
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [gateDay, setGateDay] = useState<{ day: number; reason: 'locked' | 'missed' | 'closed' | 'completed' } | null>(
@@ -481,6 +685,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           justCompletedId={justCompletedId}
           onInspect={setInspectAssignment}
           levelClosed={todayLevelClosed && today.progress.completed >= today.progress.total}
+          onStartExercise={(assignment) => setActiveExerciseAssignment(assignment)}
         />
       )}
 
@@ -492,6 +697,16 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           onClose={() => setInspectAssignment(null)}
           onComplete={handleComplete}
           completing={completingId === inspectAssignment.id}
+          onStartExercise={(assignment) => setActiveExerciseAssignment(assignment)}
+        />
+      )}
+
+      {activeExerciseAssignment && (
+        <ActiveExerciseModal
+          assignment={activeExerciseAssignment}
+          onClose={() => setActiveExerciseAssignment(null)}
+          onComplete={handleComplete}
+          completing={completingId === activeExerciseAssignment.id}
         />
       )}
 
