@@ -10,17 +10,16 @@ const STEP_GOAL = 10_000
 const STORAGE_PREFIX = 'movegrid_steps_'
 
 /**
- * Acceleration magnitude threshold for a step peak.
- * Tuned for walking pace (≈ 10–13 m/s² including gravity).
- * Raise if you're getting false positives, lower if steps are missed.
+ * Acceleration magnitude threshold for a step peak (in m/s² of linear acceleration).
+ * Dynamic vector filtering isolates walking movement from gravity baseline.
  */
-const STEP_THRESHOLD = 11.5
+const LINEAR_STEP_THRESHOLD = 1.25
 
 /**
  * Minimum milliseconds between two detected steps (debounce).
- * Prevents double-counting the same footfall.
+ * Prevents double-counting fast jitter while tracking cadence up to 4.5 steps/sec.
  */
-const STEP_MIN_INTERVAL_MS = 250
+const STEP_MIN_INTERVAL_MS = 220
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -76,6 +75,7 @@ export function useStepCounter(): StepCounterState {
   const lastPeakTimeRef = useRef<number>(0)
   const prevMagRef = useRef<number>(0)
   const risingRef = useRef<boolean>(false)
+  const gravityRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 9.81 })
 
   /** Persist + update state together */
   function setSteps(n: number) {
@@ -120,18 +120,40 @@ export function useStepCounter(): StepCounterState {
   // ── Step detection handler ────────────────────────────────────────────────
 
   const handleMotion = useCallback((event: DeviceMotionEvent) => {
-    const acc = event.accelerationIncludingGravity
-    if (!acc) return
-    const x = acc.x ?? 0
-    const y = acc.y ?? 0
-    const z = acc.z ?? 0
-    const mag = Math.sqrt(x * x + y * y + z * z)
+    let mag = 0
+
+    // 1. Prefer hardware-compensated pure linear acceleration if available
+    const userAcc = event.acceleration
+    if (userAcc && userAcc.x !== null && userAcc.x !== undefined && userAcc.y !== null && userAcc.y !== undefined) {
+      const x = userAcc.x || 0
+      const y = userAcc.y || 0
+      const z = userAcc.z || 0
+      mag = Math.sqrt(x * x + y * y + z * z)
+    } else {
+      // 2. Fallback: Low-pass vector gravity isolation for accurate 3D linear acceleration
+      const acc = event.accelerationIncludingGravity
+      if (!acc) return
+      const rawX = acc.x ?? 0
+      const rawY = acc.y ?? 0
+      const rawZ = acc.z ?? 0
+
+      const alpha = 0.85
+      gravityRef.current.x = alpha * gravityRef.current.x + (1 - alpha) * rawX
+      gravityRef.current.y = alpha * gravityRef.current.y + (1 - alpha) * rawY
+      gravityRef.current.z = alpha * gravityRef.current.z + (1 - alpha) * rawZ
+
+      const linX = rawX - gravityRef.current.x
+      const linY = rawY - gravityRef.current.y
+      const linZ = rawZ - gravityRef.current.z
+
+      mag = Math.sqrt(linX * linX + linY * linY + linZ * linZ)
+    }
 
     const wasRising = risingRef.current
     const isRising = mag > prevMagRef.current
 
-    // Detect a downward crossing above threshold → step peak
-    if (wasRising && !isRising && prevMagRef.current > STEP_THRESHOLD) {
+    // Detect downward peak crossing above threshold → step step count
+    if (wasRising && !isRising && prevMagRef.current > LINEAR_STEP_THRESHOLD) {
       const now = Date.now()
       if (now - lastPeakTimeRef.current > STEP_MIN_INTERVAL_MS) {
         lastPeakTimeRef.current = now

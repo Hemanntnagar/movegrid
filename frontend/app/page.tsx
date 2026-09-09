@@ -234,6 +234,20 @@ export default function Page() {
       />
 
       <main className="main-content dashboard-with-trail">
+        {/* Top Floating Notification Pop-up for Daily Challenge */}
+        <div className="top-daily-challenge-banner">
+          <DailyChallengeBar
+            challengeState={challengeState}
+            secondsRemaining={secondsRemaining}
+            challengeTitle="10,000 Daily Steps Goal"
+            challengeMove={150}
+            steps={steps}
+            stepGoal={stepGoal}
+            stepPercent={stepPercent}
+            onStartChallenge={handleStartChallenge}
+          />
+        </div>
+
         <div className="welcome trail-welcome">
           <div>
             <div className="cartoon-speech-bubble">
@@ -252,37 +266,26 @@ export default function Page() {
         </div>
 
         <div className="dashboard-grid-layout">
-          <aside className="dashboard-sidebar-left">
+          <div className="dashboard-main-content">
+            <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
+          </div>
+
+          <aside className="dashboard-sidebar-right">
             <div className="stats-vertical-stack">
-              <StatCard icon={<Zap size={19} />} label="MOVE points ⚡" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" />
-              <StatCard icon={<Flame size={19} />} label="Current streak 🔥" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
+              <StatCard icon={<Zap size={16} />} label="MOVE points ⚡" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" />
+              <StatCard icon={<Flame size={16} />} label="Current streak 🔥" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
               <StatCard
-                icon={<Footprints size={19} />}
+                icon={<Footprints size={16} />}
                 label="Steps today 👟"
                 value={steps.toLocaleString()}
                 detail={`${stepPercent}% of ${stepGoal.toLocaleString()} goal`}
                 tone="blue"
               />
               <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                <StatCard icon={<Trophy size={19} />} label="Global rank 🏆" value={rankLabel} detail="↑ 6 places" tone="purple" />
+                <StatCard icon={<Trophy size={16} />} label="Global rank 🏆" value={rankLabel} detail="↑ 6 places" tone="purple" />
               </Link>
             </div>
           </aside>
-
-          <div className="dashboard-main-content">
-            <DailyChallengeBar
-              challengeState={challengeState}
-              secondsRemaining={secondsRemaining}
-              challengeTitle="10,000 Daily Steps Goal"
-              challengeMove={150}
-              steps={steps}
-              stepGoal={stepGoal}
-              stepPercent={stepPercent}
-              onStartChallenge={handleStartChallenge}
-            />
-
-            <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
-          </div>
         </div>
       </main>
 
