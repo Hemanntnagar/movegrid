@@ -27,8 +27,8 @@ function LoginContent() {
   
   const [mode, setMode] = useState<'login' | 'signup'>(initialTab)
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('demo@movegrid.demo')
-  const [password, setPassword] = useState('movegrid-demo')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [fitnessLevel, setFitnessLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>('Beginner')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -207,10 +207,28 @@ function LoginContent() {
       </div>
 
       <p className="login-hint" style={{ fontSize: '10px', opacity: 0.85, marginTop: '8px' }}>
-        {isDemoMode
-          ? 'Offline demo — any email/password works without backend setup.'
-          : 'Demo credentials: demo@movegrid.demo / movegrid-demo'}
+        Enter your credentials or click below to test with demo account:
       </p>
+      <div style={{ textAlign: 'center', marginTop: '4px' }}>
+        <button
+          type="button"
+          onClick={() => {
+            setEmail('demo@movegrid.demo')
+            setPassword('movegrid-demo')
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#657a17',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
+          Prefill demo credentials (demo@movegrid.demo)
+        </button>
+      </div>
     </div>
   )
 }

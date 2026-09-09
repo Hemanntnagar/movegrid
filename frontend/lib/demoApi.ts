@@ -20,6 +20,7 @@ import { getIstParts, istDateKey } from './ist'
 
 const DEMO_TOKEN = 'demo.movegrid.local'
 const DEMO_USER_KEY = 'movegrid_demo_user'
+const DEMO_ACCOUNTS_KEY = 'movegrid_demo_accounts'
 const DEMO_DAY_KEY = 'movegrid_demo_day'
 const DEMO_REDEEM_KEY = 'movegrid_demo_redeems'
 const DEMO_PRESENCE_KEY = 'movegrid_demo_presence'
@@ -63,6 +64,7 @@ type DemoUserState = {
   id: number
   name: string
   email: string
+  password?: string
   total_points: number
   streak: number
   streak_score: number
@@ -121,6 +123,17 @@ function defaultUser(email = 'demo@movegrid.demo'): DemoUserState {
     steps: 3450,
     avatar: 'initials:AM:#8bd4f4',
   }
+}
+
+function readAccounts(): Record<string, DemoUserState> {
+  return readJson(DEMO_ACCOUNTS_KEY, {})
+}
+
+function saveAccount(account: DemoUserState) {
+  const accounts = readAccounts()
+  accounts[account.email.toLowerCase().trim()] = account
+  writeJson(DEMO_ACCOUNTS_KEY, accounts)
+  saveUser(account)
 }
 
 function getUser(): DemoUserState {
@@ -263,26 +276,36 @@ export function isDemoToken(token: string | null | undefined) {
 }
 
 export const demoApi = {
-  register(name: string, email: string, _password: string, fitness_level?: string): ApiToken {
-    const cleanEmail = email.trim() || 'user@movegrid.demo'
+  register(name: string, email: string, password: string, fitness_level?: string): ApiToken {
+    const cleanEmail = email.trim().toLowerCase() || 'user@movegrid.demo'
     const cleanName = name.trim() || cleanEmail.split('@')[0] || 'MOVEGRID Mover'
-    const initials = cleanName
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((p) => p[0])
-      .join('')
-      .toUpperCase() || 'MG'
-    const newUser: DemoUserState = {
-      id: Date.now(),
-      name: cleanName,
-      email: cleanEmail,
-      total_points: 250,
-      streak: 1,
-      streak_score: 10,
-      active_minutes: 0,
-      avatar: `initials:${initials}:#8bd4f4`,
+    const initials =
+      cleanName
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((p) => p[0])
+        .join('')
+        .toUpperCase() || 'MG'
+
+    const accounts = readAccounts()
+    let user = accounts[cleanEmail]
+    if (!user) {
+      user = {
+        id: Date.now(),
+        name: cleanName,
+        email: cleanEmail,
+        password,
+        total_points: 250,
+        streak: 1,
+        streak_score: 10,
+        active_minutes: 0,
+        avatar: `initials:${initials}:#8bd4f4`,
+      }
+    } else {
+      user.name = cleanName
+      user.password = password
     }
-    saveUser(newUser)
+    saveAccount(user)
     if (fitness_level && typeof window !== 'undefined') {
       const existingPlan = getStoredPlan()
       writeJson('movegrid_fitness_plan', {
@@ -291,14 +314,37 @@ export const demoApi = {
         hasCompletedOnboarding: true,
       })
     }
-    return { access_token: `demo.${Date.now()}`, token_type: 'bearer' }
+    return { access_token: `demo.${user.id}`, token_type: 'bearer' }
   },
 
-  login(email: string, _password: string): ApiToken {
-    const base = defaultUser(email)
-    const user = { ...getUser(), ...base, email }
-    saveUser(user)
-    return { access_token: DEMO_TOKEN, token_type: 'bearer' }
+  login(email: string, password: string): ApiToken {
+    const cleanEmail = email.trim().toLowerCase()
+    const accounts = readAccounts()
+    let account = accounts[cleanEmail]
+
+    if (account) {
+      if (account.password && password && account.password !== password) {
+        throw new Error('Invalid email or password')
+      }
+    } else if (cleanEmail === 'demo@movegrid.demo' || cleanEmail.endsWith('.demo')) {
+      account = { ...defaultUser(cleanEmail), password }
+    } else {
+      const short = cleanEmail.split('@')[0] || 'Mover'
+      const cleanName = short.charAt(0).toUpperCase() + short.slice(1)
+      account = {
+        id: Date.now(),
+        name: cleanName,
+        email: cleanEmail,
+        password,
+        total_points: 250,
+        streak: 1,
+        streak_score: 10,
+        active_minutes: 0,
+        avatar: `initials:${short.slice(0, 2).toUpperCase()}:#8bd4f4`,
+      }
+    }
+    saveAccount(account)
+    return { access_token: `demo.${account.id}`, token_type: 'bearer' }
   },
 
   me(_token: string): ApiUser {
