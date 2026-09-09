@@ -30,6 +30,7 @@ export type ApiUser = {
   streak_score?: number
   streak_month?: string
   active_minutes: number
+  steps?: number
   avatar: string
 }
 
@@ -318,6 +319,22 @@ export const movegridApi = {
       : request<ApiParticipateResult>(`/competitions/${id}/participate`, {
           method: 'POST',
           headers: authHeaders(token),
+        }),
+  startMission: (id: number, steps = 0, token?: string | null) =>
+    isDemoMode
+      ? asPromise(demoApi.startMission(id, steps))
+      : request(`/missions/${id}/start`, {
+          method: 'POST',
+          headers: token ? authHeaders(token) : undefined,
+          body: JSON.stringify({ steps }),
+        }),
+  syncSteps: (token: string, steps: number, active_minutes?: number) =>
+    isDemoMode
+      ? asPromise(demoApi.syncSteps(token, steps, active_minutes))
+      : request<{ steps: number; total_points: number; streak: number; streak_score: number; streak_gained: number }>('/daily-fitness/steps', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ steps, active_minutes }),
         }),
   completeMission: (id: number, code = 'movegrid-demo') =>
     isDemoMode

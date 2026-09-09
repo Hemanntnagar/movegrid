@@ -323,31 +323,49 @@ function MissionModal({
             </span>
           </div>
         )}
-        <button
-          type="button"
-          className="primary-button full"
-          disabled={loading}
-          onClick={() => {
-            if (step < 3) {
-              setStep(step + 1)
-            } else {
-              onComplete()
-            }
-          }}
-        >
-          {loading ? (
-            <LoaderCircle size={16} className="spin" />
-          ) : step === 0 ? (
-            'Start goal'
-          ) : step === 1 ? (
-            'Verify activity'
-          ) : step === 2 ? (
-            'Log progress'
-          ) : (
-            'Claim MOVE points'
-          )}{' '}
-          {!loading && <ArrowRight size={16} />}
-        </button>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '1rem', width: '100%' }}>
+          {step > 0 && (
+            <button
+              type="button"
+              className="outline-button"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => setStep((s) => s - 1)}
+            >
+              <ArrowLeft size={16} /> Previous
+            </button>
+          )}
+          <button
+            type="button"
+            className="primary-button full"
+            disabled={loading}
+            onClick={() => {
+              if (step === 0) {
+                const token = getStoredToken()
+                if (token) {
+                  movegridApi.startMission(mission.id, 150, token).catch(() => {})
+                }
+              }
+              if (step < 3) {
+                setStep(step + 1)
+              } else {
+                onComplete()
+              }
+            }}
+          >
+            {loading ? (
+              <LoaderCircle size={16} className="spin" />
+            ) : step === 0 ? (
+              'Start goal'
+            ) : step === 1 ? (
+              'Verify activity'
+            ) : step === 2 ? (
+              'Log progress'
+            ) : (
+              'Claim MOVE points'
+            )}{' '}
+            {!loading && <ArrowRight size={16} />}
+          </button>
+        </div>
       </div>
     </div>
   )

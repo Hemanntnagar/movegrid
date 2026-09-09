@@ -10,7 +10,7 @@ from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.core.exercise_catalog import SEED_EXERCISES
 from app.main import app
-from app.models.entities import DailyAssignment, Exercise, User
+from app.models.entities import Challenge, DailyAssignment, Exercise, User, Zone
 from app.services import fitness_assignment_service as fitness
 
 
@@ -150,3 +150,43 @@ async def test_expire_due_assignments_helper(client):
         await session.refresh(row)
         assert count == 1
         assert row.status == "EXPIRED"
+
+
+@pytest.mark.asyncio
+async def test_sync_steps_and_start_mission(client):
+    http, session_factory = client
+    login = await http.post(
+        "/api/v1/auth/login",
+        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
+    )
+    token = login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Test sync steps
+    res = await http.post("/api/v1/daily-fitness/steps", json={"steps": 1250, "active_minutes": 15}, headers=headers)
+    assert res.status_code == 200
+    assert res.json()["steps"] == 1250
+
+    me = await http.get("/api/v1/auth/me", headers=headers)
+    assert me.json()["steps"] == 1250
+
+    # Test start mission with steps
+    async with session_factory() as session:
+        zone = Zone(name="Test Zone", description="Test", latitude=0.0, longitude=0.0, qr_token="movegrid-demo")
+        session.add(zone)
+        await session.commit()
+        await session.refresh(zone)
+
+        ch = Challenge(title="10k Step Challenge", description="Hit 10k steps", type="Walk", zone_id=zone.id)
+        session.add(ch)
+        await session.commit()
+        await session.refresh(ch)
+        ch_id = ch.id
+
+    start_res = await http.post(f"/api/v1/missions/{ch_id}/start", json={"steps": 1500}, headers=headers)
+    assert start_res.status_code == 200
+    assert start_res.json()["steps_count"] == 1500
+
+    me_after = await http.get("/api/v1/auth/me", headers=headers)
+    assert me_after.json()["steps"] == 1500
+

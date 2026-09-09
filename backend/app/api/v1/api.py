@@ -22,6 +22,9 @@ from app.schemas.common import (
     RewardRead,
     RewardRedemptionRead,
     SquadCreate,
+    StartMissionPayload,
+    StepSyncRequest,
+    StepSyncResponse,
     TodayFitnessResponse,
     Token,
     UserCreate,
@@ -37,6 +40,7 @@ from app.services.leaderboard_service import (
 )
 from app.services.mission_service import list_missions, verify_and_complete
 from app.services.presence_service import list_nearby, upsert_presence
+from app.services.progress_service import record_activity_progress
 from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
 
 api_router = APIRouter()
@@ -86,10 +90,48 @@ async def challenge(challenge_id: int, db: AsyncSession = Depends(get_db)):
     return item
 
 @api_router.post("/missions/{challenge_id}/start")
-async def start_mission(challenge_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    if not await db.get(Challenge, challenge_id): raise HTTPException(404, "Mission not found")
-    activity = Activity(user_id=user.id, challenge_id=challenge_id, status="started")
-    db.add(activity); await db.commit(); await db.refresh(activity); return activity
+async def start_mission(
+    challenge_id: int,
+    payload: StartMissionPayload | None = None,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not await db.get(Challenge, challenge_id):
+        raise HTTPException(404, "Mission not found")
+    initial_steps = payload.steps if (payload and payload.steps is not None) else 0
+    if initial_steps > 0:
+        user.steps = max(user.steps, initial_steps)
+    activity = Activity(
+        user_id=user.id,
+        challenge_id=challenge_id,
+        status="started",
+        steps_count=initial_steps,
+    )
+    db.add(activity)
+    await db.commit()
+    await db.refresh(activity)
+    return activity
+
+@api_router.post("/daily-fitness/steps", response_model=StepSyncResponse)
+@api_router.post("/steps", response_model=StepSyncResponse)
+async def sync_steps(
+    payload: StepSyncRequest,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user.steps = max(user.steps, payload.steps)
+    if payload.active_minutes:
+        user.active_minutes += payload.active_minutes
+    progress = await record_activity_progress(db, user)
+    await db.commit()
+    return StepSyncResponse(
+        steps=user.steps,
+        total_points=user.total_points,
+        streak=user.streak,
+        streak_score=user.streak_score,
+        streak_gained=progress["streak_gained"],
+    )
+
 
 @api_router.post("/missions/{challenge_id}/verify")
 async def verify_mission(challenge_id: int, payload: VerifyRequest, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):

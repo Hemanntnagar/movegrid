@@ -214,7 +214,13 @@ export default function Page() {
     setChallengeState('active')
     localStorage.setItem(`movegrid_challenge_state_${today}`, 'active')
     requestPermission()
+    const currentSteps = steps === 0 ? 150 : steps
     if (steps === 0) addSteps(150) // initial boost on start
+    const token = getStoredToken()
+    if (token) {
+      movegridApi.syncSteps(token, currentSteps).catch(() => {})
+      movegridApi.startMission(1, currentSteps, token).catch(() => {})
+    }
   }, [requestPermission, addSteps, steps])
 
   return (

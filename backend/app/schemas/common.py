@@ -25,7 +25,9 @@ class UserRead(BaseModel):
     streak_score: int = 0
     streak_month: str = ""
     active_minutes: int
+    steps: int = 0
     avatar: str
+
 
 
 class LeaderboardEntry(BaseModel):
@@ -145,7 +147,23 @@ class ActivityRead(BaseModel):
     started_at: datetime
     completed_at: datetime | None
     points_earned: int
+    steps_count: int = 0
     verification_status: str
+
+class StepSyncRequest(BaseModel):
+    steps: int = Field(ge=0)
+    active_minutes: int | None = Field(default=None, ge=0)
+
+class StepSyncResponse(BaseModel):
+    steps: int
+    total_points: int
+    streak: int
+    streak_score: int
+    streak_gained: int = 0
+
+class StartMissionPayload(BaseModel):
+    steps: int | None = 0
+
 
 class ExerciseRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)

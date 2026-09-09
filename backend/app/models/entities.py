@@ -57,6 +57,7 @@ class User(Base):
     streak_month: Mapped[str] = mapped_column(String(7), default="")
     last_activity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    steps: Mapped[int] = mapped_column(Integer, default=0)
     avatar: Mapped[str] = mapped_column(String(255), default="/avatars/mover.png")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -132,6 +133,7 @@ class Activity(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     points_earned: Mapped[int] = mapped_column(Integer, default=0)
+    steps_count: Mapped[int] = mapped_column(Integer, default=0)
     verification_status: Mapped[str] = mapped_column(String(30), default="pending")
 
     @property

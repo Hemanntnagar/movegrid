@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { istDateKey } from '../lib/ist'
+import { getStoredToken, movegridApi } from '../lib/api'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -81,6 +82,10 @@ export function useStepCounter(): StepCounterState {
     stepsRef.current = n
     setStepsState(n)
     saveSteps(n)
+    const token = getStoredToken()
+    if (token) {
+      movegridApi.syncSteps(token, n).catch(() => {})
+    }
   }
 
   // Load today's saved count on mount

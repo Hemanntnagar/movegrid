@@ -67,6 +67,7 @@ type DemoUserState = {
   streak: number
   streak_score: number
   active_minutes: number
+  steps?: number
   avatar: string
 }
 
@@ -117,6 +118,7 @@ function defaultUser(email = 'demo@movegrid.demo'): DemoUserState {
     streak: 7,
     streak_score: 420,
     active_minutes: 86,
+    steps: 3450,
     avatar: 'initials:AM:#8bd4f4',
   }
 }
@@ -218,6 +220,7 @@ function toApiUser(user: DemoUserState): ApiUser {
     streak_score: user.streak_score,
     streak_month: `${parts.year}-${String(parts.month).padStart(2, '0')}`,
     active_minutes: user.active_minutes,
+    steps: user.steps ?? 0,
     avatar: user.avatar,
   }
 }
@@ -729,6 +732,31 @@ export const demoApi = {
       count: nearby.length,
       me,
       nearby,
+    }
+  },
+
+  startMission(id: number, steps = 0) {
+    const user = getUser()
+    if (steps > 0) {
+      user.steps = Math.max(user.steps || 0, steps)
+      saveUser(user)
+    }
+    return { status: 'started', id, challenge_id: id, steps_count: steps }
+  },
+
+  syncSteps(_token: string, steps: number, active_minutes?: number) {
+    const user = getUser()
+    user.steps = Math.max(user.steps || 0, steps)
+    if (active_minutes) {
+      user.active_minutes += active_minutes
+    }
+    saveUser(user)
+    return {
+      steps: user.steps,
+      total_points: user.total_points,
+      streak: user.streak,
+      streak_score: user.streak_score,
+      streak_gained: 0,
     }
   },
 
