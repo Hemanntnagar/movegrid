@@ -73,8 +73,17 @@ function ActiveExerciseModal({
   const [repsDone, setRepsDone] = useState(0)
   const [formScore, setFormScore] = useState(90)
   const [isPostureCorrect, setIsPostureCorrect] = useState(true)
+  const [goalCompleted, setGoalCompleted] = useState(false)
 
-  const isFinished = repsDone >= targetReps
+  const isFinished = repsDone >= targetReps || goalCompleted
+
+  const handleGoalComplete = useCallback(() => {
+    setGoalCompleted(true)
+    // Auto-complete after 1.8 seconds of celebration
+    setTimeout(() => {
+      onComplete(assignment.id).then(() => onClose()).catch(() => {})
+    }, 1800)
+  }, [assignment.id, onComplete, onClose])
 
   return (
     <div className="modal-backdrop" style={{ zIndex: 45 }} onClick={onClose}>
@@ -109,6 +118,7 @@ function ActiveExerciseModal({
               setFormScore(score)
               setIsPostureCorrect(isCorrect)
             }}
+            onGoalComplete={handleGoalComplete}
           />
         </div>
 
@@ -133,7 +143,12 @@ function ActiveExerciseModal({
           {completing ? (
             <>
               <LoaderCircle size={16} className="spin" />
-              <span>Logging Exercise...</span>
+              <span>Logging Exercise & Awarding Rewards...</span>
+            </>
+          ) : isFinished ? (
+            <>
+              <Sparkles size={16} />
+              <span>Goal Reached! Claim +{assignment.points} MOVE</span>
             </>
           ) : (
             <>

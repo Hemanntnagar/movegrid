@@ -5,14 +5,19 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
+  Check,
+  Flame,
   Info,
   RefreshCw,
   RotateCcw,
+  Sparkles,
+  Trophy,
   VideoOff,
+  Zap,
 } from 'lucide-react'
 
-// Keypoint indices & labels for posture tracking:
-// 0: Head/Nose, 1: L Eye, 2: R Eye, 3: L Ear, 4: R Ear
+// Keypoint indices:
+// 0: Nose, 1: L Eye, 2: R Eye, 3: L Ear, 4: R Ear
 // 5: L Shoulder, 6: R Shoulder, 7: L Elbow, 8: R Elbow, 9: L Wrist, 10: R Wrist
 // 11: L Hip, 12: R Hip, 13: L Knee, 14: R Knee, 15: L Ankle, 16: R Ankle
 const SKELETON_CONNECTIONS = [
@@ -34,13 +39,15 @@ type PostureCameraProps = {
   targetReps?: number
   onRepsChange?: (reps: number) => void
   onPostureUpdate?: (score: number, isCorrect: boolean) => void
+  onGoalComplete?: () => void
 }
 
 export function PostureCamera({
   exerciseName,
-  targetReps = 10,
+  targetReps = 15,
   onRepsChange,
   onPostureUpdate,
+  onGoalComplete,
 }: PostureCameraProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -51,23 +58,36 @@ export function PostureCamera({
   const [cameraError, setCameraError] = useState<string | null>(null)
 
   const [recSeconds, setRecSeconds] = useState(0)
-  const [formScore, setFormScore] = useState(94)
+  const [formScore, setFormScore] = useState(95)
   const [isPostureCorrect, setIsPostureCorrect] = useState(true)
-  const [feedbackMsg, setFeedbackMsg] = useState('Stand in camera view for posture tracking')
+  const [feedbackMsg, setFeedbackMsg] = useState('Get into position to start counting reps')
   const [repsDone, setRepsDone] = useState(0)
+  const [isGoalReached, setIsGoalReached] = useState(false)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
 
+  // Movement state machine: 'UP' vs 'DOWN' for reps
   const movementPhaseRef = useRef<'UP' | 'DOWN'>('UP')
   const lastRepTimeRef = useRef<number>(0)
+  const autoGoalTriggeredRef = useRef<boolean>(false)
 
   // Recording timer
   useEffect(() => {
-    if (!cameraActive) return
+    if (!cameraActive || isGoalReached) return
     const timer = setInterval(() => {
       setRecSeconds((prev) => prev + 1)
     }, 1000)
     return () => clearInterval(timer)
-  }, [cameraActive])
+  }, [cameraActive, isGoalReached])
+
+  // Check goal completion
+  useEffect(() => {
+    if (repsDone >= targetReps && targetReps > 0 && !autoGoalTriggeredRef.current) {
+      autoGoalTriggeredRef.current = true
+      setIsGoalReached(true)
+      setFeedbackMsg(`🎉 GOAL COMPLETED! ${repsDone}/${targetReps} Reps Done!`)
+      onGoalComplete?.()
+    }
+  }, [repsDone, targetReps, onGoalComplete])
 
   // Start WebRTC Camera
   const startCamera = useCallback(async () => {
@@ -95,9 +115,9 @@ export function PostureCamera({
         setCameraActive(true)
       }
     } catch (err) {
-      console.error('Camera permission or device error:', err)
+      console.error('Camera access error:', err)
       setCameraError(
-        'Could not access camera. Please allow webcam permissions in your browser.',
+        'Could not access camera. Please enable webcam permissions in your browser.',
       )
       setCameraActive(false)
     } finally {
@@ -129,85 +149,108 @@ export function PostureCamera({
     return angle
   }
 
-  // Analyze Posture Form for active exercise type
-  const analyzePosture = useCallback(
+  // AI Rep Counter & Posture Evaluator
+  const analyzePostureAndCountReps = useCallback(
     (keypoints: KeyPoint[], width: number, height: number) => {
-      if (!keypoints || keypoints.length < 17) return
+      if (!keypoints || keypoints.length < 17 || isGoalReached) return
 
       const lShoulder = keypoints[5]
       const rShoulder = keypoints[6]
+      const lElbow = keypoints[7]
+      const lWrist = keypoints[9]
       const lHip = keypoints[11]
       const lKnee = keypoints[13]
       const lAnkle = keypoints[15]
 
       let isCorrect = true
-      let score = 95
-      let feedback = 'Great posture! Keep body aligned ✅'
+      let score = 96
+      let feedback = feedbackMsg
 
       const exerciseLower = exerciseName.toLowerCase()
+      const now = Date.now()
 
-      // Squat Posture Check
-      if (exerciseLower.includes('squat') || exerciseLower.includes('lunge')) {
-        if (lHip && lKnee && lAnkle) {
-          const kneeAngle = calculateAngle(lHip, lKnee, lAnkle)
+      // 1. PUSH-UPS REP COUNTER
+      if (exerciseLower.includes('push') || exerciseLower.includes('press')) {
+        if (lShoulder && lElbow && lWrist) {
+          const elbowAngle = calculateAngle(lShoulder, lElbow, lWrist)
 
-          if (kneeAngle < 125) {
-            // Squatting down phase
-            if (movementPhaseRef.current === 'UP' && Date.now() - lastRepTimeRef.current > 1200) {
+          // Push-up DOWN phase (elbow flexed < 100 degrees)
+          if (elbowAngle < 100) {
+            if (movementPhaseRef.current === 'UP' && now - lastRepTimeRef.current > 800) {
               movementPhaseRef.current = 'DOWN'
             }
             score = 98
-            feedback = 'Excellent squat depth! Drive up through heels 💪'
-          } else if (kneeAngle > 160) {
-            // Standing back up phase
+            feedback = `Chest DOWN! Keep core tight 💪 (${repsDone}/${targetReps})`
+          }
+          // Push-up UP phase (arms extended > 150 degrees)
+          else if (elbowAngle > 150) {
             if (movementPhaseRef.current === 'DOWN') {
               movementPhaseRef.current = 'UP'
-              lastRepTimeRef.current = Date.now()
-              setRepsDone((prev) => {
-                const next = prev + 1
-                onRepsChange?.(next)
-                return next
-              })
-              feedback = 'Rep Completed! Explosive power! 🔥'
+              lastRepTimeRef.current = now
+              const nextReps = repsDone + 1
+              setRepsDone(nextReps)
+              onRepsChange?.(nextReps)
+              feedback = `Push-up ${nextReps}/${targetReps} Done! Great form! 🔥`
+            } else if (movementPhaseRef.current === 'UP') {
+              feedback = `Push-up position ready. Lower chest down... (${repsDone}/${targetReps})`
+            }
+          }
+
+          // Check straight body alignment (shoulder - hip - ankle line)
+          if (lShoulder && lHip && lAnkle) {
+            const spineAngle = calculateAngle(lShoulder, lHip, lAnkle)
+            if (spineAngle < 145) {
+              isCorrect = false
+              score = 70
+              feedback = 'Keep hips in line with shoulders! Avoid sagging ⚠️'
+            }
+          }
+        }
+      }
+      // 2. SQUAT REP COUNTER
+      else if (exerciseLower.includes('squat') || exerciseLower.includes('lunge')) {
+        if (lHip && lKnee && lAnkle) {
+          const kneeAngle = calculateAngle(lHip, lKnee, lAnkle)
+
+          if (kneeAngle < 120) {
+            if (movementPhaseRef.current === 'UP' && now - lastRepTimeRef.current > 800) {
+              movementPhaseRef.current = 'DOWN'
+            }
+            score = 98
+            feedback = `Squat DOWN phase! Hold depth & push up 💪`
+          } else if (kneeAngle > 160) {
+            if (movementPhaseRef.current === 'DOWN') {
+              movementPhaseRef.current = 'UP'
+              lastRepTimeRef.current = now
+              const nextReps = repsDone + 1
+              setRepsDone(nextReps)
+              onRepsChange?.(nextReps)
+              feedback = `Squat ${nextReps}/${targetReps} Done! Powerful extension! 🔥`
+            } else {
+              feedback = `Standing tall. Lower into deep squat... (${repsDone}/${targetReps})`
             }
           }
 
           if (lShoulder && lHip && lKnee) {
             const backAngle = calculateAngle(lShoulder, lHip, lKnee)
-            if (backAngle < 82) {
+            if (backAngle < 80) {
               isCorrect = false
-              score = 74
-              feedback = 'Keep spine upright! Avoid leaning forward ⚠️'
+              score = 73
+              feedback = 'Keep chest lifted! Avoid rounding spine ⚠️'
             }
           }
         }
       }
-      // Plank / Pushup Posture Check
-      else if (
-        exerciseLower.includes('plank') ||
-        exerciseLower.includes('push') ||
-        exerciseLower.includes('hold')
-      ) {
-        if (lShoulder && lHip && lAnkle) {
-          const bodyLineAngle = calculateAngle(lShoulder, lHip, lAnkle)
-          if (bodyLineAngle < 150) {
-            isCorrect = false
-            score = 71
-            feedback = 'Align hips with shoulders! Don’t sag lower back ⚠️'
-          } else {
-            score = 97
-            feedback = 'Perfect straight plank posture! Hold strong 🔥'
-          }
-        }
-      }
-      // General Posture Check
+      // 3. GENERAL / PLANK / JUMPING JACKS
       else {
         if (lShoulder && rShoulder) {
           const shoulderDiff = Math.abs(lShoulder.y - rShoulder.y)
           if (shoulderDiff > height * 0.08) {
             isCorrect = false
             score = 78
-            feedback = 'Keep shoulders level & chest open ⚠️'
+            feedback = 'Keep shoulders balanced and level ⚠️'
+          } else {
+            feedback = `Tracking reps: ${repsDone}/${targetReps} completed ✅`
           }
         }
       }
@@ -217,10 +260,10 @@ export function PostureCamera({
       setFeedbackMsg(feedback)
       onPostureUpdate?.(score, isCorrect)
     },
-    [exerciseName, onRepsChange, onPostureUpdate],
+    [exerciseName, repsDone, targetReps, isGoalReached, onRepsChange, onPostureUpdate, feedbackMsg],
   )
 
-  // Real-time Canvas Rendering & Skeleton Tracker
+  // Real-time Canvas Renderer & Pose Simulator
   useEffect(() => {
     if (!cameraActive || !videoRef.current || !canvasRef.current) return
 
@@ -249,35 +292,64 @@ export function PostureCamera({
           const w = canvas.width
           const h = canvas.height
           const t = Date.now() * 0.003
-          const breathe = Math.sin(t) * 5
-          const motionShift = Math.cos(t * 0.8) * 8
+          const breathe = Math.sin(t) * 4
+          const motionShift = Math.cos(t * 0.8) * 6
 
-          // Generate posture tracking skeleton keypoints overlay
-          const keypoints: KeyPoint[] = [
-            { x: w * 0.5 + motionShift, y: h * 0.2 + breathe }, // Nose
-            { x: w * 0.48 + motionShift, y: h * 0.18 + breathe }, // L Eye
-            { x: w * 0.52 + motionShift, y: h * 0.18 + breathe }, // R Eye
-            { x: w * 0.45 + motionShift, y: h * 0.2 + breathe }, // L Ear
-            { x: w * 0.55 + motionShift, y: h * 0.2 + breathe }, // R Ear
-            { x: w * 0.38 + motionShift, y: h * 0.35 + breathe }, // L Shoulder
-            { x: w * 0.62 + motionShift, y: h * 0.35 + breathe }, // R Shoulder
-            { x: w * 0.32 + motionShift, y: h * 0.5 + breathe }, // L Elbow
-            { x: w * 0.68 + motionShift, y: h * 0.5 + breathe }, // R Elbow
-            { x: w * 0.3 + motionShift, y: h * 0.65 + breathe }, // L Wrist
-            { x: w * 0.7 + motionShift, y: h * 0.65 + breathe }, // R Wrist
-            { x: w * 0.42 + motionShift, y: h * 0.6 + breathe }, // L Hip
-            { x: w * 0.58 + motionShift, y: h * 0.6 + breathe }, // R Hip
-            { x: w * 0.41 + motionShift, y: h * 0.78 + breathe }, // L Knee
-            { x: w * 0.59 + motionShift, y: h * 0.78 + breathe }, // R Knee
-            { x: w * 0.4 + motionShift, y: h * 0.92 }, // L Ankle
-            { x: w * 0.6 + motionShift, y: h * 0.92 }, // R Ankle
-          ]
+          // Generate keypoints tailored for pushup vs squat pose
+          const isPushup = exerciseName.toLowerCase().includes('push')
+          const keypoints: KeyPoint[] = isPushup
+            ? [
+                { x: w * 0.2 + motionShift, y: h * 0.4 + breathe }, // Nose
+                { x: w * 0.18 + motionShift, y: h * 0.38 + breathe }, // L Eye
+                { x: w * 0.22 + motionShift, y: h * 0.38 + breathe }, // R Eye
+                { x: w * 0.15 + motionShift, y: h * 0.4 + breathe }, // L Ear
+                { x: w * 0.25 + motionShift, y: h * 0.4 + breathe }, // R Ear
+                { x: w * 0.35 + motionShift, y: h * 0.45 + breathe }, // L Shoulder
+                { x: w * 0.35 + motionShift, y: h * 0.45 + breathe }, // R Shoulder
+                { x: w * 0.38 + motionShift, y: h * 0.65 + breathe }, // L Elbow
+                { x: w * 0.38 + motionShift, y: h * 0.65 + breathe }, // R Elbow
+                { x: w * 0.4 + motionShift, y: h * 0.85 }, // L Wrist
+                { x: w * 0.4 + motionShift, y: h * 0.85 }, // R Wrist
+                { x: w * 0.58 + motionShift, y: h * 0.48 + breathe }, // L Hip
+                { x: w * 0.58 + motionShift, y: h * 0.48 + breathe }, // R Hip
+                { x: w * 0.75 + motionShift, y: h * 0.52 }, // L Knee
+                { x: w * 0.75 + motionShift, y: h * 0.52 }, // R Knee
+                { x: w * 0.9 + motionShift, y: h * 0.55 }, // L Ankle
+                { x: w * 0.9 + motionShift, y: h * 0.55 }, // R Ankle
+              ]
+            : [
+                { x: w * 0.5 + motionShift, y: h * 0.2 + breathe },
+                { x: w * 0.48 + motionShift, y: h * 0.18 + breathe },
+                { x: w * 0.52 + motionShift, y: h * 0.18 + breathe },
+                { x: w * 0.45 + motionShift, y: h * 0.2 + breathe },
+                { x: w * 0.55 + motionShift, y: h * 0.2 + breathe },
+                { x: w * 0.38 + motionShift, y: h * 0.35 + breathe },
+                { x: w * 0.62 + motionShift, y: h * 0.35 + breathe },
+                { x: w * 0.32 + motionShift, y: h * 0.5 + breathe },
+                { x: w * 0.68 + motionShift, y: h * 0.5 + breathe },
+                { x: w * 0.3 + motionShift, y: h * 0.65 + breathe },
+                { x: w * 0.7 + motionShift, y: h * 0.65 + breathe },
+                { x: w * 0.42 + motionShift, y: h * 0.6 + breathe },
+                { x: w * 0.58 + motionShift, y: h * 0.6 + breathe },
+                { x: w * 0.41 + motionShift, y: h * 0.78 + breathe },
+                { x: w * 0.59 + motionShift, y: h * 0.78 + breathe },
+                { x: w * 0.4 + motionShift, y: h * 0.92 },
+                { x: w * 0.6 + motionShift, y: h * 0.92 },
+              ]
 
-          // Draw Skeleton Connections
+          // Draw Skeleton Lines
           ctx.lineWidth = 4
-          ctx.strokeStyle = isPostureCorrect ? '#b7e88f' : '#ff5964'
-          ctx.shadowColor = isPostureCorrect ? '#27ae60' : '#d90429'
-          ctx.shadowBlur = 10
+          ctx.strokeStyle = isGoalReached
+            ? '#ffd447'
+            : isPostureCorrect
+            ? '#b7e88f'
+            : '#ff5964'
+          ctx.shadowColor = isGoalReached
+            ? '#ffb703'
+            : isPostureCorrect
+            ? '#27ae60'
+            : '#d90429'
+          ctx.shadowBlur = 12
 
           for (const [i1, i2] of SKELETON_CONNECTIONS) {
             const kp1 = keypoints[i1]
@@ -290,13 +362,17 @@ export function PostureCamera({
             }
           }
 
-          // Draw Joint Keypoints
+          // Draw Keypoint Joint Dots
           for (let i = 0; i < keypoints.length; i++) {
             const kp = keypoints[i]
             if (kp) {
               ctx.beginPath()
               ctx.arc(kp.x, kp.y, 6, 0, 2 * Math.PI)
-              ctx.fillStyle = isPostureCorrect ? '#ffd447' : '#ff2a2a'
+              ctx.fillStyle = isGoalReached
+                ? '#ffffff'
+                : isPostureCorrect
+                ? '#ffd447'
+                : '#ff2a2a'
               ctx.shadowColor = '#ffffff'
               ctx.shadowBlur = 8
               ctx.fill()
@@ -306,7 +382,7 @@ export function PostureCamera({
             }
           }
 
-          analyzePosture(keypoints, canvas.width, canvas.height)
+          analyzePostureAndCountReps(keypoints, canvas.width, canvas.height)
         }
       }
 
@@ -321,7 +397,7 @@ export function PostureCamera({
         cancelAnimationFrame(animationFrameId.current)
       }
     }
-  }, [cameraActive, isPostureCorrect, analyzePosture])
+  }, [cameraActive, isPostureCorrect, isGoalReached, exerciseName, analyzePostureAndCountReps])
 
   const formatRecTime = (sec: number) => {
     const m = Math.floor(sec / 60)
@@ -329,22 +405,28 @@ export function PostureCamera({
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   }
 
+  const percentProgress = Math.min(100, Math.round((repsDone / (targetReps || 1)) * 100))
+
   return (
     <div className="posture-camera-wrapper">
-      {/* Top Posture Status Header Bar */}
+      {/* Header Bar */}
       <div className="posture-status-header">
         <div className="rec-live-badge">
           <span className="rec-dot-pulse" />
           <span className="rec-text">REC {formatRecTime(recSeconds)}</span>
         </div>
 
-        <div className={`posture-accuracy-chip ${isPostureCorrect ? 'good' : 'warning'}`}>
-          {isPostureCorrect ? (
+        <div className={`posture-accuracy-chip ${isGoalReached ? 'goal' : isPostureCorrect ? 'good' : 'warning'}`}>
+          {isGoalReached ? (
+            <Trophy size={15} />
+          ) : isPostureCorrect ? (
             <CheckCircle2 size={15} />
           ) : (
             <AlertCircle size={15} />
           )}
-          <span>{isPostureCorrect ? 'CORRECT FORM' : 'ADJUST FORM'} ({formScore}%)</span>
+          <span>
+            {isGoalReached ? 'GOAL COMPLETED!' : isPostureCorrect ? 'CORRECT FORM' : 'ADJUST FORM'} ({formScore}%)
+          </span>
         </div>
       </div>
 
@@ -353,7 +435,7 @@ export function PostureCamera({
         {cameraLoading && (
           <div className="camera-loading-overlay">
             <RefreshCw size={28} className="spin" />
-            <p>Initializing AI Camera & Posture Engine...</p>
+            <p>Initializing Posture & Rep Counter Model...</p>
           </div>
         )}
 
@@ -382,13 +464,26 @@ export function PostureCamera({
           </>
         )}
 
-        {/* Live Posture Guidance Banner Overlay */}
-        <div className={`posture-guidance-banner ${isPostureCorrect ? 'good' : 'warn'}`}>
-          <Info size={15} />
-          <span>{feedbackMsg}</span>
-        </div>
+        {/* Goal Completion Celebration Overlay */}
+        {isGoalReached && (
+          <div className="goal-complete-overlay">
+            <div className="goal-trophy-badge">
+              <Trophy size={38} className="bounce" />
+            </div>
+            <h3>{targetReps} {exerciseName} COMPLETED!</h3>
+            <p>Target Goal Achieved with Great Posture! 🎉</p>
+          </div>
+        )}
 
-        {/* Bottom Floating Control Pills */}
+        {/* Live Posture Guidance Banner Overlay */}
+        {!isGoalReached && (
+          <div className={`posture-guidance-banner ${isPostureCorrect ? 'good' : 'warn'}`}>
+            <Info size={15} />
+            <span>{feedbackMsg}</span>
+          </div>
+        )}
+
+        {/* Camera Control Pills */}
         <div className="posture-camera-controls">
           <button
             type="button"
@@ -406,7 +501,7 @@ export function PostureCamera({
               stopCamera()
               startCamera()
             }}
-            title="Recalibrate Posture"
+            title="Recalibrate"
           >
             <RotateCcw size={14} />
             <span>Recalibrate</span>
@@ -414,25 +509,39 @@ export function PostureCamera({
         </div>
       </div>
 
-      {/* Rep / Posture Movement Counter Bar */}
+      {/* Progress Bar Track */}
+      <div className="rep-progress-track">
+        <div
+          className={`rep-progress-fill ${isGoalReached ? 'complete' : ''}`}
+          style={{ width: `${percentProgress}%` }}
+        />
+      </div>
+
+      {/* Rep / Movement Counter Bar */}
       <div className="posture-rep-tracker-bar">
         <div className="rep-count-label">
           <span className="rep-number">{repsDone}</span>
-          <span className="rep-target">/ {targetReps || 10} Reps Tracked</span>
+          <span className="rep-target">/ {targetReps} Reps Tracked</span>
         </div>
 
         <div className="rep-increment-buttons">
-          <button
-            type="button"
-            className="outline-button compact-btn"
-            onClick={() => {
-              const next = repsDone + 1
-              setRepsDone(next)
-              onRepsChange?.(next)
-            }}
-          >
-            +1 Posture Rep
-          </button>
+          {!isGoalReached ? (
+            <button
+              type="button"
+              className="outline-button compact-btn"
+              onClick={() => {
+                const next = repsDone + 1
+                setRepsDone(next)
+                onRepsChange?.(next)
+              }}
+            >
+              +1 Rep
+            </button>
+          ) : (
+            <span className="goal-done-chip">
+              <Check size={14} /> Complete
+            </span>
+          )}
         </div>
       </div>
     </div>

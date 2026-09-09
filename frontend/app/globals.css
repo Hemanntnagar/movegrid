@@ -2517,10 +2517,101 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   font-weight: 800;
 }
 
-.posture-accuracy-chip.good {
+.posture-accuracy-chip.goal {
+  background: linear-gradient(135deg, #ffb703, #fb8500);
+  color: #000000;
+  box-shadow: 0 0 16px rgba(255, 183, 3, 0.6);
+  animation: goldPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes goldPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.goal-complete-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(13, 27, 42, 0.88);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  text-align: center;
+  padding: 20px;
+  z-index: 10;
+  animation: fadeIn 0.4s ease;
+}
+
+.goal-trophy-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd447, #ff9f1c);
+  color: #183d59;
+  box-shadow: 0 0 25px rgba(255, 212, 71, 0.7);
+}
+
+.bounce {
+  animation: bounceTrophy 1.2s infinite ease-in-out;
+}
+
+@keyframes bounceTrophy {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.goal-complete-overlay h3 {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffd447;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.goal-complete-overlay p {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.9;
+  color: #b7e88f;
+}
+
+.rep-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rep-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #b7e88f, #27ae60);
+  border-radius: 999px;
+  transition: width 0.3s ease-out;
+}
+
+.rep-progress-fill.complete {
+  background: linear-gradient(90deg, #ffd447, #ff9f1c);
+  box-shadow: 0 0 10px #ffd447;
+}
+
+.goal-done-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: #27ae60;
   color: #ffffff;
-  box-shadow: 0 0 12px rgba(39, 174, 96, 0.4);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .posture-accuracy-chip.warning {
