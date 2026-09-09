@@ -468,9 +468,6 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     <>
       {error && <p className="form-error">{error}</p>}
       <PenguinPathMap levels={levels} todayDay={todayDay} onSelectDay={handleSelectDay} />
-      <p className="trail-expiry-note">
-        Today expires in <strong>{formatCountdown(secondsRemaining)}</strong> · IST · fresh map each month
-      </p>
 
       {selectedDay === todayDay && today && (
         <DayLevelModal

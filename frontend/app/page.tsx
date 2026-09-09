@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowRight, Bell, CheckCircle2, Flame, Footprints, Gift, LayoutDashboard, Lock,
-  Play, Sparkles, Target, Trophy, Unlock, Users, Zap
+  Bell, CheckCircle2, Flame, Footprints, Gift, LayoutDashboard,
+  Play, Sparkles, Target, Trophy, Zap
 } from 'lucide-react'
 import {
   ApiTodayFitness, ApiUser, clearToken, getStoredToken, movegridApi
@@ -251,51 +251,39 @@ export default function Page() {
           </div>
         </div>
 
-        <DailyChallengeBar
-          challengeState={challengeState}
-          secondsRemaining={secondsRemaining}
-          challengeTitle="10,000 Daily Steps Goal"
-          challengeMove={150}
-          steps={steps}
-          stepGoal={stepGoal}
-          stepPercent={stepPercent}
-          onStartChallenge={handleStartChallenge}
-        />
+        <div className="dashboard-grid-layout">
+          <aside className="dashboard-sidebar-left">
+            <div className="stats-vertical-stack">
+              <StatCard icon={<Zap size={19} />} label="MOVE points ⚡" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" />
+              <StatCard icon={<Flame size={19} />} label="Current streak 🔥" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
+              <StatCard
+                icon={<Footprints size={19} />}
+                label="Steps today 👟"
+                value={steps.toLocaleString()}
+                detail={`${stepPercent}% of ${stepGoal.toLocaleString()} goal`}
+                tone="blue"
+              />
+              <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                <StatCard icon={<Trophy size={19} />} label="Global rank 🏆" value={rankLabel} detail="↑ 6 places" tone="purple" />
+              </Link>
+            </div>
+          </aside>
 
-        <section className="stats-grid" style={{ marginTop: '1.25rem' }}>
-          <StatCard icon={<Zap size={19} />} label="MOVE points ⚡" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" />
-          <StatCard icon={<Flame size={19} />} label="Current streak 🔥" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
-          <StatCard
-            icon={<Footprints size={19} />}
-            label="Steps today 👟"
-            value={steps.toLocaleString()}
-            detail={`${stepPercent}% of ${stepGoal.toLocaleString()} goal`}
-            tone="blue"
-          />
-          <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-            <StatCard icon={<Trophy size={19} />} label="Global rank 🏆" value={rankLabel} detail="↑ 6 places" tone="purple" />
-          </Link>
-        </section>
+          <div className="dashboard-main-content">
+            <DailyChallengeBar
+              challengeState={challengeState}
+              secondsRemaining={secondsRemaining}
+              challengeTitle="10,000 Daily Steps Goal"
+              challengeMove={150}
+              steps={steps}
+              stepGoal={stepGoal}
+              stepPercent={stepPercent}
+              onStartChallenge={handleStartChallenge}
+            />
 
-        <div className="home-quick-links">
-          <Link href="/standings" className="outline-button">
-            <Trophy size={15} /> Standings
-          </Link>
-          <Link href="/challenges" className="outline-button">
-            <Target size={15} /> Challenges
-          </Link>
-          <Link href="/competitions" className="outline-button">
-            Competitions
-          </Link>
-          <Link href="/assistant" className="outline-button">
-            Customize plan
-          </Link>
-          <Link href="/buddies" className="outline-button">
-            <Users size={15} /> Buddies
-          </Link>
+            <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
+          </div>
         </div>
-
-        <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
       </main>
 
       {toast && (
@@ -310,7 +298,7 @@ export default function Page() {
         </div>
       )}
 
-      <footer className="mobile-nav">
+      <footer className="centered-nav-bar">
         {(
           [
             ['Home', LayoutDashboard, '/'],
@@ -320,7 +308,7 @@ export default function Page() {
           ] as const
         ).map(([label, Icon, path]) => (
           <Link className={label === 'Home' ? 'active' : ''} href={path} key={label}>
-            <Icon size={19} />
+            <Icon size={18} />
             <span>{label}</span>
           </Link>
         ))}

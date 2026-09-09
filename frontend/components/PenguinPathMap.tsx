@@ -416,15 +416,6 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
           <ChevronDown size={20} />
         </button>
       </div>
-
-      <p className="trail-slide-hint">Swipe or tap arrows · only 3 levels on screen</p>
-
-      <div className="trail-legend">
-        <span><i className="dot active" /> Today</span>
-        <span><i className="dot completed" /><Check size={12} /> Done</span>
-        <span><i className="dot locked" /><Lock size={12} /> Locked</span>
-        <span><i className="dot missed" /> Missed</span>
-      </div>
     </section>
   )
 }
