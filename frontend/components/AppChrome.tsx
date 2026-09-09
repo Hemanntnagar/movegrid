@@ -31,12 +31,12 @@ const MENU_ITEMS: {
   icon: typeof Users
   tone: string
 }[] = [
-  { id: 'standings', label: 'Standings', icon: Trophy, tone: 'orange', href: '/standings' },
-  { id: 'buddies', label: 'Buddies', icon: Users, tone: 'lime', href: '/buddies' },
-  { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
-  { id: 'challenges', label: 'Challenges', icon: Target, tone: 'purple', href: '/challenges' },
-  { id: 'reward-hub', label: 'Reward Hub', icon: Gift, tone: 'lime', href: '/rewards' },
-  { id: 'assistant', label: 'Assistant', icon: Bot, tone: 'blue', href: '/assistant' },
+  { id: 'standings', label: '🏆 Standings', icon: Trophy, tone: 'orange', href: '/standings' },
+  { id: 'buddies', label: '👥 Buddies', icon: Users, tone: 'lime', href: '/buddies' },
+  { id: 'competitions', label: '⚔️ Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
+  { id: 'challenges', label: '🎯 Challenges', icon: Target, tone: 'purple', href: '/challenges' },
+  { id: 'reward-hub', label: '🎁 Reward Hub', icon: Gift, tone: 'lime', href: '/rewards' },
+  { id: 'assistant', label: '🤖 AI Assistant', icon: Bot, tone: 'blue', href: '/assistant' },
 ]
 
 type AppChromeProps = {
