@@ -209,22 +209,31 @@ function LiveStepPanel() {
 
       {permissionState === 'prompt' && !active ? (
         <button type="button" className="primary-button" onClick={requestPermission}>
-          <Play size={15} fill="currentColor" /> Allow motion sensor
+          <Play size={15} fill="currentColor" /> Allow Gyro & Motion Sensors
         </button>
       ) : active ? (
         <button type="button" className="outline-button" onClick={pause}>
-          <Pause size={15} /> Pause counting
+          <Pause size={15} /> Pause Gyro Tracking
         </button>
       ) : (
         <button type="button" className="primary-button" onClick={requestPermission}>
-          <Play size={15} fill="currentColor" /> Resume counting
+          <Play size={15} fill="currentColor" /> Resume Gyro Tracking
         </button>
       )}
 
+      <button
+        type="button"
+        className="outline-button compact-btn"
+        style={{ fontSize: '0.8rem', padding: '6px 14px' }}
+        onClick={() => addSteps(100)}
+      >
+        + 100 Demo Steps
+      </button>
+
       <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
         {active
-          ? `Counting live from your phone\u2019s motion sensor`
-          : 'Tap to start reading from your phone'}
+          ? `Counting live from mobile Gyroscope & Accelerometer sensors`
+          : 'Tap to activate Gyroscope & Motion Sensor pedometer'}
       </span>
     </div>
   )

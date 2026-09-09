@@ -4,43 +4,47 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { istDateKey } from '../lib/ist'
 import { getStoredToken, movegridApi } from '../lib/api'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants & Sensor Tuning ────────────────────────────────────────────────
 
 const STEP_GOAL = 10_000
 const STORAGE_PREFIX = 'movegrid_steps_'
 
 /**
- * Acceleration magnitude threshold for a step peak (in m/s² of linear acceleration).
- * Dynamic vector filtering isolates walking movement from gravity baseline.
+ * Acceleration magnitude threshold for a step peak (in m/s²).
+ * Combined with gyroscope angular velocity for high-accuracy step detection.
  */
-const LINEAR_STEP_THRESHOLD = 1.25
+const MIN_ACCELERATION_THRESHOLD = 1.15
 
 /**
- * Minimum milliseconds between two detected steps (debounce).
- * Prevents double-counting fast jitter while tracking cadence up to 4.5 steps/sec.
+ * Minimum Gyroscope angular velocity (deg/s) associated with human leg/hip stride swing.
  */
-const STEP_MIN_INTERVAL_MS = 220
+const MIN_GYRO_ROTATION_THRESHOLD = 12.0
+
+/**
+ * Minimum & Maximum time window between 2 valid walking strides (ms).
+ * 200ms = 5 steps/sec (fast sprint), 1200ms = 0.83 steps/sec (slow walk).
+ */
+const MIN_STEP_INTERVAL_MS = 200
+const MAX_STEP_INTERVAL_MS = 1200
+
+/**
+ * Minimum consecutive stride peaks before committing steps (noise suppression).
+ * Filters out random hand shakes or stationary phone movement.
+ */
+const MIN_STRIDE_BUFFER_COUNT = 2
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type PermissionState = 'unknown' | 'granted' | 'denied' | 'unavailable' | 'prompt'
 
 export interface StepCounterState {
-  /** Current step count for today (persisted across refreshes). */
   steps: number
-  /** Daily step goal (default 10 000). */
   goal: number
-  /** 0–100 percent toward goal. */
   percent: number
-  /** Whether the sensor listener is currently running. */
   active: boolean
-  /** DeviceMotion permission state. */
   permissionState: PermissionState
-  /** Call this to start counting (also requests permission on iOS). */
   requestPermission: () => Promise<void>
-  /** Pause the sensor listener without resetting the count. */
   pause: () => void
-  /** Manually add steps (useful for testing on desktop). */
   addSteps: (n: number) => void
 }
 
@@ -63,21 +67,32 @@ function saveSteps(steps: number) {
   localStorage.setItem(todayKey(), String(steps))
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+// ─── Gyroscope + Accelerometer Pedometer Hook ────────────────────────────────
 
 export function useStepCounter(): StepCounterState {
   const [steps, setStepsState] = useState<number>(0)
   const [active, setActive] = useState(false)
   const [permissionState, setPermissionState] = useState<PermissionState>('unknown')
 
-  // Ref so the event listener always sees the latest value without re-registering
   const stepsRef = useRef<number>(0)
   const lastPeakTimeRef = useRef<number>(0)
   const prevMagRef = useRef<number>(0)
-  const risingRef = useRef<boolean>(false)
+  const isRisingRef = useRef<boolean>(false)
+
+  // Stride cadence buffer for noise rejection
+  const strideBufferRef = useRef<number>(0)
+  const lastStrideTimeRef = useRef<number>(0)
+
+  // Gravity vector estimation for low-pass filter
   const gravityRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 9.81 })
 
-  /** Persist + update state together */
+  // Latest Gyroscope angular velocity values (alpha, beta, gamma)
+  const gyroRateRef = useRef<{ alpha: number; beta: number; gamma: number }>({
+    alpha: 0,
+    beta: 0,
+    gamma: 0,
+  })
+
   function setSteps(n: number) {
     stepsRef.current = n
     setStepsState(n)
@@ -88,116 +103,161 @@ export function useStepCounter(): StepCounterState {
     }
   }
 
-  // Load today's saved count on mount
+  // Load saved step count on mount
   useEffect(() => {
     const saved = loadSteps()
     stepsRef.current = saved
     setStepsState(saved)
   }, [])
 
-  // Determine initial permission state
+  // Check hardware availability & iOS vs Android permissions
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // DeviceMotionEvent not available at all (e.g. desktop with no sensors)
-    if (!('DeviceMotionEvent' in window)) {
+    if (!('DeviceMotionEvent' in window) && !('DeviceOrientationEvent' in window)) {
       setPermissionState('unavailable')
       return
     }
 
-    // iOS 13+ requires explicit permission; Android grants automatically
-    if (
-      typeof (DeviceMotionEvent as unknown as { requestPermission?: unknown }).requestPermission ===
-      'function'
-    ) {
+    // iOS 13+ requires explicit user gesture permission request
+    const motionReq = (DeviceMotionEvent as unknown as { requestPermission?: unknown }).requestPermission
+    const orientationReq = (DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission
+
+    if (typeof motionReq === 'function' || typeof orientationReq === 'function') {
       setPermissionState('prompt')
     } else {
-      // Android / non-iOS — permission is implicitly granted
       setPermissionState('granted')
     }
   }, [])
 
-  // ── Step detection handler ────────────────────────────────────────────────
+  // ── Gyroscope Rotation Handler ─────────────────────────────────────────────
+
+  const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
+    if (event.alpha !== null || event.beta !== null || event.gamma !== null) {
+      gyroRateRef.current = {
+        alpha: Math.abs(event.alpha || 0),
+        beta: Math.abs(event.beta || 0),
+        gamma: Math.abs(event.gamma || 0),
+      }
+    }
+  }, [])
+
+  // ── Accelerometer & Gyro Fusion Step Handler ─────────────────────────────
 
   const handleMotion = useCallback((event: DeviceMotionEvent) => {
-    let mag = 0
+    let linMag = 0
+    let gyroMag = 0
 
-    // 1. Prefer hardware-compensated pure linear acceleration if available
+    // Extract Gyroscope rotation rate from motion event if available
+    const rot = event.rotationRate
+    if (rot && (rot.alpha !== null || rot.beta !== null || rot.gamma !== null)) {
+      const a = rot.alpha || 0
+      const b = rot.beta || 0
+      const g = rot.gamma || 0
+      gyroMag = Math.sqrt(a * a + b * b + g * g)
+    } else {
+      // Fallback: estimate rotation from orientation rate
+      const { alpha, beta, gamma } = gyroRateRef.current
+      gyroMag = Math.sqrt(alpha * alpha + beta * beta + gamma * gamma) * 0.1
+    }
+
+    // Extract Pure Linear Acceleration (hardware compensated or gravity low-pass filtered)
     const userAcc = event.acceleration
     if (userAcc && userAcc.x !== null && userAcc.x !== undefined && userAcc.y !== null && userAcc.y !== undefined) {
       const x = userAcc.x || 0
       const y = userAcc.y || 0
       const z = userAcc.z || 0
-      mag = Math.sqrt(x * x + y * y + z * z)
+      linMag = Math.sqrt(x * x + y * y + z * z)
     } else {
-      // 2. Fallback: Low-pass vector gravity isolation for accurate 3D linear acceleration
+      // Low-pass gravity separation filter
       const acc = event.accelerationIncludingGravity
       if (!acc) return
       const rawX = acc.x ?? 0
       const rawY = acc.y ?? 0
-      const rawZ = acc.z ?? 0
+      const rawZ = acc.z ?? 9.81
 
-      const alpha = 0.85
-      gravityRef.current.x = alpha * gravityRef.current.x + (1 - alpha) * rawX
-      gravityRef.current.y = alpha * gravityRef.current.y + (1 - alpha) * rawY
-      gravityRef.current.z = alpha * gravityRef.current.z + (1 - alpha) * rawZ
+      const alphaFilter = 0.82
+      gravityRef.current.x = alphaFilter * gravityRef.current.x + (1 - alphaFilter) * rawX
+      gravityRef.current.y = alphaFilter * gravityRef.current.y + (1 - alphaFilter) * rawY
+      gravityRef.current.z = alphaFilter * gravityRef.current.z + (1 - alphaFilter) * rawZ
 
-      const linX = rawX - gravityRef.current.x
-      const linY = rawY - gravityRef.current.y
-      const linZ = rawZ - gravityRef.current.z
+      const lx = rawX - gravityRef.current.x
+      const ly = rawY - gravityRef.current.y
+      const lz = rawZ - gravityRef.current.z
 
-      mag = Math.sqrt(linX * linX + linY * linY + linZ * linZ)
+      linMag = Math.sqrt(lx * lx + ly * ly + lz * lz)
     }
 
-    const wasRising = risingRef.current
-    const isRising = mag > prevMagRef.current
+    // Combined Sensor Fusion Score (70% Linear Acc + 30% Gyro Rotation)
+    const combinedScore = linMag * 0.7 + (gyroMag / 25.0) * 0.3
 
-    // Detect downward peak crossing above threshold → step step count
-    if (wasRising && !isRising && prevMagRef.current > LINEAR_STEP_THRESHOLD) {
+    const wasRising = isRisingRef.current
+    const isRising = combinedScore > prevMagRef.current
+
+    // Peak detection: upward trend flips downward above threshold
+    if (wasRising && !isRising && prevMagRef.current > MIN_ACCELERATION_THRESHOLD) {
       const now = Date.now()
-      if (now - lastPeakTimeRef.current > STEP_MIN_INTERVAL_MS) {
+      const timeSinceLastPeak = now - lastPeakTimeRef.current
+
+      if (timeSinceLastPeak >= MIN_STEP_INTERVAL_MS && timeSinceLastPeak <= MAX_STEP_INTERVAL_MS) {
         lastPeakTimeRef.current = now
-        const next = Math.min(stepsRef.current + 1, 99_999)
-        setSteps(next)
+
+        const timeSinceLastStride = now - lastStrideTimeRef.current
+        lastStrideTimeRef.current = now
+
+        if (timeSinceLastStride >= MIN_STEP_INTERVAL_MS && timeSinceLastStride <= MAX_STEP_INTERVAL_MS) {
+          strideBufferRef.current += 1
+        } else {
+          strideBufferRef.current = 1
+        }
+
+        // Only count steps if stride cadence is consistent (noise suppression)
+        if (strideBufferRef.current >= MIN_STRIDE_BUFFER_COUNT) {
+          const nextSteps = Math.min(stepsRef.current + 1, 999_999)
+          setSteps(nextSteps)
+        }
       }
     }
 
-    prevMagRef.current = mag
-    risingRef.current = isRising
+    prevMagRef.current = combinedScore
+    isRisingRef.current = isRising
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Start / stop sensor ───────────────────────────────────────────────────
+  // ── Start / Pause Sensor Listeners ─────────────────────────────────────────
 
   const startListening = useCallback(() => {
     window.addEventListener('devicemotion', handleMotion, { passive: true })
+    window.addEventListener('deviceorientation', handleOrientation, { passive: true })
     setActive(true)
-  }, [handleMotion])
+  }, [handleMotion, handleOrientation])
 
   const pause = useCallback(() => {
     window.removeEventListener('devicemotion', handleMotion)
+    window.removeEventListener('deviceorientation', handleOrientation)
     setActive(false)
-  }, [handleMotion])
+  }, [handleMotion, handleOrientation])
 
-  // Stop listener on unmount
   useEffect(() => {
     return () => {
       window.removeEventListener('devicemotion', handleMotion)
+      window.removeEventListener('deviceorientation', handleOrientation)
     }
-  }, [handleMotion])
+  }, [handleMotion, handleOrientation])
 
-  // ── Permission request ────────────────────────────────────────────────────
+  // ── Permission Request (iOS 13+ & Android) ─────────────────────────────────
 
   const requestPermission = useCallback(async () => {
     if (typeof window === 'undefined') return
 
-    // iOS 13+ requires runtime permission
-    const requestFn = (
-      DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> }
-    ).requestPermission
+    const motionReq = (DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission
+    const orientationReq = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission
 
-    if (typeof requestFn === 'function') {
+    if (typeof motionReq === 'function') {
       try {
-        const result = await requestFn()
+        const result = await motionReq()
+        if (typeof orientationReq === 'function') {
+          await orientationReq().catch(() => {})
+        }
         if (result === 'granted') {
           setPermissionState('granted')
           startListening()
@@ -208,20 +268,17 @@ export function useStepCounter(): StepCounterState {
         setPermissionState('denied')
       }
     } else {
-      // Android / desktop — just start
       setPermissionState('granted')
       startListening()
     }
   }, [startListening])
 
-  // ── Manual step addition (for desktop testing) ────────────────────────────
+  // ── Manual Step Override (Desktop Testing) ─────────────────────────────────
 
   const addSteps = useCallback((n: number) => {
-    const next = Math.min(stepsRef.current + n, 99_999)
+    const next = Math.min(stepsRef.current + n, 999_999)
     setSteps(next)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Derived values ────────────────────────────────────────────────────────
 
   const percent = Math.min(100, Math.round((steps / STEP_GOAL) * 100))
 

@@ -168,14 +168,12 @@ export default function Page() {
     }
   }, [])
 
-  // Continuous step tracking simulation when challenge is ACTIVE
+  // Activate real motion tracking when challenge is active
   useEffect(() => {
-    if (challengeState !== 'active') return
-    const interval = setInterval(() => {
-      addSteps(Math.floor(Math.random() * 15) + 25)
-    }, 800)
-    return () => clearInterval(interval)
-  }, [challengeState, addSteps])
+    if (challengeState === 'active' && !stepActive) {
+      requestPermission()
+    }
+  }, [challengeState, stepActive, requestPermission])
 
   // Auto-fetch completion when step goal is reached!
   useEffect(() => {
