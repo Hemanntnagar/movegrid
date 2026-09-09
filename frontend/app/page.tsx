@@ -230,15 +230,18 @@ export default function Page() {
       <main className="main-content dashboard-with-trail">
         <div className="welcome trail-welcome">
           <div>
-            <p className="eyebrow">MOVEGRID</p>
+            <div className="cartoon-speech-bubble">
+              <Sparkles size={13} /> POWER UP YOUR DAY! 🚀
+            </div>
+            <p className="eyebrow">MOVEGRID · DAILY QUEST</p>
             <h1>
-              Keep moving, <span>{user ? user.name.split(' ')[0] : 'Alex'}.</span>
+              Keep moving, <span>{user ? user.name.split(' ')[0] : 'Alex'}! 💪</span>
             </h1>
-            <p className="subhead">Tap today&apos;s level · finish before the 24-hour IST window ends.</p>
+            <p className="subhead">Tap today&apos;s level · finish before the 24-hour IST window ends!</p>
           </div>
           <div className="move-chip">
-            <Zap size={14} fill="currentColor" />
-            {move.toLocaleString()} MOVE
+            <Zap size={15} fill="currentColor" />
+            {move.toLocaleString()} MOVE ⚡
           </div>
         </div>
 
@@ -254,17 +257,17 @@ export default function Page() {
         />
 
         <section className="stats-grid" style={{ marginTop: '1.25rem' }}>
-          <StatCard icon={<Zap size={19} />} label="MOVE points" value={move.toLocaleString()} detail="+150 today" tone="lime" />
-          <StatCard icon={<Flame size={19} />} label="Current streak" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
+          <StatCard icon={<Zap size={19} />} label="MOVE points ⚡" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" />
+          <StatCard icon={<Flame size={19} />} label="Current streak 🔥" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
           <StatCard
             icon={<Footprints size={19} />}
-            label="Steps today"
+            label="Steps today 👟"
             value={steps.toLocaleString()}
             detail={`${stepPercent}% of ${stepGoal.toLocaleString()} goal`}
             tone="blue"
           />
           <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-            <StatCard icon={<Trophy size={19} />} label="Global rank" value={rankLabel} detail="↑ 6 places" tone="purple" />
+            <StatCard icon={<Trophy size={19} />} label="Global rank 🏆" value={rankLabel} detail="↑ 6 places" tone="purple" />
           </Link>
         </section>
 
