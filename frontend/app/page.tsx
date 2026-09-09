@@ -15,9 +15,10 @@ import { DashboardPath } from '../components/DashboardPath'
 import { useStepCounter } from '../hooks/useStepCounter'
 import { istDateKey } from '../lib/ist'
 
-function StatCard({ icon, label, value, detail, tone }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string }) {
+function StatCard({ icon, label, value, detail, tone, badgeSymbol }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string; badgeSymbol?: string }) {
   return (
-    <div className={`stat-card ${tone}`}>
+    <div className={`stat-card compact-stat-card ${tone}`}>
+      {badgeSymbol && <span className="stat-badge-tag">{badgeSymbol}</span>}
       <div className="stat-icon">{icon}</div>
       <div>
         <p>{label}</p>
@@ -266,26 +267,27 @@ export default function Page() {
         </div>
 
         <div className="dashboard-grid-layout">
-          <div className="dashboard-main-content">
-            <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
-          </div>
-
-          <aside className="dashboard-sidebar-right">
+          <aside className="dashboard-sidebar-left">
             <div className="stats-vertical-stack">
-              <StatCard icon={<Zap size={16} />} label="MOVE points ⚡" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" />
-              <StatCard icon={<Flame size={16} />} label="Current streak 🔥" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" />
+              <StatCard icon={<Zap size={14} />} label="MOVE points" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" badgeSymbol="⚡" />
+              <StatCard icon={<Flame size={14} />} label="Current streak" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" badgeSymbol="🔥" />
               <StatCard
-                icon={<Footprints size={16} />}
-                label="Steps today 👟"
+                icon={<Footprints size={14} />}
+                label="Steps today"
                 value={steps.toLocaleString()}
-                detail={`${stepPercent}% of ${stepGoal.toLocaleString()} goal`}
+                detail={`${stepPercent}% of goal`}
                 tone="blue"
+                badgeSymbol="👟"
               />
               <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                <StatCard icon={<Trophy size={16} />} label="Global rank 🏆" value={rankLabel} detail="↑ 6 places" tone="purple" />
+                <StatCard icon={<Trophy size={14} />} label="Global rank" value={rankLabel} detail="↑ 6 places" tone="purple" badgeSymbol="🏆" />
               </Link>
             </div>
           </aside>
+
+          <div className="dashboard-main-content">
+            <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
+          </div>
         </div>
       </main>
 
