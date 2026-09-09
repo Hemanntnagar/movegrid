@@ -1449,21 +1449,33 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
 /* Daily challenge notification pop-up at top of dashboard (Half width) */
 .top-daily-challenge-banner {
   width: 100%;
-  max-width: 540px;
-  margin: 0 auto 18px auto;
+  max-width: 580px;
+  margin: 0 auto 20px auto;
 }
 .top-daily-challenge-banner .daily-challenge-notification {
   margin-top: 0;
   margin-bottom: 0;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border: 3.5px solid #0f172a;
   border-radius: 20px;
-  box-shadow: 0 6px 0 #0f172a, 0 10px 25px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 7px 0 #0f172a, 0 12px 30px rgba(15, 23, 42, 0.15);
+  background: #fffdf0;
   animation: slideDownNotification 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes slideDownNotification {
   from { transform: translateY(-16px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+.pink-name-badge {
+  color: #fff;
+  background: #ec4899;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 2.5px solid #0f172a;
+  box-shadow: 0 3px 0 #0f172a;
+  display: inline-block;
+  font-weight: 900;
 }
 
 .daily-challenge-notification {

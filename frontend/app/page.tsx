@@ -261,7 +261,7 @@ export default function Page() {
             </div>
             <p className="eyebrow">MOVEGRID · DAILY QUEST</p>
             <h1>
-              Keep moving, <span>{user ? user.name.split(' ')[0] : 'Alex'}! 💪</span>
+              Keep moving, <span className="pink-name-badge">{user ? user.name.split(' ')[0] : 'Demo'}!</span> 💪
             </h1>
             <p className="subhead">Tap today&apos;s level · finish before the 24-hour IST window ends!</p>
           </div>
