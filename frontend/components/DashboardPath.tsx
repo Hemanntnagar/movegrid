@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity,
+  Camera,
   Check,
   Clock3,
   Info,
@@ -17,6 +18,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import { PostureCamera } from './PostureCamera'
 import {
   ApiDailyAssignment,
   ApiTodayFitness,
@@ -67,41 +69,12 @@ function ActiveExerciseModal({
   completing: boolean
 }) {
   const exercise = assignment.exercise
-  const isTimeBased =
-    exercise.duration_minutes > 0 ||
-    exercise.name.toLowerCase().includes('plank') ||
-    exercise.name.toLowerCase().includes('hold')
-
-  const totalTimeSeconds = useMemo(() => {
-    if (exercise.duration_minutes > 0) return exercise.duration_minutes * 60
-    if (exercise.target_reps > 0 && isTimeBased) return exercise.target_reps
-    return 30
-  }, [exercise, isTimeBased])
-
-  const targetReps = useMemo(() => {
-    if (!isTimeBased && exercise.target_reps > 0) return exercise.target_reps
-    return 0
-  }, [exercise, isTimeBased])
-
-  const [secondsLeft, setSecondsLeft] = useState(totalTimeSeconds)
-  const [isRunning, setIsRunning] = useState(true)
+  const targetReps = exercise.target_reps || (exercise.duration_minutes ? exercise.duration_minutes * 10 : 10)
   const [repsDone, setRepsDone] = useState(0)
+  const [formScore, setFormScore] = useState(90)
+  const [isPostureCorrect, setIsPostureCorrect] = useState(true)
 
-  useEffect(() => {
-    if (!isTimeBased || !isRunning || secondsLeft <= 0) return
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(0, prev - 1))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [isTimeBased, isRunning, secondsLeft])
-
-  const isFinished = isTimeBased ? secondsLeft === 0 : repsDone >= targetReps && targetReps > 0
-
-  const formatTimer = (secs: number) => {
-    const m = Math.floor(secs / 60)
-    const s = secs % 60
-    return `${m > 0 ? String(m).padStart(2, '0') + ':' : ''}${String(s).padStart(2, '0')}`
-  }
+  const isFinished = repsDone >= targetReps
 
   return (
     <div className="modal-backdrop" style={{ zIndex: 45 }} onClick={onClose}>
@@ -111,7 +84,7 @@ function ActiveExerciseModal({
         </button>
 
         <div className="modal-kicker">
-          <Sparkles size={15} className="spin-slow" /> ACTIVE EXERCISE SESSION
+          <Camera size={15} /> LIVE POSTURE CAMERA SESSION
         </div>
 
         <div className="exercise-header-badge">
@@ -122,76 +95,27 @@ function ActiveExerciseModal({
         </div>
 
         <h2 style={{ marginTop: '6px', marginBottom: '2px' }}>{taskTitle(assignment)}</h2>
-        <p style={{ fontSize: '0.85rem', color: '#183d59', opacity: 0.85, marginBottom: '14px' }}>
+        <p style={{ fontSize: '0.85rem', color: '#183d59', opacity: 0.85, marginBottom: '12px' }}>
           {exercise.description}
         </p>
 
-        <div className="exercise-runner-box">
-          {isTimeBased ? (
-            <div className="exercise-timer-container">
-              <div className={`exercise-timer-ring ${isRunning ? 'active' : ''} ${isFinished ? 'finished' : ''}`}>
-                <span className="timer-big-text">{formatTimer(secondsLeft)}</span>
-                <span className="timer-sub-text">
-                  {isFinished ? 'TIME UP! EXERCISE COMPLETE' : isRunning ? 'TIMING LIVE' : 'PAUSED'}
-                </span>
-              </div>
-
-              <div className="exercise-timer-controls">
-                {!isFinished && (
-                  <button
-                    type="button"
-                    className="outline-button compact-btn"
-                    onClick={() => setIsRunning(!isRunning)}
-                  >
-                    {isRunning ? <Pause size={15} /> : <Play size={15} fill="currentColor" />}
-                    {isRunning ? 'Pause' : 'Resume'}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="outline-button compact-btn"
-                  onClick={() => {
-                    setSecondsLeft(totalTimeSeconds)
-                    setIsRunning(true)
-                  }}
-                >
-                  <RotateCcw size={15} />
-                  Reset
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="exercise-reps-container">
-              <div className="rep-counter-display">
-                <span className="rep-big-num">{repsDone}</span>
-                <span className="rep-slash">/</span>
-                <span className="rep-target-num">{targetReps || '10'} REPS</span>
-              </div>
-
-              <div className="exercise-rep-controls">
-                <button
-                  type="button"
-                  className="primary-button add-rep-btn"
-                  onClick={() => setRepsDone((prev) => Math.min(targetReps || 99, prev + 1))}
-                >
-                  <Plus size={16} /> +1 Rep
-                </button>
-                <button
-                  type="button"
-                  className="outline-button"
-                  onClick={() => setRepsDone(targetReps || 10)}
-                >
-                  <Check size={15} /> Finish All
-                </button>
-              </div>
-            </div>
-          )}
+        {/* Live Camera & Posture Recording Stream */}
+        <div className="exercise-runner-box posture-runner-box">
+          <PostureCamera
+            exerciseName={exercise.name}
+            targetReps={targetReps}
+            onRepsChange={(reps) => setRepsDone(reps)}
+            onPostureUpdate={(score, isCorrect) => {
+              setFormScore(score)
+              setIsPostureCorrect(isCorrect)
+            }}
+          />
         </div>
 
         {exercise.instructions && (
           <div className="exercise-technique-card">
             <strong>
-              <Activity size={13} /> Technique & Form Guide:
+              <Activity size={13} /> Form & Technique Guide:
             </strong>
             <p>{exercise.instructions}</p>
           </div>
