@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Bell, CheckCircle2, Flame, Footprints, Gift, LayoutDashboard,
   Play, Sparkles, Target, Trophy, Zap
@@ -123,6 +123,7 @@ function DailyChallengeBar({
 }
 
 export default function Page() {
+  const pathname = usePathname()
   const [move, setMove] = useState(2480)
   const [user, setUser] = useState<ApiUser | null>(null)
   const [fitness, setFitness] = useState<ApiTodayFitness | null>(null)
@@ -317,12 +318,15 @@ export default function Page() {
             ['Competitions', Trophy, '/competitions'],
             ['Rewards', Gift, '/rewards'],
           ] as const
-        ).map(([label, Icon, path]) => (
-          <Link className={label === 'Home' ? 'active' : ''} href={path} key={label}>
-            <Icon size={18} />
-            <span>{label}</span>
-          </Link>
-        ))}
+        ).map(([label, Icon, path]) => {
+          const active = path === '/' ? pathname === '/' : pathname.startsWith(path)
+          return (
+            <Link className={active ? 'active' : ''} href={path} key={label}>
+              <Icon size={18} />
+              <span>{label}</span>
+            </Link>
+          )
+        })}
       </footer>
     </div>
   )

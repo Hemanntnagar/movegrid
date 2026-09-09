@@ -328,7 +328,7 @@ function MissionModal({
             <button
               type="button"
               className="outline-button"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               onClick={() => setStep((s) => s - 1)}
             >
               <ArrowLeft size={16} /> Previous
@@ -336,7 +336,8 @@ function MissionModal({
           )}
           <button
             type="button"
-            className="primary-button full"
+            className="primary-button"
+            style={{ flex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             disabled={loading}
             onClick={() => {
               if (step === 0) {
