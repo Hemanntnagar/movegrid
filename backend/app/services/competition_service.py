@@ -1,6 +1,6 @@
 """Competition listing and participation."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -10,6 +10,10 @@ from app.models.entities import Competition, CompetitionParticipant, User
 
 
 from app.schemas.common import CompetitionCreate
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _status_for(comp: Competition, now: datetime) -> str:
@@ -37,7 +41,7 @@ def serialize_competition(
     participating_ids: set[int],
     now: datetime | None = None,
 ) -> dict:
-    now = now or datetime.utcnow()
+    now = now or _utcnow()
     status = _status_for(comp, now)
     eligible = _eligible(user, comp) and status != "ended" and comp.is_active
     return {
@@ -60,7 +64,7 @@ def serialize_competition(
 
 
 async def create_competition(db: AsyncSession, payload: CompetitionCreate, user: User | None = None) -> dict:
-    now = datetime.utcnow()
+    now = _utcnow()
     starts_at = payload.starts_at or now
     comp = Competition(
         name=payload.name,
@@ -97,7 +101,7 @@ async def list_competitions(db: AsyncSession, user: User | None = None) -> list[
         ).all()
         participating_ids = {row[0] for row in rows}
 
-    now = datetime.utcnow()
+    now = _utcnow()
     results = []
     for comp in comps:
         item = serialize_competition(comp, user=user, participating_ids=participating_ids, now=now)
@@ -116,7 +120,7 @@ async def participate(db: AsyncSession, user: User, competition_id: int) -> dict
     if not comp or not comp.is_active:
         raise HTTPException(404, "Competition not found")
 
-    now = datetime.utcnow()
+    now = _utcnow()
     status = _status_for(comp, now)
     if status == "ended":
         raise HTTPException(400, "This competition has ended")

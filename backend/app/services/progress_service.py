@@ -1,7 +1,11 @@
 """Shared progress updates after missions / fitness completions."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -63,7 +67,7 @@ async def record_activity_progress(
     now: datetime | None = None,
 ) -> dict:
     """Apply MOVE, streak score, team competition points, then refresh ranks."""
-    moment = now or datetime.utcnow()
+    moment = now or _utcnow()
     today = moment.date()
 
     if move_awarded:

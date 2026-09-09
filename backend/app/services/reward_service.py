@@ -1,6 +1,10 @@
 """MOVE reward store — list, detail, redeem, and history."""
 
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -69,7 +73,7 @@ async def redeem_reward(db: AsyncSession, user: User, reward_id: int) -> dict:
 
     locked_user.total_points = new_balance
     reward.stock -= 1
-    redeemed_at = datetime.utcnow()
+    redeemed_at = _utcnow()
     redemption = RewardRedemption(
         user_id=locked_user.id,
         reward_id=reward.id,

@@ -1,12 +1,17 @@
 """Backend-owned leaderboard ranking queries and rank delta tracking."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.entities import LeaderboardRank, Team, User
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 BOARD_MOVE = "move"
 BOARD_STREAK = "streak"
@@ -23,7 +28,7 @@ async def refresh_board_ranks(
     ordered_ids_and_points: list[tuple[int, int]],
 ) -> None:
     """Persist current ranks and compute movement vs previous ranks."""
-    now = datetime.utcnow()
+    now = _utcnow()
     existing = (
         await db.execute(
             select(LeaderboardRank).where(
