@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   Activity,
   ArrowLeft,
@@ -9,6 +10,8 @@ import {
   Check,
   Droplets,
   Footprints,
+  Gift,
+  LayoutDashboard,
   LoaderCircle,
   MapPin,
   Play,
@@ -16,6 +19,7 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
+  Trophy,
   X,
   Zap,
 } from 'lucide-react'
@@ -415,6 +419,7 @@ function MissionModal({
 }
 
 export default function ChallengesPage() {
+  const pathname = usePathname()
   const [selected, setSelected] = useState<Mission | null>(null)
   const [user, setUser] = useState<ApiUser | null>(null)
   const [apiMissions, setApiMissions] = useState<Mission[]>(DEFAULT_MISSIONS)
@@ -523,6 +528,25 @@ export default function ChallengesPage() {
       {selected && (
         <MissionModal mission={selected} onClose={() => setSelected(null)} onComplete={finish} loading={loadingComplete} />
       )}
+
+      <footer className="centered-nav-bar">
+        {(
+          [
+            ['Home', LayoutDashboard, '/'],
+            ['Challenges', Target, '/challenges'],
+            ['Competitions', Trophy, '/competitions'],
+            ['Rewards', Gift, '/rewards'],
+          ] as const
+        ).map(([label, Icon, path]) => {
+          const active = path === '/' ? pathname === '/' : pathname.startsWith(path)
+          return (
+            <Link className={active ? 'active' : ''} href={path} key={label}>
+              <Icon size={18} />
+              <span>{label}</span>
+            </Link>
+          )
+        })}
+      </footer>
     </div>
   )
 }

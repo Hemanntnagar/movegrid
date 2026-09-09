@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Building2,
@@ -10,10 +10,13 @@ import {
   Check,
   Clock,
   Gift,
+  LayoutDashboard,
   LoaderCircle,
   Plus,
   ShieldCheck,
   Swords,
+  Target,
+  Trophy,
   Users,
   X,
   Zap,
@@ -219,6 +222,7 @@ function CompetitionCard({
 }
 
 export default function CompetitionsPage() {
+  const pathname = usePathname()
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<ApiUser | null>(null)
