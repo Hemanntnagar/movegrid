@@ -133,7 +133,7 @@ export default function Page() {
   const [toast, setToast] = useState<string>('')
 
   // Live step counter from phone accelerometer
-  const { steps, goal: stepGoal, percent: stepPercent, requestPermission, active: stepActive, addSteps } = useStepCounter()
+  const { steps, goal: stepGoal, percent: stepPercent, startTracking, active: stepActive, pause: stopTracking } = useStepCounter()
 
   const token = getStoredToken()
 
@@ -168,12 +168,14 @@ export default function Page() {
     }
   }, [])
 
-  // Activate real motion tracking when challenge is active
+  // Activate tracking when challenge is active, stop when finished or expired
   useEffect(() => {
     if (challengeState === 'active' && !stepActive) {
-      requestPermission()
+      startTracking()
+    } else if ((challengeState === 'completed' || challengeState === 'expired') && stepActive) {
+      stopTracking()
     }
-  }, [challengeState, stepActive, requestPermission])
+  }, [challengeState, stepActive, startTracking, stopTracking])
 
   // Auto-fetch completion when step goal is reached!
   useEffect(() => {
@@ -219,15 +221,13 @@ export default function Page() {
     const today = istDateKey()
     setChallengeState('active')
     localStorage.setItem(`movegrid_challenge_state_${today}`, 'active')
-    requestPermission()
-    const currentSteps = steps === 0 ? 150 : steps
-    if (steps === 0) addSteps(150) // initial boost on start
+    startTracking()
     const token = getStoredToken()
     if (token) {
-      movegridApi.syncSteps(token, currentSteps).catch(() => {})
-      movegridApi.startMission(1, currentSteps, token).catch(() => {})
+      movegridApi.syncSteps(token, steps).catch(() => {})
+      movegridApi.startMission(1, steps, token).catch(() => {})
     }
-  }, [requestPermission, addSteps, steps])
+  }, [startTracking, steps])
 
   return (
     <div className="app-shell">

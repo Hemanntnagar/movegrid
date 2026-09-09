@@ -178,62 +178,24 @@ function StepRing({ percent, steps, goal }: { percent: number; steps: number; go
 // ─── Live step panel (shown at mission step 1 for Walk missions) ─────────────
 
 function LiveStepPanel() {
-  const { steps, goal, percent, active, permissionState, requestPermission, pause, addSteps } =
-    useStepCounter()
+  const { steps, goal, percent, active, startTracking } = useStepCounter()
 
-  if (permissionState === 'unavailable') {
-    return (
-      <div className="qr-panel">
-        <Footprints size={64} style={{ opacity: 0.4 }} />
-        <strong>Sensor not available</strong>
-        <span style={{ fontSize: '0.8rem', textAlign: 'center', opacity: 0.65 }}>
-          Step counting requires a phone with a motion sensor. Open this page on your Android or
-          iPhone.
-        </span>
-        {/* Desktop testing helper — add 100 steps at a time */}
-        <button
-          type="button"
-          className="outline-button"
-          style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}
-          onClick={() => addSteps(100)}
-        >
-          + 100 demo steps
-        </button>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (!active) {
+      startTracking()
+    }
+  }, [active, startTracking])
 
   return (
     <div className="qr-panel" style={{ gap: '1rem' }}>
       <StepRing percent={percent} steps={steps} goal={goal} />
 
-      {permissionState === 'prompt' && !active ? (
-        <button type="button" className="primary-button" onClick={requestPermission}>
-          <Play size={15} fill="currentColor" /> Allow Gyro & Motion Sensors
-        </button>
-      ) : active ? (
-        <button type="button" className="outline-button" onClick={pause}>
-          <Pause size={15} /> Pause Gyro Tracking
-        </button>
-      ) : (
-        <button type="button" className="primary-button" onClick={requestPermission}>
-          <Play size={15} fill="currentColor" /> Resume Gyro Tracking
-        </button>
-      )}
-
-      <button
-        type="button"
-        className="outline-button compact-btn"
-        style={{ fontSize: '0.8rem', padding: '6px 14px' }}
-        onClick={() => addSteps(100)}
-      >
-        + 100 Demo Steps
-      </button>
+      <span className="challenge-status-chip active" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <Sparkles size={14} className="spin-slow" /> {active ? 'Tracking Live' : 'Challenge Active'}
+      </span>
 
       <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
-        {active
-          ? `Counting live from mobile Gyroscope & Accelerometer sensors`
-          : 'Tap to activate Gyroscope & Motion Sensor pedometer'}
+        {active ? 'Step tracking active from phone sensors...' : 'Walk to complete your step goal'}
       </span>
     </div>
   )

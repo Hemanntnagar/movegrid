@@ -44,6 +44,8 @@ export interface StepCounterState {
   active: boolean
   permissionState: PermissionState
   requestPermission: () => Promise<void>
+  startTracking: () => void
+  start: () => void
   pause: () => void
   addSteps: (n: number) => void
 }
@@ -67,17 +69,18 @@ function saveSteps(steps: number) {
   localStorage.setItem(todayKey(), String(steps))
 }
 
-// ─── Gyroscope + Accelerometer Pedometer Hook ────────────────────────────────
+// ─── Pedometer Hook ──────────────────────────────────────────────────────────
 
 export function useStepCounter(): StepCounterState {
   const [steps, setStepsState] = useState<number>(0)
   const [active, setActive] = useState(false)
-  const [permissionState, setPermissionState] = useState<PermissionState>('unknown')
+  const [permissionState, setPermissionState] = useState<PermissionState>('granted')
 
   const stepsRef = useRef<number>(0)
   const lastPeakTimeRef = useRef<number>(0)
   const prevMagRef = useRef<number>(0)
   const isRisingRef = useRef<boolean>(false)
+  const lastMotionEventTimeRef = useRef<number>(0)
 
   // Stride cadence buffer for noise rejection
   const strideBufferRef = useRef<number>(0)
@@ -86,7 +89,7 @@ export function useStepCounter(): StepCounterState {
   // Gravity vector estimation for low-pass filter
   const gravityRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 9.81 })
 
-  // Latest Gyroscope angular velocity values (alpha, beta, gamma)
+  // Latest angular velocity values (alpha, beta, gamma)
   const gyroRateRef = useRef<{ alpha: number; beta: number; gamma: number }>({
     alpha: 0,
     beta: 0,
@@ -110,27 +113,8 @@ export function useStepCounter(): StepCounterState {
     setStepsState(saved)
   }, [])
 
-  // Check hardware availability & iOS vs Android permissions
-  useEffect(() => {
-    if (typeof window === 'undefined') return
 
-    if (!('DeviceMotionEvent' in window) && !('DeviceOrientationEvent' in window)) {
-      setPermissionState('unavailable')
-      return
-    }
-
-    // iOS 13+ requires explicit user gesture permission request
-    const motionReq = (DeviceMotionEvent as unknown as { requestPermission?: unknown }).requestPermission
-    const orientationReq = (DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission
-
-    if (typeof motionReq === 'function' || typeof orientationReq === 'function') {
-      setPermissionState('prompt')
-    } else {
-      setPermissionState('granted')
-    }
-  }, [])
-
-  // ── Gyroscope Rotation Handler ─────────────────────────────────────────────
+  // ── Rotation Handler ──────────────────────────────────────────────────────
 
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
     if (event.alpha !== null || event.beta !== null || event.gamma !== null) {
@@ -142,13 +126,14 @@ export function useStepCounter(): StepCounterState {
     }
   }, [])
 
-  // ── Accelerometer & Gyro Fusion Step Handler ─────────────────────────────
+  // ── Motion & Step Handler ─────────────────────────────────────────────────
 
   const handleMotion = useCallback((event: DeviceMotionEvent) => {
+    lastMotionEventTimeRef.current = Date.now()
     let linMag = 0
     let gyroMag = 0
 
-    // Extract Gyroscope rotation rate from motion event if available
+    // Extract rotation rate from motion event if available
     const rot = event.rotationRate
     if (rot && (rot.alpha !== null || rot.beta !== null || rot.gamma !== null)) {
       const a = rot.alpha || 0
@@ -188,7 +173,7 @@ export function useStepCounter(): StepCounterState {
       linMag = Math.sqrt(lx * lx + ly * ly + lz * lz)
     }
 
-    // Combined Sensor Fusion Score (70% Linear Acc + 30% Gyro Rotation)
+    // Combined Sensor Fusion Score (70% Linear Acc + 30% Rotation)
     const combinedScore = linMag * 0.7 + (gyroMag / 25.0) * 0.3
 
     const wasRising = isRisingRef.current
@@ -226,25 +211,32 @@ export function useStepCounter(): StepCounterState {
   // ── Start / Pause Sensor Listeners ─────────────────────────────────────────
 
   const startListening = useCallback(() => {
-    window.addEventListener('devicemotion', handleMotion, { passive: true })
-    window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+    if (typeof window !== 'undefined') {
+      window.addEventListener('devicemotion', handleMotion, { passive: true })
+      window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+    }
     setActive(true)
+    setPermissionState('granted')
   }, [handleMotion, handleOrientation])
 
   const pause = useCallback(() => {
-    window.removeEventListener('devicemotion', handleMotion)
-    window.removeEventListener('deviceorientation', handleOrientation)
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('devicemotion', handleMotion)
+      window.removeEventListener('deviceorientation', handleOrientation)
+    }
     setActive(false)
   }, [handleMotion, handleOrientation])
 
   useEffect(() => {
     return () => {
-      window.removeEventListener('devicemotion', handleMotion)
-      window.removeEventListener('deviceorientation', handleOrientation)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('devicemotion', handleMotion)
+        window.removeEventListener('deviceorientation', handleOrientation)
+      }
     }
   }, [handleMotion, handleOrientation])
 
-  // ── Permission Request (iOS 13+ & Android) ─────────────────────────────────
+  // ── Permission Request & Direct Start ─────────────────────────────────────
 
   const requestPermission = useCallback(async () => {
     if (typeof window === 'undefined') return
@@ -254,23 +246,15 @@ export function useStepCounter(): StepCounterState {
 
     if (typeof motionReq === 'function') {
       try {
-        const result = await motionReq()
+        await motionReq()
         if (typeof orientationReq === 'function') {
           await orientationReq().catch(() => {})
         }
-        if (result === 'granted') {
-          setPermissionState('granted')
-          startListening()
-        } else {
-          setPermissionState('denied')
-        }
       } catch {
-        setPermissionState('denied')
+        /* proceed to start tracking anyway */
       }
-    } else {
-      setPermissionState('granted')
-      startListening()
     }
+    startListening()
   }, [startListening])
 
   // ── Manual Step Override (Desktop Testing) ─────────────────────────────────
@@ -289,6 +273,8 @@ export function useStepCounter(): StepCounterState {
     active,
     permissionState,
     requestPermission,
+    startTracking: requestPermission,
+    start: requestPermission,
     pause,
     addSteps,
   }
