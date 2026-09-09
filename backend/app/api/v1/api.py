@@ -80,7 +80,9 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def me(user: User = Depends(current_user)): return user
 
 @api_router.get("/missions", response_model=list[MissionRead])
+@api_router.get("/challenges", response_model=list[MissionRead])
 async def missions(db: AsyncSession = Depends(get_db)): return await list_missions(db)
+
 
 
 @api_router.post("/missions/{challenge_id}/start")

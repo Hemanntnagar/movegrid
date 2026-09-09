@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LogIn,
   Swords,
+  Target,
   Trophy,
   UserRound,
   Users,
@@ -19,6 +20,7 @@ import { ApiUser, clearToken, getStoredToken, movegridApi } from '../lib/api'
 
 export type MenuAction =
   | 'dashboard'
+  | 'challenges'
   | 'buddies'
   | 'competitions'
   | 'reward-hub'
@@ -33,6 +35,7 @@ const MENU_ITEMS: {
   tone: string
 }[] = [
   { id: 'dashboard', label: 'Dashboard Trail', icon: LayoutDashboard, tone: 'lime', href: '/' },
+  { id: 'challenges', label: 'Challenges', icon: Target, tone: 'mint', href: '/challenges' },
   { id: 'leaderboard', label: 'Leaderboards', icon: Flame, tone: 'orange', href: '/leaderboard' },
   { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
   { id: 'buddies', label: 'Buddies & Nearby', icon: Users, tone: 'lime', href: '/buddies' },
