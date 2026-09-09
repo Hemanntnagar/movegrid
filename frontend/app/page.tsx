@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
-  Bell, CheckCircle2, Flame, Footprints, Gift, LayoutDashboard,
-  Play, Sparkles, Target, Trophy, Zap
+  Bell, Flame, Footprints, Gift, LayoutDashboard,
+  Sparkles, Trophy, Zap
 } from 'lucide-react'
 import {
   ApiTodayFitness, ApiUser, clearToken, getStoredToken, movegridApi
@@ -13,7 +13,6 @@ import {
 import { AppChrome } from '../components/AppChrome'
 import { DashboardPath } from '../components/DashboardPath'
 import { useStepCounter } from '../hooks/useStepCounter'
-import { istDateKey } from '../lib/ist'
 
 function StatCard({ icon, label, value, detail, tone, badgeSymbol }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string; badgeSymbol?: string }) {
   return (
@@ -29,111 +28,16 @@ function StatCard({ icon, label, value, detail, tone, badgeSymbol }: { icon: Rea
   )
 }
 
-function formatCountdown(totalSeconds: number) {
-  const safe = Math.max(0, totalSeconds)
-  const hours = Math.floor(safe / 3600)
-  const minutes = Math.floor((safe % 3600) / 60)
-  const seconds = safe % 60
-  return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':')
-}
-
-function DailyChallengeBar({
-  challengeState,
-  secondsRemaining,
-  challengeTitle,
-  challengeMove,
-  steps,
-  stepGoal,
-  stepPercent,
-  onStartChallenge,
-}: {
-  challengeState: 'idle' | 'active' | 'completed' | 'expired'
-  secondsRemaining: number
-  challengeTitle: string
-  challengeMove: number
-  steps: number
-  stepGoal: number
-  stepPercent: number
-  onStartChallenge: () => void
-}) {
-  const isCompleted = challengeState === 'completed' || stepPercent >= 100
-  const isExpired = challengeState === 'expired' && !isCompleted
-  const isActive = challengeState === 'active' && !isCompleted
-
-  return (
-    <div className={`daily-challenge-notification ${isCompleted ? 'unlocked' : isExpired ? 'expired' : isActive ? 'active' : 'locked'}`}>
-      <div className="challenge-box-header">
-        <div className="notification-badge">
-          <Bell size={13} className={isActive ? 'bell-ring' : ''} />
-          <span>
-            {isCompleted ? 'COMPLETED' : isExpired ? 'EXPIRED' : isActive ? 'TRACKING LIVE' : 'DAILY QUEST'}
-          </span>
-        </div>
-        <strong className="notification-title">{challengeTitle}</strong>
-        <span className="notification-timer-chip">
-          {isCompleted ? '✓ Done' : isExpired ? '⌛ Expired' : `⏱ ${formatCountdown(secondsRemaining)}`}
-        </span>
-      </div>
-
-      <div className="challenge-box-body">
-        <div className="notification-meta-pills">
-          <span className="meta-pill">
-            <Footprints size={12} /> {steps.toLocaleString()} / {stepGoal.toLocaleString()} ({stepPercent}%)
-          </span>
-          <span className="meta-pill reward">
-            <Zap size={12} fill="currentColor" /> +{challengeMove} MOVE
-          </span>
-        </div>
-
-        <div className="notification-actions">
-          {isCompleted ? (
-            <span className="challenge-status-chip success">
-              <CheckCircle2 size={14} /> +{challengeMove} MOVE
-            </span>
-          ) : isExpired ? (
-            <span className="challenge-status-chip expired">
-              Expired
-            </span>
-          ) : isActive ? (
-            <span className="challenge-status-chip active">
-              <Sparkles size={14} className="spin-slow" /> Active
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="primary-button start-challenge-btn"
-              onClick={onStartChallenge}
-              title="Click to start continuous live tracking for today's challenge"
-            >
-              <Play size={12} fill="currentColor" />
-              <span>Start Challenge</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="notification-progress-track">
-        <div
-          className={`notification-progress-fill ${isCompleted ? 'complete' : ''}`}
-          style={{ width: `${Math.min(100, stepPercent)}%` }}
-        />
-      </div>
-    </div>
-  )
-}
-
 export default function Page() {
   const pathname = usePathname()
   const [move, setMove] = useState(2480)
   const [user, setUser] = useState<ApiUser | null>(null)
-  const [fitness, setFitness] = useState<ApiTodayFitness | null>(null)
-  const [tick, setTick] = useState(0)
+  const [, setFitness] = useState<ApiTodayFitness | null>(null)
   const [rankLabel, setRankLabel] = useState('#24')
-  const [challengeState, setChallengeState] = useState<'idle' | 'active' | 'completed' | 'expired'>('idle')
   const [toast, setToast] = useState<string>('')
 
   // Live step counter from phone accelerometer
-  const { steps, goal: stepGoal, percent: stepPercent, startTracking, active: stepActive, pause: stopTracking } = useStepCounter()
+  const { steps, percent: stepPercent } = useStepCounter()
 
   const token = getStoredToken()
 
@@ -154,81 +58,6 @@ export default function Page() {
     load(token).catch(() => clearToken())
   }, [token, load])
 
-  useEffect(() => {
-    const id = window.setInterval(() => setTick((v) => v + 1), 1000)
-    return () => window.clearInterval(id)
-  }, [])
-
-  // Check saved challenge state for today
-  useEffect(() => {
-    const today = istDateKey()
-    const savedState = localStorage.getItem(`movegrid_challenge_state_${today}`) as any
-    if (savedState) {
-      setChallengeState(savedState)
-    }
-  }, [])
-
-  // Activate tracking when challenge is active, stop when finished or expired
-  useEffect(() => {
-    if (challengeState === 'active' && !stepActive) {
-      startTracking()
-    } else if ((challengeState === 'completed' || challengeState === 'expired') && stepActive) {
-      stopTracking()
-    }
-  }, [challengeState, stepActive, startTracking, stopTracking])
-
-  // Auto-fetch completion when step goal is reached!
-  useEffect(() => {
-    if (steps >= stepGoal && challengeState !== 'completed') {
-      const today = istDateKey()
-      setChallengeState('completed')
-      localStorage.setItem(`movegrid_challenge_state_${today}`, 'completed')
-
-      // Auto-fetch completion rewards
-      movegridApi.completeMission(1)
-        .then((res: any) => {
-          if (res.total_points) setMove(res.total_points)
-          else setMove((prev) => prev + 150)
-          setToast('🎉 Daily Challenge Completed! +150 MOVE points auto-fetched & awarded!')
-        })
-        .catch(() => {
-          setMove((prev) => prev + 150)
-          setToast('🎉 Daily Challenge Completed! +150 MOVE points awarded!')
-        })
-    }
-  }, [steps, stepGoal, challengeState])
-
-  const secondsRemaining = useMemo(() => {
-    void tick
-    if (fitness?.expires_at) {
-      return Math.max(0, Math.floor((new Date(fitness.expires_at).getTime() - Date.now()) / 1000))
-    }
-    const end = new Date()
-    end.setHours(24, 0, 0, 0)
-    return Math.max(0, Math.floor((end.getTime() - Date.now()) / 1000))
-  }, [fitness?.expires_at, tick])
-
-  // Auto-expire when timer hits zero
-  useEffect(() => {
-    if (secondsRemaining === 0 && challengeState === 'active') {
-      const today = istDateKey()
-      setChallengeState('expired')
-      localStorage.setItem(`movegrid_challenge_state_${today}`, 'expired')
-    }
-  }, [secondsRemaining, challengeState])
-
-  const handleStartChallenge = useCallback(() => {
-    const today = istDateKey()
-    setChallengeState('active')
-    localStorage.setItem(`movegrid_challenge_state_${today}`, 'active')
-    startTracking()
-    const token = getStoredToken()
-    if (token) {
-      movegridApi.syncSteps(token, steps).catch(() => {})
-      movegridApi.startMission(1, steps, token).catch(() => {})
-    }
-  }, [startTracking, steps])
-
   return (
     <div className="app-shell">
       <AppChrome
@@ -240,20 +69,6 @@ export default function Page() {
       />
 
       <main className="main-content dashboard-with-trail">
-        {/* Top Floating Notification Pop-up for Daily Challenge */}
-        <div className="top-daily-challenge-banner">
-          <DailyChallengeBar
-            challengeState={challengeState}
-            secondsRemaining={secondsRemaining}
-            challengeTitle="10,000 Daily Steps Goal"
-            challengeMove={150}
-            steps={steps}
-            stepGoal={stepGoal}
-            stepPercent={stepPercent}
-            onStartChallenge={handleStartChallenge}
-          />
-        </div>
-
         <div className="welcome trail-welcome">
           <div>
             <div className="cartoon-speech-bubble">
@@ -312,7 +127,6 @@ export default function Page() {
         {(
           [
             ['Home', LayoutDashboard, '/'],
-            ['Challenges', Target, '/challenges'],
             ['Competitions', Trophy, '/competitions'],
             ['Rewards', Gift, '/rewards'],
           ] as const

@@ -80,14 +80,8 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def me(user: User = Depends(current_user)): return user
 
 @api_router.get("/missions", response_model=list[MissionRead])
-@api_router.get("/challenges", response_model=list[MissionRead])
 async def missions(db: AsyncSession = Depends(get_db)): return await list_missions(db)
 
-@api_router.get("/challenges/{challenge_id}")
-async def challenge(challenge_id: int, db: AsyncSession = Depends(get_db)):
-    item = await db.get(Challenge, challenge_id)
-    if not item: raise HTTPException(404, "Challenge not found")
-    return item
 
 @api_router.post("/missions/{challenge_id}/start")
 async def start_mission(
