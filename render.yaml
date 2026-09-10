@@ -33,3 +33,8 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: '["http://localhost:3000"]'
+      # Optional: set GEMINI_API_KEY in the Render dashboard for AI-generated fitness plans.
+      # - key: GEMINI_API_KEY
+      #   sync: false
+      # - key: GEMINI_MODEL
+      #   value: gemini-3.8-flash

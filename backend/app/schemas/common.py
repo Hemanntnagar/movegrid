@@ -296,3 +296,30 @@ class BuddyConnectResponse(BaseModel):
     status: str
     invite: BuddyInviteRead
     buddy: BuddyUserRead
+
+
+class FitnessPlanGenerateRequest(BaseModel):
+    fitness_level: str = "Beginner"
+    goal: str = "active"
+    daily_minutes: int = Field(default=30, ge=15, le=120)
+    preferred_windows: list[str] = Field(default_factory=lambda: ["Morning", "Evening"])
+    focus_areas: list[str] = Field(default_factory=lambda: ["Walking", "Strength"])
+
+
+class FitnessPlanSlotRead(BaseModel):
+    id: str
+    time: str
+    title: str
+    duration: int
+    category: str
+    notes: str
+
+
+class FitnessPlanGenerateResponse(BaseModel):
+    fitness_level: str
+    goal: str
+    daily_minutes: int
+    preferred_windows: list[str]
+    focus_areas: list[str]
+    schedule: list[FitnessPlanSlotRead]
+    source: str = "ai"

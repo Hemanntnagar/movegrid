@@ -15,6 +15,8 @@ from app.schemas.common import (
     CompetitionCreate,
     CompetitionRead,
     FitnessHistoryResponse,
+    FitnessPlanGenerateRequest,
+    FitnessPlanGenerateResponse,
     LeaderboardResponse,
     LoginRequest,
     MissionRead,
@@ -43,6 +45,7 @@ from app.services.leaderboard_service import (
     get_streak_leaderboard,
 )
 from app.services.mission_service import list_missions, verify_and_complete
+from app.services.plan_generation_service import generate_fitness_plan
 from app.services.presence_service import list_nearby, upsert_presence
 from app.services.progress_service import record_activity_progress
 from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
@@ -167,6 +170,20 @@ async def daily_fitness_complete(assignment_id: int, user: User = Depends(curren
 @api_router.get("/daily-fitness/history", response_model=FitnessHistoryResponse)
 async def daily_fitness_history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     return await get_assignment_history(db, user)
+
+
+@api_router.post("/fitness-plan/generate", response_model=FitnessPlanGenerateResponse)
+async def fitness_plan_generate(
+    payload: FitnessPlanGenerateRequest,
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await generate_fitness_plan(payload.model_dump())
+    if user:
+        user.fitness_level = result["fitness_level"]
+        await db.commit()
+    return result
+
 
 @api_router.get("/zones")
 async def zones(db: AsyncSession = Depends(get_db)): return (await db.execute(select(Zone).where(Zone.is_active.is_(True)))).scalars().all()

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:3001",
     ]
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.8-flash"
 
     @field_validator("database_url", mode="before")
     @classmethod

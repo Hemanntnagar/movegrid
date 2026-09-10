@@ -17,6 +17,8 @@ import type {
   ApiTodayFitness,
   ApiToken,
   ApiUser,
+  ApiFitnessPlanGeneratePayload,
+  ApiFitnessPlanGenerateResult,
 } from './api'
 import { FitnessPlan, getStoredPlan } from './fitnessPlan'
 import { getIstParts, istDateKey } from './ist'
@@ -692,6 +694,22 @@ export const demoApi = {
     writeJson(DEMO_COMPETE_KEY, [...joined])
     const updated = this.competitions(_token).find((item) => item.id === id)!
     return { status: 'joined', competition: { ...updated, is_participating: true } }
+  },
+
+  async generateFitnessPlan(
+    payload: ApiFitnessPlanGeneratePayload,
+    _token?: string | null,
+  ): Promise<ApiFitnessPlanGenerateResult> {
+    const response = await fetch('/api/fitness-plan/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => null)
+      throw new Error(typeof body?.detail === 'string' ? body.detail : 'Could not generate fitness plan')
+    }
+    return response.json() as Promise<ApiFitnessPlanGenerateResult>
   },
 
   todayFitness(_token: string): ApiTodayFitness {

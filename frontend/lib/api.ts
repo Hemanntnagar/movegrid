@@ -246,6 +246,33 @@ export type ApiBuddyConnectResult = {
   buddy: ApiBuddy
 }
 
+export type ApiFitnessPlanGeneratePayload = {
+  fitness_level: string
+  goal: string
+  daily_minutes: number
+  preferred_windows: string[]
+  focus_areas: string[]
+}
+
+export type ApiFitnessPlanSlot = {
+  id: string
+  time: string
+  title: string
+  duration: number
+  category: string
+  notes: string
+}
+
+export type ApiFitnessPlanGenerateResult = {
+  fitness_level: string
+  goal: string
+  daily_minutes: number
+  preferred_windows: string[]
+  focus_areas: string[]
+  schedule: ApiFitnessPlanSlot[]
+  source: string
+}
+
 const TOKEN_KEY = 'movegrid_token'
 
 export function getStoredToken(): string | null {
@@ -459,5 +486,13 @@ export const movegridApi = {
       : request<{ status: string; invite_id: number }>(`/buddies/invites/${inviteId}/decline`, {
           method: 'POST',
           headers: authHeaders(token),
+        }),
+  generateFitnessPlan: (payload: ApiFitnessPlanGeneratePayload, token?: string | null) =>
+    isDemoMode
+      ? demoApi.generateFitnessPlan(payload, token)
+      : request<ApiFitnessPlanGenerateResult>('/fitness-plan/generate', {
+          method: 'POST',
+          headers: token ? authHeaders(token) : undefined,
+          body: JSON.stringify(payload),
         }),
 }

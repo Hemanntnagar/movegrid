@@ -14,14 +14,13 @@ import {
 } from 'lucide-react'
 import { AppChrome } from '../../components/AppChrome'
 import {
-  CUSTOM_EXERCISE_PRESETS,
   FOCUS_OPTIONS,
   FitnessPlan,
   FocusArea,
   TimetableSlot,
   getStoredPlan,
   hasCompletedOnboarding,
-  newSlotFromPreset,
+  newEmptySlot,
   saveFitnessPlan,
 } from '../../lib/fitnessPlan'
 
@@ -30,7 +29,6 @@ export default function AssistantPage() {
   const [plan, setPlan] = useState<FitnessPlan | null>(null)
   const [schedule, setSchedule] = useState<TimetableSlot[]>([])
   const [saved, setSaved] = useState(false)
-  const [presetIndex, setPresetIndex] = useState(0)
 
   useEffect(() => {
     if (!hasCompletedOnboarding()) {
@@ -62,41 +60,8 @@ export default function AssistantPage() {
   }
 
   function addSlot() {
-    const next = newSlotFromPreset(presetIndex)
-    setPresetIndex((i) => i + 1)
+    const next = newEmptySlot()
     setSchedule((prev) => [...prev, next].sort((a, b) => a.time.localeCompare(b.time)))
-    setSaved(false)
-  }
-
-  function applyPreset(title: string) {
-    const preset = CUSTOM_EXERCISE_PRESETS.find((item) => item.title === title)
-    if (!preset) return
-    setSchedule((prev) => {
-      if (prev.length === 0) {
-        return [
-          {
-            id: newSlotFromPreset(0).id,
-            time: '18:00',
-            title: preset.title,
-            duration: preset.duration,
-            category: preset.category,
-            notes: preset.notes,
-          },
-        ]
-      }
-      const last = prev[prev.length - 1]
-      return prev.map((slot) =>
-        slot.id === last.id
-          ? {
-              ...slot,
-              title: preset.title,
-              duration: preset.duration,
-              category: preset.category,
-              notes: preset.notes,
-            }
-          : slot
-      )
-    })
     setSaved(false)
   }
 
@@ -140,7 +105,7 @@ export default function AssistantPage() {
               Customize your <span>daily exercises</span>
             </h1>
             <p className="subhead">
-              Edit times, swap moves, or add slots to the timetable you set during onboarding.
+              Edit times, swap moves, or add slots to the AI timetable you set during onboarding.
             </p>
           </div>
         </div>
@@ -150,6 +115,7 @@ export default function AssistantPage() {
             <p className="eyebrow">CURRENT PLAN</p>
             <strong>
               {plan.fitnessLevel} · {totalMinutes} min/day · {schedule.length} sessions
+              {plan.planSource === 'ai' ? ' · AI' : ''}
             </strong>
           </div>
           <button type="button" className="primary-button" onClick={save}>
@@ -157,20 +123,6 @@ export default function AssistantPage() {
             {saved ? 'Saved' : 'Save timetable'}
           </button>
         </section>
-
-        <section className="section-heading compact">
-          <div>
-            <p className="eyebrow">QUICK PRESETS</p>
-            <h2>Tap to fill the last slot</h2>
-          </div>
-        </section>
-        <div className="choice-grid assistant-presets">
-          {CUSTOM_EXERCISE_PRESETS.map((preset) => (
-            <button key={preset.title} type="button" className="choice-chip" onClick={() => applyPreset(preset.title)}>
-              {preset.title}
-            </button>
-          ))}
-        </div>
 
         <section className="section-heading compact">
           <div>
@@ -246,7 +198,7 @@ export default function AssistantPage() {
             <div className="fitness-empty">
               <Clock3 size={22} />
               <strong>No exercises yet</strong>
-              <span>Add a slot or pick a preset to rebuild your day.</span>
+              <span>Add a slot to rebuild your day.</span>
             </div>
           )}
         </div>

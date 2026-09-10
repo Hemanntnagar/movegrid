@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Check,
   Clock3,
+  Loader2,
   Sparkles,
   Target,
 } from 'lucide-react'
@@ -20,16 +21,18 @@ import {
   LEVEL_OPTIONS,
   MINUTE_OPTIONS,
   OnboardingAnswers,
+  TimetableSlot,
   TimeWindow,
   WINDOW_OPTIONS,
-  buildTimetable,
-  createPlanFromAnswers,
+  createPlanFromGenerated,
   goalLabel,
   hasCompletedOnboarding,
   saveFitnessPlan,
 } from '../../lib/fitnessPlan'
+import { getStoredToken, movegridApi } from '../../lib/api'
 
-const STEPS = ['Level', 'Goal', 'Time', 'Focus', 'Timetable'] as const
+const STEPS = ['Level', 'Goal', 'Duration', 'When', 'Focus', 'Your plan'] as const
+const PLAN_STEP = STEPS.length - 1
 
 function toggleItem<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
@@ -45,6 +48,10 @@ export default function OnboardingPage() {
     preferredWindows: ['Morning', 'Evening'],
     focusAreas: ['Walking', 'Strength'],
   })
+  const [generatedSchedule, setGeneratedSchedule] = useState<TimetableSlot[] | null>(null)
+  const [planSource, setPlanSource] = useState<string>('ai')
+  const [generating, setGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
 
   useEffect(() => {
     if (hasCompletedOnboarding()) {
@@ -52,15 +59,54 @@ export default function OnboardingPage() {
     }
   }, [router])
 
-  const previewSchedule = useMemo(() => buildTimetable(answers), [answers])
+  const generatePlan = useCallback(async () => {
+    setGenerating(true)
+    setGenerateError(null)
+    try {
+      const token = getStoredToken()
+      const generated = await movegridApi.generateFitnessPlan(
+        {
+          fitness_level: answers.fitnessLevel,
+          goal: answers.goal,
+          daily_minutes: answers.dailyMinutes,
+          preferred_windows: answers.preferredWindows,
+          focus_areas: answers.focusAreas,
+        },
+        token,
+      )
+      setGeneratedSchedule(generated.schedule)
+      setPlanSource(generated.source)
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'Could not generate your plan')
+      setGeneratedSchedule(null)
+    } finally {
+      setGenerating(false)
+    }
+  }, [answers])
+
+  useEffect(() => {
+    if (step === PLAN_STEP) {
+      void generatePlan()
+    }
+  }, [step, generatePlan])
 
   const canContinue = useMemo(() => {
-    if (step === 3) return answers.focusAreas.length > 0 && answers.preferredWindows.length > 0
+    if (step === 3) return answers.preferredWindows.length > 0
+    if (step === 4) return answers.focusAreas.length > 0
     return true
   }, [answers.focusAreas.length, answers.preferredWindows.length, step])
 
   function finish() {
-    const plan = createPlanFromAnswers(answers)
+    if (!generatedSchedule?.length) return
+    const plan = createPlanFromGenerated(answers, {
+      fitness_level: answers.fitnessLevel,
+      goal: answers.goal,
+      daily_minutes: answers.dailyMinutes,
+      preferred_windows: answers.preferredWindows,
+      focus_areas: answers.focusAreas,
+      schedule: generatedSchedule,
+      source: planSource,
+    })
     saveFitnessPlan(plan)
     router.replace('/')
   }
@@ -74,7 +120,7 @@ export default function OnboardingPage() {
             Build your <span>daily timetable</span>
           </h1>
           <p className="subhead">
-            Answer a few questions once. We&apos;ll design a schedule you follow every day. Customize later in Assistant.
+            Answer five questions once. Our AI coach designs a schedule from your goals. Customize later in Assistant.
           </p>
 
           <div className="onboarding-steps" aria-label="Onboarding progress">
@@ -88,7 +134,7 @@ export default function OnboardingPage() {
 
           {step === 0 && (
             <section className="onboarding-section">
-              <h2>What&apos;s your fitness level?</h2>
+              <h2>1. What&apos;s your fitness level?</h2>
               <div className="choice-grid">
                 {LEVEL_OPTIONS.map((level) => (
                   <button
@@ -106,7 +152,7 @@ export default function OnboardingPage() {
 
           {step === 1 && (
             <section className="onboarding-section">
-              <h2>What&apos;s your main goal?</h2>
+              <h2>2. What&apos;s your main goal?</h2>
               <div className="choice-grid">
                 {GOAL_OPTIONS.map((goal) => (
                   <button
@@ -124,7 +170,7 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <section className="onboarding-section">
-              <h2>How much time can you commit daily?</h2>
+              <h2>3. How much time can you commit daily?</h2>
               <div className="choice-grid">
                 {MINUTE_OPTIONS.map((mins) => (
                   <button
@@ -137,7 +183,15 @@ export default function OnboardingPage() {
                   </button>
                 ))}
               </div>
-              <h2 style={{ marginTop: '1.4rem' }}>When do you prefer to move?</h2>
+            </section>
+          )}
+
+          {step === 3 && (
+            <section className="onboarding-section">
+              <h2>4. When do you prefer to move?</h2>
+              <p className="subhead" style={{ marginBottom: '0.9rem' }}>
+                Pick at least one time window.
+              </p>
               <div className="choice-grid">
                 {WINDOW_OPTIONS.map((window) => (
                   <button
@@ -158,11 +212,11 @@ export default function OnboardingPage() {
             </section>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <section className="onboarding-section">
-              <h2>Which focus areas matter most?</h2>
+              <h2>5. Which focus areas matter most?</h2>
               <p className="subhead" style={{ marginBottom: '0.9rem' }}>
-                Pick at least one. We&apos;ll mix these into your daily timetable.
+                Pick at least one. The AI will blend these into your daily timetable.
               </p>
               <div className="choice-grid">
                 {FOCUS_OPTIONS.map((area) => (
@@ -184,11 +238,11 @@ export default function OnboardingPage() {
             </section>
           )}
 
-          {step === 4 && (
+          {step === PLAN_STEP && (
             <section className="onboarding-section">
               <div className="timetable-summary">
                 <div>
-                  <p className="eyebrow">YOUR PLAN</p>
+                  <p className="eyebrow">YOUR AI PLAN</p>
                   <h2>Daily timetable</h2>
                   <p className="subhead">
                     {answers.fitnessLevel} · {goalLabel(answers.goal)} · {answers.dailyMinutes} min/day
@@ -196,26 +250,49 @@ export default function OnboardingPage() {
                 </div>
                 <CalendarDays size={22} />
               </div>
-              <ol className="timetable-list">
-                {previewSchedule.map((slot) => (
-                  <li key={slot.id}>
-                    <div className="timetable-time">
-                      <Clock3 size={14} />
-                      {slot.time}
-                    </div>
-                    <div>
-                      <strong>{slot.title}</strong>
-                      <small>
-                        {slot.duration} min · {slot.category}
-                      </small>
-                      <span>{slot.notes}</span>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              <p className="onboarding-note">
-                <Sparkles size={14} /> You can customize exercises anytime in the Assistant menu.
-              </p>
+
+              {generating && (
+                <p className="subhead" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Loader2 size={16} className="spin" /> Generating your personalized plan…
+                </p>
+              )}
+
+              {generateError && (
+                <p className="subhead" style={{ color: 'var(--danger, #f87171)' }}>
+                  {generateError}
+                </p>
+              )}
+
+              {!generating && generatedSchedule && generatedSchedule.length > 0 && (
+                <>
+                  <ol className="timetable-list">
+                    {generatedSchedule.map((slot) => (
+                      <li key={slot.id}>
+                        <div className="timetable-time">
+                          <Clock3 size={14} />
+                          {slot.time}
+                        </div>
+                        <div>
+                          <strong>{slot.title}</strong>
+                          <small>
+                            {slot.duration} min · {slot.category}
+                          </small>
+                          <span>{slot.notes}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="onboarding-note">
+                    <Sparkles size={14} />{' '}
+                    {planSource === 'ai'
+                      ? 'Built by AI from your answers. Customize anytime in Assistant.'
+                      : 'Personalized from your answers. Add GEMINI_API_KEY for full AI coaching.'}
+                  </p>
+                  <button type="button" className="outline-button" onClick={() => void generatePlan()} disabled={generating}>
+                    Regenerate plan
+                  </button>
+                </>
+              )}
             </section>
           )}
 
@@ -237,7 +314,12 @@ export default function OnboardingPage() {
                 Continue <ArrowRight size={15} />
               </button>
             ) : (
-              <button type="button" className="primary-button" onClick={finish}>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={finish}
+                disabled={generating || !generatedSchedule?.length}
+              >
                 <Target size={15} /> Start MOVEGRID
               </button>
             )}
