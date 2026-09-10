@@ -1,0 +1,3 @@
+# Fallback when a Render web service uses the repo root (no rootDir).
+# Preferred: Blueprint in render.yaml with rootDir: backend
+-r backend/requirements.txt
