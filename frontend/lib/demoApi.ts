@@ -21,12 +21,12 @@ import type {
 import { FitnessPlan, getStoredPlan } from './fitnessPlan'
 import { getIstParts, istDateKey } from './ist'
 
-const DEMO_TOKEN = 'demo.movegrid.local'
 const DEMO_USER_KEY = 'movegrid_demo_user'
 const DEMO_ACCOUNTS_KEY = 'movegrid_demo_accounts'
 const DEMO_DAY_KEY = 'movegrid_demo_day'
 const DEMO_REDEEM_KEY = 'movegrid_demo_redeems'
 const DEMO_PRESENCE_KEY = 'movegrid_demo_presence'
+const DEMO_PRESENCE_REGISTRY_KEY = 'movegrid_demo_presence_registry'
 const DEMO_COMPETE_KEY = 'movegrid_demo_competitions'
 const DEMO_CUSTOM_COMPETITIONS_KEY = 'movegrid_demo_custom_competitions'
 const DEMO_BUDDY_INVITES_KEY = 'movegrid_demo_buddy_invites'
@@ -109,27 +109,6 @@ function writeJson(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-function defaultUser(email = 'demo@movegrid.demo'): DemoUserState {
-  const short = email.split('@')[0] || 'Alex'
-  const name =
-    short
-      .split(/[._-]/)
-      .filter(Boolean)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ') || 'Alex Mover'
-  return {
-    id: 1,
-    name,
-    email,
-    total_points: 2480,
-    streak: 7,
-    streak_score: 420,
-    active_minutes: 86,
-    steps: 3450,
-    avatar: 'initials:AM:#8bd4f4',
-  }
-}
-
 function readAccounts(): Record<string, DemoUserState> {
   return readJson(DEMO_ACCOUNTS_KEY, {})
 }
@@ -142,34 +121,13 @@ function saveAccount(account: DemoUserState) {
 }
 
 function getUser(): DemoUserState {
-  return readJson(DEMO_USER_KEY, defaultUser())
+  const stored = readJson<DemoUserState | null>(DEMO_USER_KEY, null)
+  if (!stored) throw new Error('Not signed in')
+  return stored
 }
 
 function saveUser(user: DemoUserState) {
   writeJson(DEMO_USER_KEY, user)
-}
-
-const DEMO_NEARBY_USERS: Record<number, DemoUserState> = {
-  2: {
-    id: 2,
-    name: 'Maya Chen',
-    email: 'maya@movegrid.demo',
-    total_points: 2840,
-    streak: 12,
-    streak_score: 420,
-    active_minutes: 210,
-    avatar: 'initials:MC:#ffd447',
-  },
-  3: {
-    id: 3,
-    name: 'Jordan Lee',
-    email: 'jordan@movegrid.demo',
-    total_points: 2690,
-    streak: 9,
-    streak_score: 365,
-    active_minutes: 188,
-    avatar: 'initials:JL:#ff9a61',
-  },
 }
 
 function buddyCardFromDemoUser(user: DemoUserState): ApiBuddy {
@@ -197,8 +155,6 @@ function demoBuddyFromId(id: number): ApiBuddy | null {
   const accounts = readAccounts()
   const account = Object.values(accounts).find((entry) => entry.id === id)
   if (account) return buddyCardFromDemoUser(account)
-  const seed = DEMO_NEARBY_USERS[id]
-  if (seed) return buddyCardFromDemoUser(seed)
   return buddyCardFromDemoUser({
     id,
     name: `Mover ${id}`,
@@ -222,6 +178,40 @@ function buildDemoInvite(fromId: number, toId: number, message: string, id: numb
     from_user: demoBuddyFromId(fromId)!,
     to_user: demoBuddyFromId(toId)!,
   }
+}
+
+type DemoPresenceRegistryEntry = {
+  user_id: number
+  name: string
+  avatar: string
+  latitude: number
+  longitude: number
+  is_sharing: boolean
+  updated_at: string
+  total_points: number
+  streak: number
+}
+
+const LIVE_PRESENCE_MS = 15 * 60 * 1000
+
+function readPresenceRegistry(): Record<string, DemoPresenceRegistryEntry> {
+  return readJson(DEMO_PRESENCE_REGISTRY_KEY, {})
+}
+
+function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const r = 6371000
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * r * Math.asin(Math.sqrt(a))
+}
+
+function formatDistanceM(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} m`
+  return `${(meters / 1000).toFixed(1)} km`
 }
 
 function getDayState(plan: FitnessPlan | null): DemoDayState {
@@ -400,30 +390,14 @@ export const demoApi = {
   login(email: string, password: string): ApiToken {
     const cleanEmail = email.trim().toLowerCase()
     const accounts = readAccounts()
-    let account = accounts[cleanEmail]
-
-    if (account) {
-      if (account.password && password && account.password !== password) {
-        throw new Error('Invalid email or password')
-      }
-    } else if (cleanEmail === 'demo@movegrid.demo' || cleanEmail.endsWith('.demo')) {
-      account = { ...defaultUser(cleanEmail), password }
-    } else {
-      const short = cleanEmail.split('@')[0] || 'Mover'
-      const cleanName = short.charAt(0).toUpperCase() + short.slice(1)
-      account = {
-        id: Date.now(),
-        name: cleanName,
-        email: cleanEmail,
-        password,
-        total_points: 250,
-        streak: 1,
-        streak_score: 10,
-        active_minutes: 0,
-        avatar: `initials:${short.slice(0, 2).toUpperCase()}:#8bd4f4`,
-      }
+    const account = accounts[cleanEmail]
+    if (!account) {
+      throw new Error('Invalid email or password')
     }
-    saveAccount(account)
+    if (account.password && password && account.password !== password) {
+      throw new Error('Invalid email or password')
+    }
+    saveUser(account)
     return { access_token: `demo.${account.id}`, token_type: 'bearer' }
   },
 
@@ -816,14 +790,29 @@ export const demoApi = {
     longitude: number,
     isSharing = true,
   ): ApiPresence {
+    const user = getUser()
+    const now = new Date().toISOString()
     const presence = {
-      user_id: 1,
+      user_id: user.id,
       latitude,
       longitude,
       is_sharing: isSharing,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     }
     writeJson(DEMO_PRESENCE_KEY, presence)
+    const registry = readPresenceRegistry()
+    registry[String(user.id)] = {
+      user_id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      latitude,
+      longitude,
+      is_sharing: isSharing,
+      updated_at: now,
+      total_points: user.total_points,
+      streak: user.streak,
+    }
+    writeJson(DEMO_PRESENCE_REGISTRY_KEY, registry)
     return presence
   },
 
@@ -834,50 +823,59 @@ export const demoApi = {
     radiusM = 800,
   ): ApiNearbyPresence {
     const meUser = toApiUser(getUser())
+    const meInitials =
+      meUser.name
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((p) => p[0])
+        .join('')
+        .toUpperCase() || 'YO'
     const me = {
       id: meUser.id,
       name: meUser.name,
       avatar: meUser.avatar,
-      initials: 'YO',
+      initials: meInitials,
       latitude,
       longitude,
       distance_m: 0,
-      distance_label: 'you',
+      distance_label: 'You',
       total_points: meUser.total_points,
       streak: meUser.streak,
       updated_at: new Date().toISOString(),
       is_current_user: true,
     }
-    const nearby = [
-      {
-        id: 2,
-        name: 'Maya Chen',
-        avatar: 'initials:MC:#ffd447',
-        initials: 'MC',
-        latitude: latitude + 0.0008,
-        longitude: longitude + 0.0005,
-        distance_m: 95,
-        distance_label: '95 m',
-        total_points: 2840,
-        streak: 12,
-        updated_at: new Date().toISOString(),
-        is_current_user: false,
-      },
-      {
-        id: 3,
-        name: 'Jordan Lee',
-        avatar: 'initials:JL:#ff9a61',
-        initials: 'JL',
-        latitude: latitude - 0.0006,
-        longitude: longitude + 0.0009,
-        distance_m: 140,
-        distance_label: '140 m',
-        total_points: 2690,
-        streak: 9,
-        updated_at: new Date().toISOString(),
-        is_current_user: false,
-      },
-    ]
+
+    const cutoff = Date.now() - LIVE_PRESENCE_MS
+    const registry = readPresenceRegistry()
+    const nearby = Object.values(registry)
+      .filter((entry) => entry.user_id !== meUser.id && entry.is_sharing)
+      .filter((entry) => new Date(entry.updated_at).getTime() >= cutoff)
+      .map((entry) => {
+        const distance_m = haversineM(latitude, longitude, entry.latitude, entry.longitude)
+        return {
+          id: entry.user_id,
+          name: entry.name,
+          avatar: entry.avatar,
+          initials:
+            entry.name
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((p) => p[0])
+              .join('')
+              .toUpperCase() || 'MG',
+          latitude: entry.latitude,
+          longitude: entry.longitude,
+          distance_m: Math.round(distance_m * 10) / 10,
+          distance_label: formatDistanceM(distance_m),
+          total_points: entry.total_points,
+          streak: entry.streak,
+          updated_at: entry.updated_at,
+          is_current_user: false,
+        }
+      })
+      .filter((entry) => entry.distance_m <= radiusM)
+      .sort((a, b) => a.distance_m - b.distance_m)
+
     return {
       latitude,
       longitude,
@@ -999,14 +997,4 @@ export const demoApi = {
     return { status: 'declined', invite_id: inviteId }
   },
 
-  /** Ensure a browser session exists so the trail works without a remote API. */
-  ensureSession() {
-    if (typeof window === 'undefined') return
-    if (!localStorage.getItem('movegrid_token')) {
-      localStorage.setItem('movegrid_token', DEMO_TOKEN)
-    }
-    if (!localStorage.getItem(DEMO_USER_KEY)) {
-      saveUser(defaultUser())
-    }
-  },
 }

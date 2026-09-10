@@ -9,26 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.entities import User, UserPresence
 from app.schemas.common import NearbyPresenceResponse, NearbyUserRead, PresenceUpdate, PresenceRead
 
-# Demo movers whose locations orbit the requester so the live map always feels populated.
-DEMO_NEIGHBOR_EMAILS = [
-    "maya@movegrid.demo",
-    "jordan@movegrid.demo",
-    "sam@movegrid.demo",
-    "priya@movegrid.demo",
-    "chris@movegrid.demo",
-    "taylor@movegrid.demo",
-]
-
-# Rough meter offsets (north, east) for demo neighbors around the live user.
-DEMO_OFFSETS_M = [
-    (85, 40),
-    (-60, 110),
-    (120, -70),
-    (-95, -50),
-    (45, -130),
-    (-30, 160),
-]
-
 LIVE_WINDOW = timedelta(minutes=15)
 EARTH_RADIUS_M = 6_371_000
 
@@ -92,38 +72,6 @@ async def upsert_presence(db: AsyncSession, user: User, payload: PresenceUpdate)
     )
 
 
-async def _ensure_demo_neighbors(db: AsyncSession, latitude: float, longitude: float) -> None:
-    """Keep seeded demo movers live near the requesting coordinates."""
-    now = datetime.utcnow()
-    for index, email in enumerate(DEMO_NEIGHBOR_EMAILS):
-        user = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
-        if not user:
-            continue
-        north, east = DEMO_OFFSETS_M[index % len(DEMO_OFFSETS_M)]
-        # Slight time-based drift so markers feel alive across polls.
-        drift = (now.second % 20) - 10
-        lat, lng = offset_lat_lng(latitude, longitude, north + drift, east - drift / 2)
-        row = (
-            await db.execute(select(UserPresence).where(UserPresence.user_id == user.id))
-        ).scalar_one_or_none()
-        if row:
-            row.latitude = lat
-            row.longitude = lng
-            row.is_sharing = True
-            row.updated_at = now
-        else:
-            db.add(
-                UserPresence(
-                    user_id=user.id,
-                    latitude=lat,
-                    longitude=lng,
-                    is_sharing=True,
-                    updated_at=now,
-                )
-            )
-    await db.commit()
-
-
 async def list_nearby(
     db: AsyncSession,
     *,
@@ -131,11 +79,7 @@ async def list_nearby(
     longitude: float,
     radius_m: float = 800,
     current_user: User | None = None,
-    include_demo: bool = True,
 ) -> NearbyPresenceResponse:
-    if include_demo:
-        await _ensure_demo_neighbors(db, latitude, longitude)
-
     cutoff = datetime.utcnow() - LIVE_WINDOW
     rows = (
         await db.execute(

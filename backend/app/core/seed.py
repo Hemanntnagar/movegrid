@@ -5,9 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exercise_catalog import SEED_EXERCISES
 from app.core.security import hash_password
-from app.models.entities import Challenge, ClassGroup, Competition, Exercise, Reward, Team, User, UserPresence, Zone
+from app.models.entities import Challenge, ClassGroup, Competition, Exercise, Reward, Team, User, Zone
 from app.services.leaderboard_service import refresh_all_leaderboard_ranks
-from app.services.presence_service import DEMO_NEIGHBOR_EMAILS, DEMO_OFFSETS_M, offset_lat_lng
 
 AVATAR_COLORS = [
     "#ffd447",
@@ -159,41 +158,6 @@ async def seed_demo_data(db: AsyncSession) -> None:
 
     month_key = f"{date.today().year:04d}-{date.today().month:02d}"
     password = hash_password("movegrid-demo")
-
-    demo = (await db.execute(select(User).where(User.email == "demo@movegrid.demo"))).scalar_one_or_none()
-    if not demo:
-        demo = (await db.execute(select(User).where(User.email == "student@movegrid.demo"))).scalar_one_or_none()
-        if demo:
-            demo.email = "demo@movegrid.demo"
-            demo.role = "member"
-    if not demo:
-        demo = User(
-            email="demo@movegrid.demo",
-            name="Alex Morgan",
-            password_hash=password,
-            role="member",
-            class_id=cohort.id,
-            team_id=teams[0].id,
-            fitness_level="Beginner",
-            total_points=2480,
-            streak=7,
-            streak_score=225,
-            streak_month=month_key,
-            last_activity_date=date.today() - timedelta(days=1),
-            active_minutes=86,
-            avatar=_avatar("AM", "#f3a8c7"),
-        )
-        db.add(demo)
-    else:
-        demo.class_id = demo.class_id or cohort.id
-        demo.team_id = demo.team_id or teams[0].id
-        demo.role = "member"
-        if not demo.streak_month:
-            demo.streak_month = month_key
-        if demo.streak_score == 0:
-            demo.streak_score = 225
-        if not demo.avatar or demo.avatar == "/avatars/student.png":
-            demo.avatar = _avatar("AM", "#f3a8c7")
 
     for index, (name, email, move, streak, streak_score, minutes, level, team_index, initials) in enumerate(SEED_MOVERS):
         existing = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
@@ -385,34 +349,5 @@ async def seed_demo_data(db: AsyncSession) -> None:
             if bump == 0:
                 bump = 1
             row.previous_rank = max(1, row.rank + bump)
-
-    # Seed live presence around Central Green for demo neighbors.
-    hub_lat = zone.latitude if zone else 40.7128
-    hub_lng = zone.longitude if zone else -74.006
-    now = datetime.utcnow()
-    for index, email in enumerate(DEMO_NEIGHBOR_EMAILS):
-        neighbor = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
-        if not neighbor:
-            continue
-        existing_presence = (
-            await db.execute(select(UserPresence).where(UserPresence.user_id == neighbor.id))
-        ).scalar_one_or_none()
-        north, east = DEMO_OFFSETS_M[index % len(DEMO_OFFSETS_M)]
-        lat, lng = offset_lat_lng(hub_lat, hub_lng, north, east)
-        if existing_presence:
-            existing_presence.latitude = lat
-            existing_presence.longitude = lng
-            existing_presence.is_sharing = True
-            existing_presence.updated_at = now
-        else:
-            db.add(
-                UserPresence(
-                    user_id=neighbor.id,
-                    latitude=lat,
-                    longitude=lng,
-                    is_sharing=True,
-                    updated_at=now,
-                )
-            )
 
     await db.commit()

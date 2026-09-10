@@ -191,6 +191,9 @@ export default function BuddiesPage() {
               Find movers <span>near you.</span>
             </h1>
             <p className="subhead">Invite nearby movers — when they accept, you&apos;re connected workout buddies.</p>
+            <p className="subhead" style={{ marginTop: '0.35rem', opacity: 0.85 }}>
+              Only people sharing live location (updated in the last 15 minutes) appear on the map.
+            </p>
           </div>
         </div>
 
@@ -305,7 +308,7 @@ export default function BuddiesPage() {
             <ul className="buddies-list">
               {nearby.length === 0 ? (
                 <li className="buddies-empty-hint">
-                  <small>Share location on the map to see movers within ~800 m.</small>
+                  <small>No live movers nearby yet. Ask a friend to open Buddies, allow location, and share presence.</small>
                 </li>
               ) : (
                 nearby.map((buddy) => {

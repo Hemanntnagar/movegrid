@@ -2,37 +2,55 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { ensureDemoSession } from '../lib/api'
+import { getStoredToken } from '../lib/api'
 import { hasCompletedOnboarding } from '../lib/fitnessPlan'
 
-const SKIP = new Set(['/onboarding', '/login', '/signup', '/profile'])
+const AUTH_PUBLIC = new Set(['/login', '/signup'])
+const ONBOARDING_OPTIONAL = new Set(['/profile'])
 
-/** Redirects first-time visitors to the one-time questionnaire. */
+/** Requires sign-in, then one-time onboarding, before the main app. */
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const skip = SKIP.has(pathname)
-  const [ready, setReady] = useState(skip)
+  const isPublic = AUTH_PUBLIC.has(pathname)
+  const [ready, setReady] = useState(isPublic)
 
   useEffect(() => {
-    if (SKIP.has(pathname)) {
+    if (AUTH_PUBLIC.has(pathname)) {
       setReady(true)
       return
     }
-    if (!hasCompletedOnboarding()) {
+
+    const token = getStoredToken()
+    if (!token) {
       setReady(false)
-      router.replace('/onboarding')
+      router.replace('/login')
       return
     }
-    ensureDemoSession()
+
+    if (!hasCompletedOnboarding() && !ONBOARDING_OPTIONAL.has(pathname)) {
+      if (pathname !== '/onboarding') {
+        setReady(false)
+        router.replace('/onboarding')
+        return
+      }
+      setReady(true)
+      return
+    }
+
+    if (pathname === '/onboarding' && hasCompletedOnboarding()) {
+      router.replace('/')
+      return
+    }
+
     setReady(true)
   }, [pathname, router])
 
-  if (skip) return <>{children}</>
+  if (isPublic) return <>{children}</>
   if (!ready) {
     return (
       <div className="app-shell fitness-loading">
-        <p>Preparing your plan…</p>
+        <p>Loading…</p>
       </div>
     )
   }

@@ -261,12 +261,6 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
 }
 
-/** Start a local demo session when no backend URL is configured. */
-export function ensureDemoSession() {
-  if (!isDemoMode) return
-  demoApi.ensureSession()
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response
   try {

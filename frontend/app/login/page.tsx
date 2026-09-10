@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { FormEvent, Suspense, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn, UserPlus, Sparkles, Trophy } from 'lucide-react'
-import { clearToken, getStoredToken, isDemoMode, movegridApi, storeToken } from '../../lib/api'
+import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
 import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -206,29 +206,6 @@ function LoginContent() {
         )}
       </div>
 
-      <p className="login-hint" style={{ fontSize: '10px', opacity: 0.85, marginTop: '8px' }}>
-        Enter your credentials or click below to test with demo account:
-      </p>
-      <div style={{ textAlign: 'center', marginTop: '4px' }}>
-        <button
-          type="button"
-          onClick={() => {
-            setEmail('demo@movegrid.demo')
-            setPassword('movegrid-demo')
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#657a17',
-            fontSize: '11px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            textDecoration: 'underline',
-          }}
-        >
-          Prefill demo credentials (demo@movegrid.demo)
-        </button>
-      </div>
     </div>
   )
 }

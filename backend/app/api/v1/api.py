@@ -199,7 +199,6 @@ async def nearby_presence(
         longitude=longitude,
         radius_m=radius_m,
         current_user=user,
-        include_demo=True,
     )
 
 

@@ -11,7 +11,6 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react'
-import { ensureDemoSession } from '../../lib/api'
 import {
   FOCUS_OPTIONS,
   FitnessGoal,
@@ -63,7 +62,6 @@ export default function OnboardingPage() {
   function finish() {
     const plan = createPlanFromAnswers(answers)
     saveFitnessPlan(plan)
-    ensureDemoSession()
     router.replace('/')
   }
 

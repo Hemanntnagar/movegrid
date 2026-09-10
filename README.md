@@ -15,7 +15,7 @@ MOVEGRID is a full-stack movement game for everyone: missions create reasons to 
 4. Start the API with `uvicorn app.main:app --reload --port 8000`.
 5. In another terminal, run `pnpm install` from the root, then `pnpm dev`.
 
-Demo login: `demo@movegrid.demo` / `movegrid-demo`
+Create an account from the app’s **Sign up** screen (or register via `POST /api/v1/auth/register`).
 
 The frontend reads `NEXT_PUBLIC_API_URL` (default `http://localhost:8000/api/v1`).
 
