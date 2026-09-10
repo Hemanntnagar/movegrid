@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getStoredToken } from '../lib/api'
 import { hasCompletedOnboarding } from '../lib/fitnessPlan'
+import { GridCoach } from './GridCoach'
 
 const AUTH_PUBLIC = new Set(['/login', '/signup'])
 const ONBOARDING_OPTIONAL = new Set(['/profile'])
@@ -54,5 +55,10 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
-  return <>{children}</>
+  return (
+    <>
+      {children}
+      <GridCoach />
+    </>
+  )
 }

@@ -323,3 +323,25 @@ class FitnessPlanGenerateResponse(BaseModel):
     focus_areas: list[str]
     schedule: list[FitnessPlanSlotRead]
     source: str = "ai"
+
+
+class CoachChatMessage(BaseModel):
+    role: str = "user"
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class CoachChatContext(BaseModel):
+    fitness_level: str | None = None
+    goal: str | None = None
+    daily_minutes: int | None = None
+    focus_areas: list[str] | None = None
+
+
+class CoachChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+    history: list[CoachChatMessage] = Field(default_factory=list, max_length=24)
+    context: CoachChatContext | None = None
+
+
+class CoachChatResponse(BaseModel):
+    reply: str
