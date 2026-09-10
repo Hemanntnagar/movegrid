@@ -1,0 +1,30 @@
+# Render Blueprint — API lives in backend/
+# Dashboard: New > Blueprint > connect this repo, or set Root Directory manually on an existing service.
+#
+# After deploy, set CORS_ORIGINS to your Vercel URL, e.g.:
+# ["https://your-app.vercel.app"]
+
+databases:
+  - name: movegrid-db
+    plan: free
+    databaseName: movegrid
+    user: movegrid
+
+services:
+  - type: web
+    name: movegrid-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: movegrid-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: '["http://localhost:3000"]'
