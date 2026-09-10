@@ -11,8 +11,6 @@ from app.schemas.common import (
     BuddyInviteCreate,
     BuddyInviteRead,
     BuddyUserRead,
-    CoachChatRequest,
-    CoachChatResponse,
     CompleteAssignmentResponse,
     CompetitionCreate,
     CompetitionRead,
@@ -47,7 +45,6 @@ from app.services.leaderboard_service import (
     get_streak_leaderboard,
 )
 from app.services.mission_service import list_missions, verify_and_complete
-from app.services.coach_chat_service import coach_chat
 from app.services.plan_generation_service import generate_fitness_plan
 from app.services.presence_service import list_nearby, upsert_presence
 from app.services.progress_service import record_activity_progress
@@ -186,18 +183,6 @@ async def fitness_plan_generate(
         user.fitness_level = result["fitness_level"]
         await db.commit()
     return result
-
-
-@api_router.post("/coach/chat", response_model=CoachChatResponse)
-async def grid_coach_chat(
-    payload: CoachChatRequest,
-    user: User | None = Depends(optional_user),
-):
-    ctx = payload.context.model_dump() if payload.context else {}
-    if user and not ctx.get("fitness_level"):
-        ctx["fitness_level"] = user.fitness_level
-    history = [{"role": m.role, "content": m.content} for m in payload.history]
-    return await coach_chat(message=payload.message, history=history, context=ctx or None)
 
 
 @api_router.get("/zones")
