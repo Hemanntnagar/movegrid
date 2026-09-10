@@ -256,6 +256,46 @@ async def seed_demo_data(db: AsyncSession) -> None:
         if zone.description and "campus" in zone.description.lower():
             zone.description = "The neighborhood movement hub"
 
+    extra_missions = [
+        (
+            "10,000 Daily Steps Goal",
+            "Hit 10,000 steps today to keep your daily movement streak alive.",
+            "Walk",
+            45,
+            150,
+        ),
+        (
+            "Hydration Hero: Drink 2L Water",
+            "Track and drink 2 liters of water throughout the day.",
+            "Hydration",
+            5,
+            100,
+        ),
+        (
+            "City Park 5K Trail Run",
+            "Sprint or jog through the main park trail circuit.",
+            "Run",
+            28,
+            200,
+        ),
+    ]
+    for title, description, ctype, duration, reward in extra_missions:
+        existing = (
+            await db.execute(select(Challenge).where(Challenge.title == title))
+        ).scalar_one_or_none()
+        if not existing:
+            db.add(
+                Challenge(
+                    title=title,
+                    description=description,
+                    type=ctype,
+                    duration_minutes=duration,
+                    reward_points=reward,
+                    zone_id=zone.id,
+                )
+            )
+    await db.flush()
+
     desired_rewards = [
         {
             "title": "Cafe Voucher",

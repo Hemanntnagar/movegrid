@@ -26,78 +26,9 @@ import {
 import { ApiUser, clearToken, getStoredToken, movegridApi } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { useStepCounter } from '../../hooks/useStepCounter'
+import { apiMissionToUi, type UiMission } from '../../lib/missionUi'
 
-type UIKind = 'Walk' | 'Climb' | 'Run' | 'Bike' | 'Hydration' | string
-
-type Mission = {
-  id: number
-  title: string
-  zone: string
-  distance: string
-  minutes: number
-  move: number
-  kind: UIKind
-  color: string
-  description: string
-}
-
-const DEFAULT_MISSIONS: Mission[] = [
-  {
-    id: 1,
-    title: '10,000 Daily Steps Goal',
-    zone: 'Downtown Loop',
-    distance: '4.8 mi',
-    minutes: 45,
-    move: 150,
-    kind: 'Walk',
-    color: 'mint',
-    description: 'Hit 10,000 steps today to keep your daily movement streak alive.',
-  },
-  {
-    id: 2,
-    title: 'Hydration Hero: Drink 2L Water',
-    zone: 'Hydration Goal',
-    distance: '0.0 mi',
-    minutes: 5,
-    move: 100,
-    kind: 'Hydration',
-    color: 'blue',
-    description: 'Track and drink 2 Liters of fresh water throughout the day for optimal energy.',
-  },
-  {
-    id: 3,
-    title: 'City Park 5K Trail Run',
-    zone: 'Central Park',
-    distance: '3.1 mi',
-    minutes: 28,
-    move: 200,
-    kind: 'Run',
-    color: 'orange',
-    description: 'Sprint or jog through the main park trail circuit.',
-  },
-  {
-    id: 4,
-    title: 'Morning 15-Min Mobility Stretch',
-    zone: 'Home / Park',
-    distance: '0.1 mi',
-    minutes: 15,
-    move: 80,
-    kind: 'Walk',
-    color: 'purple',
-    description: 'Gentle full-body stretching session to improve posture and flexibility.',
-  },
-  {
-    id: 5,
-    title: 'Neighborhood Bike Circuit',
-    zone: 'City East Bikeway',
-    distance: '5.2 mi',
-    minutes: 30,
-    move: 160,
-    kind: 'Bike',
-    color: 'mint',
-    description: 'Cycle through the bike path and log your cardiovascular movement.',
-  },
-]
+type Mission = UiMission
 
 function Pill({ children, tone = 'lime' }: { children: React.ReactNode; tone?: string }) {
   return <span className={`pill ${tone}`}>{children}</span>
@@ -422,7 +353,8 @@ export default function ChallengesPage() {
   const pathname = usePathname()
   const [selected, setSelected] = useState<Mission | null>(null)
   const [user, setUser] = useState<ApiUser | null>(null)
-  const [apiMissions, setApiMissions] = useState<Mission[]>(DEFAULT_MISSIONS)
+  const [apiMissions, setApiMissions] = useState<Mission[]>([])
+  const [missionsLoading, setMissionsLoading] = useState(true)
   const [loadingComplete, setLoadingComplete] = useState(false)
   const [complete, setComplete] = useState(false)
   const [lastMove, setLastMove] = useState(150)
@@ -440,23 +372,10 @@ export default function ChallengesPage() {
     movegridApi
       .missions()
       .then((items) => {
-        if (items && items.length > 0) {
-          setApiMissions(
-            items.map((m, idx) => ({
-              id: m.id,
-              title: m.title.includes('Loop') ? '10,000 Daily Steps Goal' : m.title,
-              zone: m.zone,
-              distance: `${(0.2 + ((m.id * 0.15) % 0.8)).toFixed(1)} mi`,
-              minutes: m.minutes || 15,
-              move: m.move_reward || 100,
-              kind: m.kind || (idx % 3 === 0 ? 'Walk' : idx % 3 === 1 ? 'Run' : 'Bike'),
-              color: idx % 3 === 0 ? 'mint' : idx % 3 === 1 ? 'orange' : 'blue',
-              description: m.description,
-            }))
-          )
-        }
+        setApiMissions(items.map((m, idx) => apiMissionToUi(m, idx)))
       })
-      .catch(() => {})
+      .catch(() => setApiMissions([]))
+      .finally(() => setMissionsLoading(false))
   }, [token])
 
   const start = (m: Mission) => setSelected(m)
@@ -507,9 +426,15 @@ export default function ChallengesPage() {
         </div>
 
         <div className="mission-list">
-          {apiMissions.map((m) => (
-            <MissionCard mission={m} onStart={start} key={m.id} />
-          ))}
+          {missionsLoading ? (
+            <p className="subhead" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <LoaderCircle size={18} className="spin" /> Loading challenges…
+            </p>
+          ) : apiMissions.length === 0 ? (
+            <p className="subhead">No active challenges right now. Check back soon.</p>
+          ) : (
+            apiMissions.map((m) => <MissionCard mission={m} onStart={start} key={m.id} />)
+          )}
         </div>
       </main>
 

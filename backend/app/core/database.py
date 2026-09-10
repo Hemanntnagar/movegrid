@@ -1,8 +1,10 @@
 import os
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
+from app.core.base import Base
 from app.core.config import settings
+
+__all__ = ["Base", "engine", "SessionLocal", "get_db", "use_sqlite_fallback", "create_app_engine"]
 
 def create_app_engine(url: str | None = None) -> AsyncEngine:
     db_url = url or settings.database_url
@@ -18,9 +20,6 @@ def use_sqlite_fallback():
     sqlite_url = "sqlite+aiosqlite:///./movegrid.db"
     engine = create_app_engine(sqlite_url)
     SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
-
-class Base(DeclarativeBase):
-    pass
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:

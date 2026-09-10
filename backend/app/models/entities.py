@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-from app.core.database import Base
+from app.core.base import Base
 
 class ClassGroup(Base):
     __tablename__ = "classes"

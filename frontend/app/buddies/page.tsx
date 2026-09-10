@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, HeartHandshake, MapPin, MessageSquare, UserPlus, Users, X } from 'lucide-react'
+import type { ApiNearbyUser } from '../../lib/api'
 import { getStoredToken } from '../../lib/api'
 import { NearbyLiveMap } from '../../components/NearbyLiveMap'
 import { AppChrome } from '../../components/AppChrome'
@@ -20,18 +21,34 @@ type Buddy = {
 
 const DEFAULT_INVITE_MESSAGE = "Heyy!! Let's burn some calories."
 
-const NEARBY_BUDDIES: Buddy[] = [
-  { id: 101, name: 'Maya Chen', distance: '0.2 mi away', activity: '5K Trail Run', level: 'Advanced', status: 'Active now', avatar: 'MC', color: '#ffd447' },
-  { id: 102, name: 'Jordan Lee', distance: '0.4 mi away', activity: '10k Steps Walk', level: 'Intermediate', status: 'Walking nearby', avatar: 'JL', color: '#8bd4f4' },
-  { id: 103, name: 'Sam Rivera', distance: '0.6 mi away', activity: 'Morning Stretch', level: 'Beginner', status: 'Ready for workout', avatar: 'SR', color: '#ff9a61' },
-  { id: 104, name: 'Priya Nair', distance: '0.8 mi away', activity: 'Bike Circuit', level: 'Advanced', status: 'On bike trail', avatar: 'PN', color: '#b7e88f' },
-]
+function buddyFromNearby(person: ApiNearbyUser): Buddy {
+  const color = person.avatar.startsWith('initials:')
+    ? person.avatar.split(':')[2] || '#8bd4f4'
+    : '#8bd4f4'
+  const level =
+    person.total_points >= 2000 ? 'Advanced' : person.total_points >= 1000 ? 'Intermediate' : 'Beginner'
+  return {
+    id: person.id,
+    name: person.name,
+    distance: person.distance_label === 'you' ? 'At your location' : person.distance_label,
+    activity: `${person.total_points.toLocaleString()} MOVE · ${person.streak}-day streak`,
+    level,
+    status: 'Active nearby',
+    avatar: person.initials,
+    color,
+  }
+}
 
 export default function BuddiesPage() {
   const token = getStoredToken()
+  const [buddies, setBuddies] = useState<Buddy[]>([])
   const [inviteToast, setInviteToast] = useState('')
   const [inviteTarget, setInviteTarget] = useState<Buddy | null>(null)
   const [inviteMessage, setInviteMessage] = useState(DEFAULT_INVITE_MESSAGE)
+
+  const handleNearbyUpdate = useCallback((payload: { nearby: ApiNearbyUser[]; me: ApiNearbyUser | null }) => {
+    setBuddies(payload.nearby.map(buddyFromNearby))
+  }, [])
 
   const openInvite = (buddy: Buddy) => {
     setInviteTarget(buddy)
@@ -74,7 +91,7 @@ export default function BuddiesPage() {
         </div>
 
         <div className="buddies-layout">
-          <NearbyLiveMap token={token} variant="page" />
+          <NearbyLiveMap token={token} variant="page" onNearbyUpdate={handleNearbyUpdate} />
 
           <section className="side-card buddies-panel">
             <div className="section-heading compact" style={{ marginTop: 0 }}>
@@ -89,23 +106,29 @@ export default function BuddiesPage() {
             </p>
 
             <ul className="buddies-list">
-              {NEARBY_BUDDIES.map((buddy) => (
-                <li key={buddy.id}>
-                  <div className="mini-avatar" style={{ background: buddy.color, width: 40, height: 40, fontSize: 12 }}>
-                    {buddy.avatar}
-                  </div>
-                  <div>
-                    <strong>{buddy.name}</strong>
-                    <small>
-                      <MapPin size={11} /> {buddy.distance} · {buddy.activity}
-                    </small>
-                    <small className="buddy-status">{buddy.status} · {buddy.level}</small>
-                  </div>
-                  <button type="button" className="outline-button" onClick={() => openInvite(buddy)}>
-                    <UserPlus size={14} /> Invite
-                  </button>
+              {buddies.length === 0 ? (
+                <li className="buddies-empty-hint">
+                  <small>Share location on the map to see movers within ~800 m.</small>
                 </li>
-              ))}
+              ) : (
+                buddies.map((buddy) => (
+                  <li key={buddy.id}>
+                    <div className="mini-avatar" style={{ background: buddy.color, width: 40, height: 40, fontSize: 12 }}>
+                      {buddy.avatar}
+                    </div>
+                    <div>
+                      <strong>{buddy.name}</strong>
+                      <small>
+                        <MapPin size={11} /> {buddy.distance} · {buddy.activity}
+                      </small>
+                      <small className="buddy-status">{buddy.status} · {buddy.level}</small>
+                    </div>
+                    <button type="button" className="outline-button" onClick={() => openInvite(buddy)}>
+                      <UserPlus size={14} /> Invite
+                    </button>
+                  </li>
+                ))
+              )}
             </ul>
           </section>
         </div>

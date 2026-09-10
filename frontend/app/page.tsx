@@ -8,12 +8,14 @@ import {
   Play, Sparkles, Target, Trophy, Zap
 } from 'lucide-react'
 import {
+  ApiMission,
   ApiTodayFitness, ApiUser, clearToken, getStoredToken, movegridApi
 } from '../lib/api'
 import { AppChrome } from '../components/AppChrome'
 import { DashboardPath } from '../components/DashboardPath'
 import { useStepCounter } from '../hooks/useStepCounter'
 import { istDateKey } from '../lib/ist'
+import { pickDailyStepMission, rankMovementDetail, streakBadgeDetail } from '../lib/missionUi'
 
 function StatCard({ icon, label, value, detail, tone, badgeSymbol }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string; badgeSymbol?: string }) {
   return (
@@ -124,11 +126,13 @@ function DailyChallengeBar({
 
 export default function Page() {
   const pathname = usePathname()
-  const [move, setMove] = useState(2480)
+  const [move, setMove] = useState(0)
   const [user, setUser] = useState<ApiUser | null>(null)
   const [fitness, setFitness] = useState<ApiTodayFitness | null>(null)
+  const [dailyMission, setDailyMission] = useState<ApiMission | null>(null)
   const [tick, setTick] = useState(0)
-  const [rankLabel, setRankLabel] = useState('#24')
+  const [rankLabel, setRankLabel] = useState('—')
+  const [rankDelta, setRankDelta] = useState<number | null>(null)
   const [challengeState, setChallengeState] = useState<'idle' | 'active' | 'completed' | 'expired'>('idle')
   const [toast, setToast] = useState<string>('')
 
@@ -137,16 +141,22 @@ export default function Page() {
 
   const token = getStoredToken()
 
+  const challengeTitle = dailyMission?.title ?? '10,000 Daily Steps Goal'
+  const challengeMove = dailyMission?.move_reward ?? 150
+  const dailyMissionId = dailyMission?.id ?? 1
+
   const load = useCallback(async (authToken: string) => {
-    const me = await movegridApi.me(authToken)
+    const [me, board, missions] = await Promise.all([
+      movegridApi.me(authToken),
+      movegridApi.leaderboardMove(authToken, 20).catch(() => null),
+      movegridApi.missions().catch(() => [] as ApiMission[]),
+    ])
     setUser(me)
-    if (me.total_points) setMove(me.total_points)
-    try {
-      const board = await movegridApi.leaderboardMove(authToken, 20)
-      if (board.me?.rank) setRankLabel(`#${board.me.rank}`)
-    } catch {
-      /* keep demo rank */
-    }
+    setMove(me.total_points ?? 0)
+    setDailyMission(pickDailyStepMission(missions))
+    if (board?.me?.rank) setRankLabel(`#${board.me.rank}`)
+    else setRankLabel('—')
+    setRankDelta(board?.me?.movement ?? null)
   }, [])
 
   useEffect(() => {
@@ -184,19 +194,27 @@ export default function Page() {
       setChallengeState('completed')
       localStorage.setItem(`movegrid_challenge_state_${today}`, 'completed')
 
-      // Auto-fetch completion rewards
-      movegridApi.completeMission(1)
-        .then((res: any) => {
-          if (res.total_points) setMove(res.total_points)
-          else setMove((prev) => prev + 150)
-          setToast('🎉 Daily Challenge Completed! +150 MOVE points auto-fetched & awarded!')
+      movegridApi
+        .completeMission(dailyMissionId)
+        .then((res) => {
+          const body = res as {
+            total_points?: number
+            move_points?: number
+            move_awarded?: number
+            points_awarded?: number
+          }
+          const total = body.total_points ?? body.move_points
+          const awarded = body.points_awarded ?? body.move_awarded ?? challengeMove
+          if (total != null) setMove(total)
+          else setMove((prev) => prev + awarded)
+          setToast(`🎉 Daily Challenge Completed! +${awarded} MOVE points auto-fetched & awarded!`)
         })
         .catch(() => {
-          setMove((prev) => prev + 150)
-          setToast('🎉 Daily Challenge Completed! +150 MOVE points awarded!')
+          setMove((prev) => prev + challengeMove)
+          setToast(`🎉 Daily Challenge Completed! +${challengeMove} MOVE points awarded!`)
         })
     }
-  }, [steps, stepGoal, challengeState])
+  }, [steps, stepGoal, challengeState, dailyMissionId, challengeMove])
 
   const secondsRemaining = useMemo(() => {
     void tick
@@ -225,9 +243,9 @@ export default function Page() {
     const token = getStoredToken()
     if (token) {
       movegridApi.syncSteps(token, steps).catch(() => {})
-      movegridApi.startMission(1, steps, token).catch(() => {})
+      movegridApi.startMission(dailyMissionId, steps, token).catch(() => {})
     }
-  }, [startTracking, steps])
+  }, [startTracking, steps, dailyMissionId])
 
   return (
     <div className="app-shell">
@@ -245,8 +263,8 @@ export default function Page() {
           <DailyChallengeBar
             challengeState={challengeState}
             secondsRemaining={secondsRemaining}
-            challengeTitle="10,000 Daily Steps Goal"
-            challengeMove={150}
+            challengeTitle={challengeTitle}
+            challengeMove={challengeMove}
             steps={steps}
             stepGoal={stepGoal}
             stepPercent={stepPercent}
@@ -274,8 +292,26 @@ export default function Page() {
         <div className="dashboard-grid-layout">
           <aside className="dashboard-sidebar-left">
             <div className="stats-vertical-stack">
-              <StatCard icon={<Zap size={14} />} label="MOVE points" value={`${move.toLocaleString()}`} detail="+150 today!" tone="lime" badgeSymbol="⚡" />
-              <StatCard icon={<Flame size={14} />} label="Current streak" value={`${user?.streak ?? 7} days`} detail="2 days to badge" tone="orange" badgeSymbol="🔥" />
+              <StatCard
+                icon={<Zap size={14} />}
+                label="MOVE points"
+                value={`${move.toLocaleString()}`}
+                detail={
+                  fitness?.progress.points_earned
+                    ? `+${fitness.progress.points_earned} today`
+                    : 'Finish today’s levels'
+                }
+                tone="lime"
+                badgeSymbol="⚡"
+              />
+              <StatCard
+                icon={<Flame size={14} />}
+                label="Current streak"
+                value={`${user?.streak ?? 0} days`}
+                detail={streakBadgeDetail(user?.streak ?? 0)}
+                tone="orange"
+                badgeSymbol="🔥"
+              />
               <StatCard
                 icon={<Footprints size={14} />}
                 label="Steps today"
@@ -285,7 +321,14 @@ export default function Page() {
                 badgeSymbol="👟"
               />
               <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                <StatCard icon={<Trophy size={14} />} label="Global rank" value={rankLabel} detail="↑ 6 places" tone="purple" badgeSymbol="🏆" />
+                <StatCard
+                  icon={<Trophy size={14} />}
+                  label="Global rank"
+                  value={rankLabel}
+                  detail={rankMovementDetail(rankDelta)}
+                  tone="purple"
+                  badgeSymbol="🏆"
+                />
               </Link>
             </div>
           </aside>

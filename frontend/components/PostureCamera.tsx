@@ -35,6 +35,8 @@ export type KeyPoint = {
 }
 
 type PostureCameraProps = {
+  /** When false, no getUserMedia call is made (camera stays off). */
+  enabled?: boolean
   exerciseName: string
   targetReps?: number
   onRepsChange?: (reps: number) => void
@@ -43,6 +45,7 @@ type PostureCameraProps = {
 }
 
 export function PostureCamera({
+  enabled = false,
   exerciseName,
   targetReps = 15,
   onRepsChange,
@@ -54,7 +57,7 @@ export function PostureCamera({
   const animationFrameId = useRef<number | null>(null)
 
   const [cameraActive, setCameraActive] = useState(false)
-  const [cameraLoading, setCameraLoading] = useState(true)
+  const [cameraLoading, setCameraLoading] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
 
   const [recSeconds, setRecSeconds] = useState(0)
@@ -136,9 +139,15 @@ export function PostureCamera({
   }, [])
 
   useEffect(() => {
+    if (!enabled) {
+      stopCamera()
+      setCameraLoading(false)
+      setCameraError(null)
+      return
+    }
     startCamera()
     return () => stopCamera()
-  }, [startCamera, stopCamera])
+  }, [enabled, facingMode, startCamera, stopCamera])
 
   // Helper angle calculation
   const calculateAngle = (p1: KeyPoint, p2: KeyPoint, p3: KeyPoint) => {

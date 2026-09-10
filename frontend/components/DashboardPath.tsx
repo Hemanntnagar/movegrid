@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity,
@@ -18,7 +19,10 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { PostureCamera } from './PostureCamera'
+const PostureCamera = dynamic(
+  () => import('./PostureCamera').then((mod) => mod.PostureCamera),
+  { ssr: false, loading: () => null },
+)
 import {
   ApiDailyAssignment,
   ApiTodayFitness,
@@ -86,7 +90,7 @@ function ActiveExerciseModal({
   }, [assignment.id, onComplete, onClose])
 
   return (
-    <div className="modal-backdrop" style={{ zIndex: 45 }} onClick={onClose}>
+    <div className="modal-backdrop active-exercise-backdrop" onClick={onClose}>
       <div className="modal active-exercise-modal" onClick={(e) => e.stopPropagation()}>
         <button className="close-button" onClick={onClose} aria-label="Close">
           <X size={18} />
@@ -111,6 +115,7 @@ function ActiveExerciseModal({
         {/* Live Camera & Posture Recording Stream */}
         <div className="exercise-runner-box posture-runner-box">
           <PostureCamera
+            enabled
             exerciseName={exercise.name}
             targetReps={targetReps}
             onRepsChange={(reps) => setRepsDone(reps)}
@@ -442,6 +447,12 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   const [monthProgress, setMonthProgress] = useState(() => getMonthProgress())
   const [autoCloseArmed, setAutoCloseArmed] = useState(false)
 
+  const handleStartExercise = useCallback((assignment: ApiDailyAssignment) => {
+    setSelectedDay(null)
+    setInspectAssignment(null)
+    setActiveExerciseAssignment(assignment)
+  }, [])
+
   const istToday = getIstParts()
   const todayDay = istToday.day
   const dayCount = daysInIstMonth()
@@ -624,7 +635,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           justCompletedId={justCompletedId}
           onInspect={setInspectAssignment}
           levelClosed={todayLevelClosed && today.progress.completed >= today.progress.total}
-          onStartExercise={(assignment) => setActiveExerciseAssignment(assignment)}
+          onStartExercise={handleStartExercise}
         />
       )}
 
@@ -636,7 +647,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           onClose={() => setInspectAssignment(null)}
           onComplete={handleComplete}
           completing={completingId === inspectAssignment.id}
-          onStartExercise={(assignment) => setActiveExerciseAssignment(assignment)}
+          onStartExercise={handleStartExercise}
         />
       )}
 

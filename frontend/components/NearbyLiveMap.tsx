@@ -45,9 +45,10 @@ function pinHtml(person: ApiNearbyUser, color: string, isYou: boolean) {
 type NearbyLiveMapProps = {
   token?: string | null
   variant?: 'sidebar' | 'page'
+  onNearbyUpdate?: (payload: { nearby: ApiNearbyUser[]; me: ApiNearbyUser | null }) => void
 }
 
-export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps) {
+export function NearbyLiveMap({ token, variant = 'sidebar', onNearbyUpdate }: NearbyLiveMapProps) {
   const authToken = token ?? getStoredToken()
   const [status, setStatus] = useState<GeoStatus>('idle')
   const [origin, setOrigin] = useState(FALLBACK_ORIGIN)
@@ -74,13 +75,14 @@ export function NearbyLiveMap({ token, variant = 'sidebar' }: NearbyLiveMapProps
         const data = await movegridApi.nearbyPresence(lat, lng, authToken, 800)
         setNearby(data.nearby)
         setMe(data.me)
+        onNearbyUpdate?.({ nearby: data.nearby, me: data.me })
         setLastUpdated(new Date())
         setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not load nearby movers')
       }
     },
-    [authToken]
+    [authToken, onNearbyUpdate],
   )
 
   const pushPresence = useCallback(

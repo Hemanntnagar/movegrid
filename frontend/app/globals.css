@@ -2421,11 +2421,32 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
 }
 
 /* Active Exercise Runner Modal */
+.active-exercise-backdrop {
+  z-index: 1100;
+  align-items: flex-start;
+  justify-items: center;
+  overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px
+    max(24px, env(safe-area-inset-bottom, 0px));
+}
+
 .active-exercise-modal {
   width: min(520px, 100%);
   border: 3px solid #183d59;
   background: #fffdf0;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  max-height: none;
+  margin: auto 0;
+}
+
+.complete-exercise-claim-btn {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 900;
+  position: relative;
+  z-index: 1;
 }
 
 .exercise-header-badge {
@@ -2867,12 +2888,6 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   color: #2f3e46;
 }
 
-.complete-exercise-claim-btn {
-  margin-top: 6px;
-  padding: 14px;
-  font-size: 15px;
-  font-weight: 900;
-}
 .pulse-gold {
   animation: goldGlow 1.5s infinite ease-in-out;
 }
