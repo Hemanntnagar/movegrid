@@ -3,8 +3,8 @@
 # Dashboard: New → Blueprint → connect this repo (uses this file at repo root).
 # Or on an existing web service: Root Directory = backend, then match build/start below.
 #
-# After deploy, set CORS_ORIGINS to your Vercel URL, e.g.:
-# ["https://your-app.vercel.app"]
+# After deploy, set CORS_ORIGINS to your Vercel production URL, e.g.:
+# ["https://movegrid-one.vercel.app","http://localhost:3000"]
 
 databases:
   - name: movegrid-db

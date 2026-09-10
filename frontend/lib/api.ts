@@ -296,9 +296,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     })
   } catch {
-    throw new Error(
-      `Cannot connect to backend server at ${API_URL}. Make sure your local backend is running (uvicorn app.main:app --reload on port 8000).`
-    )
+    const hint =
+      process.env.NODE_ENV === 'production'
+        ? 'Check that the API is up, NEXT_PUBLIC_API_URL is set on Vercel, and Render CORS_ORIGINS includes your Vercel URL.'
+        : 'Make sure your local backend is running (uvicorn app.main:app --reload on port 8000).'
+    throw new Error(`Cannot connect to backend server at ${API_URL}. ${hint}`)
   }
 
   if (!response.ok) {
