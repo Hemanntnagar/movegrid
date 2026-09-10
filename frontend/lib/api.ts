@@ -273,6 +273,23 @@ export type ApiFitnessPlanGenerateResult = {
   source: string
 }
 
+export type ApiCoachChatContext = {
+  fitness_level?: string
+  goal?: string
+  daily_minutes?: number
+  focus_areas?: string[]
+}
+
+export type ApiCoachChatPayload = {
+  message: string
+  history?: { role: string; content: string }[]
+  context?: ApiCoachChatContext
+}
+
+export type ApiCoachChatResult = {
+  reply: string
+}
+
 const TOKEN_KEY = 'movegrid_token'
 
 export function getStoredToken(): string | null {
@@ -493,6 +510,14 @@ export const movegridApi = {
     isDemoMode
       ? demoApi.generateFitnessPlan(payload, token)
       : request<ApiFitnessPlanGenerateResult>('/fitness-plan/generate', {
+          method: 'POST',
+          headers: token ? authHeaders(token) : undefined,
+          body: JSON.stringify(payload),
+        }),
+  coachChat: (payload: ApiCoachChatPayload, token?: string | null) =>
+    isDemoMode
+      ? demoApi.coachChat(payload, token)
+      : request<ApiCoachChatResult>('/coach/chat', {
           method: 'POST',
           headers: token ? authHeaders(token) : undefined,
           body: JSON.stringify(payload),

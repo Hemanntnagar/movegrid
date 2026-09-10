@@ -19,6 +19,8 @@ import type {
   ApiUser,
   ApiFitnessPlanGeneratePayload,
   ApiFitnessPlanGenerateResult,
+  ApiCoachChatPayload,
+  ApiCoachChatResult,
 } from './api'
 import { FitnessPlan, getStoredPlan } from './fitnessPlan'
 import { getIstParts, istDateKey } from './ist'
@@ -694,6 +696,19 @@ export const demoApi = {
     writeJson(DEMO_COMPETE_KEY, [...joined])
     const updated = this.competitions(_token).find((item) => item.id === id)!
     return { status: 'joined', competition: { ...updated, is_participating: true } }
+  },
+
+  async coachChat(payload: ApiCoachChatPayload, _token?: string | null): Promise<ApiCoachChatResult> {
+    const response = await fetch('/api/coach/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => null)
+      throw new Error(typeof body?.detail === 'string' ? body.detail : 'Coach chat failed')
+    }
+    return response.json() as Promise<ApiCoachChatResult>
   },
 
   async generateFitnessPlan(
