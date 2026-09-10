@@ -7,6 +7,10 @@ from app.core.security import create_access_token, decode_subject, hash_password
 from app.models.entities import Activity, Challenge, Squad, SquadMember, User, Zone
 from app.schemas.common import (
     ActivityRead,
+    BuddyConnectResponse,
+    BuddyInviteCreate,
+    BuddyInviteRead,
+    BuddyUserRead,
     CompleteAssignmentResponse,
     CompetitionCreate,
     CompetitionRead,
@@ -42,6 +46,7 @@ from app.services.mission_service import list_missions, verify_and_complete
 from app.services.presence_service import list_nearby, upsert_presence
 from app.services.progress_service import record_activity_progress
 from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
+from app.services.buddy_service import accept_invite, decline_invite, list_buddies, list_incoming_invites, send_invite
 
 api_router = APIRouter()
 oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -196,6 +201,44 @@ async def nearby_presence(
         current_user=user,
         include_demo=True,
     )
+
+
+@api_router.get("/buddies", response_model=list[BuddyUserRead])
+async def buddies(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await list_buddies(db, user)
+
+
+@api_router.get("/buddies/invites/incoming", response_model=list[BuddyInviteRead])
+async def buddy_invites_incoming(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await list_incoming_invites(db, user)
+
+
+@api_router.post("/buddies/invite", response_model=BuddyInviteRead, status_code=201)
+async def buddy_invite(
+    payload: BuddyInviteCreate,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await send_invite(db, user, payload.to_user_id, payload.message.strip())
+
+
+@api_router.post("/buddies/invites/{invite_id}/accept", response_model=BuddyConnectResponse)
+async def buddy_accept_invite(
+    invite_id: int,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await accept_invite(db, user, invite_id)
+
+
+@api_router.post("/buddies/invites/{invite_id}/decline")
+async def buddy_decline_invite(
+    invite_id: int,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await decline_invite(db, user, invite_id)
+
 
 @api_router.get("/competitions", response_model=list[CompetitionRead])
 async def competitions(user: User | None = Depends(optional_user), db: AsyncSession = Depends(get_db)):

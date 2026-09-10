@@ -237,3 +237,24 @@ class UserPresence(Base):
     longitude: Mapped[float] = mapped_column(default=0)
     is_sharing: Mapped[bool] = mapped_column(Boolean, default=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class BuddyInvite(Base):
+    __tablename__ = "buddy_invites"
+    __table_args__ = (UniqueConstraint("from_user_id", "to_user_id", name="uq_buddy_invite_pair"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    to_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    message: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class BuddyConnection(Base):
+    __tablename__ = "buddy_connections"
+    __table_args__ = (UniqueConstraint("user_a_id", "user_b_id", name="uq_buddy_connection_pair"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_a_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    user_b_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    connected_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

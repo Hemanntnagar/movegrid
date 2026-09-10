@@ -218,6 +218,34 @@ export type ApiPresence = {
   updated_at: string
 }
 
+export type ApiBuddy = {
+  id: number
+  name: string
+  avatar: string
+  initials: string
+  total_points: number
+  streak: number
+  fitness_level: string
+  connected_at?: string
+}
+
+export type ApiBuddyInvite = {
+  id: number
+  from_user_id: number
+  to_user_id: number
+  message: string
+  status: string
+  created_at: string
+  from_user: ApiBuddy
+  to_user: ApiBuddy
+}
+
+export type ApiBuddyConnectResult = {
+  status: string
+  invite: ApiBuddyInvite
+  buddy: ApiBuddy
+}
+
 const TOKEN_KEY = 'movegrid_token'
 
 export function getStoredToken(): string | null {
@@ -408,4 +436,34 @@ export const movegridApi = {
           `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
           { headers: token ? authHeaders(token) : undefined },
         ),
+  listBuddies: (token: string) =>
+    isDemoMode
+      ? asPromise(demoApi.listBuddies(token))
+      : request<ApiBuddy[]>('/buddies', { headers: authHeaders(token) }),
+  buddyInvitesIncoming: (token: string) =>
+    isDemoMode
+      ? asPromise(demoApi.buddyInvitesIncoming(token))
+      : request<ApiBuddyInvite[]>('/buddies/invites/incoming', { headers: authHeaders(token) }),
+  sendBuddyInvite: (token: string, toUserId: number, message: string) =>
+    isDemoMode
+      ? asPromise(demoApi.sendBuddyInvite(token, toUserId, message))
+      : request<ApiBuddyInvite>('/buddies/invite', {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ to_user_id: toUserId, message }),
+        }),
+  acceptBuddyInvite: (token: string, inviteId: number) =>
+    isDemoMode
+      ? asPromise(demoApi.acceptBuddyInvite(token, inviteId))
+      : request<ApiBuddyConnectResult>(`/buddies/invites/${inviteId}/accept`, {
+          method: 'POST',
+          headers: authHeaders(token),
+        }),
+  declineBuddyInvite: (token: string, inviteId: number) =>
+    isDemoMode
+      ? asPromise(demoApi.declineBuddyInvite(token, inviteId))
+      : request<{ status: string; invite_id: number }>(`/buddies/invites/${inviteId}/decline`, {
+          method: 'POST',
+          headers: authHeaders(token),
+        }),
 }

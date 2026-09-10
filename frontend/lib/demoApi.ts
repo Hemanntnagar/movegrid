@@ -1,4 +1,7 @@
 import type {
+  ApiBuddy,
+  ApiBuddyConnectResult,
+  ApiBuddyInvite,
   ApiCompetition,
   ApiCompetitionCreate,
   ApiCompleteFitness,
@@ -26,6 +29,8 @@ const DEMO_REDEEM_KEY = 'movegrid_demo_redeems'
 const DEMO_PRESENCE_KEY = 'movegrid_demo_presence'
 const DEMO_COMPETE_KEY = 'movegrid_demo_competitions'
 const DEMO_CUSTOM_COMPETITIONS_KEY = 'movegrid_demo_custom_competitions'
+const DEMO_BUDDY_INVITES_KEY = 'movegrid_demo_buddy_invites'
+const DEMO_BUDDY_CONNECTIONS_KEY = 'movegrid_demo_buddy_connections'
 
 const DEMO_REWARDS: ApiReward[] = [
   {
@@ -142,6 +147,81 @@ function getUser(): DemoUserState {
 
 function saveUser(user: DemoUserState) {
   writeJson(DEMO_USER_KEY, user)
+}
+
+const DEMO_NEARBY_USERS: Record<number, DemoUserState> = {
+  2: {
+    id: 2,
+    name: 'Maya Chen',
+    email: 'maya@movegrid.demo',
+    total_points: 2840,
+    streak: 12,
+    streak_score: 420,
+    active_minutes: 210,
+    avatar: 'initials:MC:#ffd447',
+  },
+  3: {
+    id: 3,
+    name: 'Jordan Lee',
+    email: 'jordan@movegrid.demo',
+    total_points: 2690,
+    streak: 9,
+    streak_score: 365,
+    active_minutes: 188,
+    avatar: 'initials:JL:#ff9a61',
+  },
+}
+
+function buddyCardFromDemoUser(user: DemoUserState): ApiBuddy {
+  const initials =
+    user.name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || 'MG'
+  return {
+    id: user.id,
+    name: user.name,
+    avatar: user.avatar,
+    initials,
+    total_points: user.total_points,
+    streak: user.streak,
+    fitness_level: 'Intermediate',
+  }
+}
+
+function demoBuddyFromId(id: number): ApiBuddy | null {
+  const me = getUser()
+  if (id === me.id) return buddyCardFromDemoUser(me)
+  const accounts = readAccounts()
+  const account = Object.values(accounts).find((entry) => entry.id === id)
+  if (account) return buddyCardFromDemoUser(account)
+  const seed = DEMO_NEARBY_USERS[id]
+  if (seed) return buddyCardFromDemoUser(seed)
+  return buddyCardFromDemoUser({
+    id,
+    name: `Mover ${id}`,
+    email: `mover${id}@movegrid.demo`,
+    total_points: 500,
+    streak: 1,
+    streak_score: 10,
+    active_minutes: 0,
+    avatar: `initials:M${id}:#8bd4f4`,
+  })
+}
+
+function buildDemoInvite(fromId: number, toId: number, message: string, id: number): ApiBuddyInvite {
+  return {
+    id,
+    from_user_id: fromId,
+    to_user_id: toId,
+    message,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    from_user: demoBuddyFromId(fromId)!,
+    to_user: demoBuddyFromId(toId)!,
+  }
 }
 
 function getDayState(plan: FitnessPlan | null): DemoDayState {
@@ -839,6 +919,84 @@ export const demoApi = {
     user.active_minutes += 20
     saveUser(user)
     return { status: 'COMPLETED', points_awarded: 150, total_points: user.total_points }
+  },
+
+  listBuddies(_token: string): ApiBuddy[] {
+    const me = getUser()
+    const pairs = readJson<number[][]>(DEMO_BUDDY_CONNECTIONS_KEY, [])
+    const buddyIds = pairs
+      .filter(([a, b]) => a === me.id || b === me.id)
+      .map(([a, b]) => (a === me.id ? b : a))
+    return buddyIds.map((id) => demoBuddyFromId(id)).filter(Boolean) as ApiBuddy[]
+  },
+
+  buddyInvitesIncoming(_token: string): ApiBuddyInvite[] {
+    const me = getUser()
+    return readJson<ApiBuddyInvite[]>(DEMO_BUDDY_INVITES_KEY, []).filter(
+      (inv) => inv.to_user_id === me.id && inv.status === 'pending',
+    )
+  },
+
+  sendBuddyInvite(_token: string, toUserId: number, message: string): ApiBuddyInvite {
+    const me = getUser()
+    if (toUserId === me.id) throw new Error('You cannot invite yourself')
+    const invites = readJson<ApiBuddyInvite[]>(DEMO_BUDDY_INVITES_KEY, [])
+    const connections = readJson<number[][]>(DEMO_BUDDY_CONNECTIONS_KEY, [])
+    const connected = connections.some(
+      ([a, b]) => (a === me.id && b === toUserId) || (b === me.id && a === toUserId),
+    )
+    if (connected) throw new Error('You are already connected with this mover')
+
+    const reverse = invites.find(
+      (inv) =>
+        inv.from_user_id === toUserId &&
+        inv.to_user_id === me.id &&
+        inv.status === 'pending',
+    )
+    if (reverse) {
+      return this.acceptBuddyInvite(_token, reverse.id).invite
+    }
+
+    const existing = invites.find((inv) => inv.from_user_id === me.id && inv.to_user_id === toUserId)
+    const payload = buildDemoInvite(me.id, toUserId, message, existing?.id ?? Date.now())
+    payload.status = 'pending'
+    const next = existing
+      ? invites.map((inv) => (inv.id === existing.id ? payload : inv))
+      : [payload, ...invites]
+    writeJson(DEMO_BUDDY_INVITES_KEY, next)
+    return payload
+  },
+
+  acceptBuddyInvite(_token: string, inviteId: number): ApiBuddyConnectResult {
+    const me = getUser()
+    const invites = readJson<ApiBuddyInvite[]>(DEMO_BUDDY_INVITES_KEY, [])
+    const invite = invites.find((inv) => inv.id === inviteId && inv.to_user_id === me.id)
+    if (!invite || invite.status !== 'pending') throw new Error('Invite not found')
+
+    invite.status = 'accepted'
+    writeJson(DEMO_BUDDY_INVITES_KEY, invites.map((inv) => (inv.id === inviteId ? invite : inv)))
+
+    const connections = readJson<number[][]>(DEMO_BUDDY_CONNECTIONS_KEY, [])
+    const a = Math.min(invite.from_user_id, invite.to_user_id)
+    const b = Math.max(invite.from_user_id, invite.to_user_id)
+    if (!connections.some(([x, y]) => x === a && y === b)) {
+      writeJson(DEMO_BUDDY_CONNECTIONS_KEY, [[a, b], ...connections])
+    }
+    return {
+      status: 'connected',
+      invite,
+      buddy: demoBuddyFromId(invite.from_user_id)!,
+    }
+  },
+
+  declineBuddyInvite(_token: string, inviteId: number) {
+    const me = getUser()
+    const invites = readJson<ApiBuddyInvite[]>(DEMO_BUDDY_INVITES_KEY, [])
+    const invite = invites.find((inv) => inv.id === inviteId && inv.to_user_id === me.id)
+    if (!invite || invite.status !== 'pending') throw new Error('Invite not found')
+    invite.status = 'declined'
+    writeJson(DEMO_BUDDY_INVITES_KEY, invites.map((inv) => (inv.id === inviteId ? invite : inv)))
+    return { status: 'declined', invite_id: inviteId }
   },
 
   /** Ensure a browser session exists so the trail works without a remote API. */

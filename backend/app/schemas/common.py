@@ -263,3 +263,36 @@ class NearbyPresenceResponse(BaseModel):
     count: int
     me: NearbyUserRead | None = None
     nearby: list[NearbyUserRead]
+
+
+class BuddyUserRead(BaseModel):
+    id: int
+    name: str
+    avatar: str
+    initials: str
+    total_points: int
+    streak: int
+    fitness_level: str = "Beginner"
+    connected_at: datetime | None = None
+
+
+class BuddyInviteCreate(BaseModel):
+    to_user_id: int = Field(gt=0)
+    message: str = Field(default="", max_length=200)
+
+
+class BuddyInviteRead(BaseModel):
+    id: int
+    from_user_id: int
+    to_user_id: int
+    message: str
+    status: str
+    created_at: datetime
+    from_user: BuddyUserRead
+    to_user: BuddyUserRead
+
+
+class BuddyConnectResponse(BaseModel):
+    status: str
+    invite: BuddyInviteRead
+    buddy: BuddyUserRead
