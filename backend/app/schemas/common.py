@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8)
     full_name: str | None = None
     name: str | None = None
+    fitness_level: str | None = "Beginner"
 
 class LoginRequest(BaseModel):
     email: EmailStr

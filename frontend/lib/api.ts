@@ -240,13 +240,37 @@ export function ensureDemoSession() {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-  })
+  let response: Response
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+    })
+  } catch {
+    throw new Error(
+      `Cannot connect to backend server at ${API_URL}. Make sure your local backend is running (uvicorn app.main:app --reload on port 8000).`
+    )
+  }
+
   if (!response.ok) {
     const body = await response.json().catch(() => null)
-    throw new Error(body?.detail ?? 'MOVEGRID API request failed')
+    let errorMsg = 'MOVEGRID API request failed'
+    if (typeof body?.detail === 'string') {
+      errorMsg = body.detail
+    } else if (Array.isArray(body?.detail)) {
+      const messages = body.detail.map((err: any) => {
+        const field = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : ''
+        if (field === 'password' && err.msg?.includes('at least 8')) {
+          return 'Password must be at least 8 characters long'
+        }
+        if (field === 'email') {
+          return 'Please enter a valid email address'
+        }
+        return err.msg || JSON.stringify(err)
+      })
+      errorMsg = messages.join('. ')
+    }
+    throw new Error(errorMsg)
   }
   return response.json()
 }

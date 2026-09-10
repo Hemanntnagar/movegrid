@@ -111,13 +111,14 @@ export default function SignupPage() {
             </label>
 
             <label>
-              Password
+              Password (at least 8 characters)
               <input
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
+                placeholder="At least 8 characters"
                 autoComplete="new-password"
               />
             </label>

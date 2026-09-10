@@ -66,7 +66,13 @@ async def optional_user(token: str | None = Depends(oauth2_optional), db: AsyncS
 async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
     if (await db.execute(select(User).where(User.email == payload.email))).scalar_one_or_none():
         raise HTTPException(409, "Email already registered")
-    user = User(email=payload.email, name=payload.name or payload.full_name or "MOVEGRID Mover", password_hash=hash_password(payload.password), role="member")
+    user = User(
+        email=payload.email,
+        name=payload.name or payload.full_name or "MOVEGRID Mover",
+        password_hash=hash_password(payload.password),
+        fitness_level=payload.fitness_level or "Beginner",
+        role="member",
+    )
     db.add(user); await db.commit(); await db.refresh(user); return user
 
 @api_router.post("/auth/login", response_model=Token)
