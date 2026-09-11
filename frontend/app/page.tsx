@@ -18,6 +18,7 @@ import {
 } from '../lib/api'
 import { AppChrome } from '../components/AppChrome'
 import { DashboardPath } from '../components/DashboardPath'
+import { GameWorldBackground } from '../components/GameWorldBackground'
 import { useStepCounter } from '../hooks/useStepCounter'
 import { istDateKey } from '../lib/ist'
 import { pickDailyStepMission, rankMovementDetail, streakBadgeDetail } from '../lib/missionUi'
@@ -264,7 +265,8 @@ export default function Page() {
   }, [startTracking, steps, dailyMissionId])
 
   return (
-    <div className="app-shell">
+    <div className="app-shell game-world">
+      <GameWorldBackground />
       <AppChrome
         rightSlot={
           <button type="button" className="icon-button" aria-label="Notifications">
@@ -288,7 +290,7 @@ export default function Page() {
           />
         </div>
 
-        <div className="welcome trail-welcome">
+        <div className="welcome trail-welcome game-quest-header">
           <div>
             <div className="cartoon-speech-bubble">
               <Sparkles size={13} /> POWER UP YOUR DAY! 🚀
