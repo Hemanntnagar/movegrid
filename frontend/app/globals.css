@@ -39,13 +39,10 @@ html, body {
 body {
   font-family: Arial, sans-serif;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='%230f172a' fill-opacity='0.06' d='M40 6l4 12h12l-10 8 4 12-10-7-10 7 4-12-10-8h12z'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath fill='%23ff5e97' fill-opacity='0.08' d='M32 4L36 22H54L40 34L46 52L32 42L18 52L24 34L10 22H28Z'/%3E%3C/svg%3E"),
     radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.4) 0 24px, transparent 25px),
     radial-gradient(circle at 90% 15%, rgba(255, 255, 255, 0.4) 0 32px, transparent 33px),
     radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.25) 0 45px, transparent 46px),
     linear-gradient(180deg, #7dd3fc 0%, #bae6fd 45%, #a3e635 100%);
-  background-size: 80px 80px, 120px 120px, auto, auto, auto, auto;
 }
 button, .primary-button, .outline-button {
   border: 3.5px solid #0f172a !important;
@@ -252,18 +249,13 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
-  border: 3.5px solid #0f172a;
+  background: #ffd447;
+  border: 3px solid var(--border);
   border-radius: 999px;
-  padding: 10px 16px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 900;
-  box-shadow: 4px 4px 0 #0f172a;
-  animation: moveChipPulse 2.8s ease-in-out infinite;
-}
-@keyframes moveChipPulse {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50% { transform: translateY(-3px) rotate(1deg); }
+  box-shadow: 0 4px 0 var(--border);
 }
 .fitness-progress-panel {
   display: flex;
@@ -2053,100 +2045,6 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
 }
 
 /* Vertical trail map (dashboard) */
-.app-shell.game-world {
-  position: relative;
-  isolation: isolate;
-}
-.app-shell.game-world > :not(.game-world-bg) {
-  position: relative;
-  z-index: 1;
-}
-.game-world-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-.game-world-grid {
-  position: absolute;
-  inset: -20%;
-  background-image:
-    linear-gradient(rgba(15, 23, 42, 0.04) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.04) 2px, transparent 2px);
-  background-size: 48px 48px;
-  transform: rotate(-3deg);
-  mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 30%, transparent 78%);
-}
-.game-world-symbol {
-  position: absolute;
-  line-height: 1;
-  opacity: 0.35;
-  filter: drop-shadow(2px 2px 0 rgba(15, 23, 42, 0.25));
-  transform: rotate(var(--symbol-rotate, 0deg));
-  animation: gameSymbolFloat 5s ease-in-out infinite;
-  animation-delay: var(--symbol-delay, 0s);
-  user-select: none;
-}
-@keyframes gameSymbolFloat {
-  0%, 100% { transform: rotate(var(--symbol-rotate, 0deg)) translateY(0); }
-  50% { transform: rotate(calc(var(--symbol-rotate, 0deg) + 6deg)) translateY(-10px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .game-world-symbol,
-  .move-chip,
-  .cartoon-speech-bubble {
-    animation: none;
-  }
-}
-.game-quest-header {
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 18px 22px;
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, rgba(255, 253, 240, 0.95) 0%, rgba(254, 240, 138, 0.75) 55%, rgba(186, 230, 253, 0.85) 100%);
-  border: 4px dashed #0f172a;
-  border-radius: 28px;
-  box-shadow: 6px 6px 0 #0f172a;
-  position: relative;
-  overflow: visible;
-}
-.game-quest-header::before {
-  content: '🎮';
-  position: absolute;
-  top: -14px;
-  left: 20px;
-  font-size: 22px;
-  filter: drop-shadow(2px 2px 0 #0f172a);
-}
-.game-quest-header::after {
-  content: 'LEVEL UP!';
-  position: absolute;
-  top: -12px;
-  right: 18px;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  background: #ff72a5;
-  color: #fffdf0;
-  border: 3px solid #0f172a;
-  border-radius: 999px;
-  padding: 4px 10px;
-  box-shadow: 3px 3px 0 #0f172a;
-  transform: rotate(3deg);
-}
-.top-daily-challenge-banner .daily-challenge-notification {
-  background: linear-gradient(135deg, #fffdf0 0%, #e0f2fe 100%);
-}
-.top-daily-challenge-banner .daily-challenge-notification::after {
-  content: '⚔️';
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  font-size: 28px;
-  opacity: 0.2;
-  pointer-events: none;
-}
 .dashboard-with-trail {
   padding-bottom: 100px;
 }
@@ -3498,15 +3396,6 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   }
   .profile-stats-grid {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .game-quest-header::after {
-    display: none;
-  }
-  .game-world-symbol {
-    opacity: 0.22;
   }
 }
 
