@@ -6,10 +6,11 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.demo_competitions import LEGACY_DEMO_COMPETITION_NAMES
 from app.models.entities import Competition, CompetitionParticipant, User
-
-
 from app.schemas.common import CompetitionCreate
+
+_LEGACY_DEMO_NAMES = frozenset(LEGACY_DEMO_COMPETITION_NAMES)
 
 
 def _utcnow() -> datetime:
@@ -114,6 +115,8 @@ async def list_competitions(db: AsyncSession, user: User | None = None) -> list[
 
     results = []
     for comp in comps:
+        if comp.name in _LEGACY_DEMO_NAMES:
+            continue
         item = serialize_competition(comp, user=user, participating_ids=participating_ids, now=now)
         count = (
             await db.execute(

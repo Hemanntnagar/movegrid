@@ -16,6 +16,7 @@ from app.models.entities import (
     User,
     Zone,
 )
+from app.core.demo_competitions import LEGACY_DEMO_COMPETITION_NAMES
 from app.services.leaderboard_service import refresh_all_leaderboard_ranks
 
 def _avatar(initials: str, color: str) -> str:
@@ -24,18 +25,9 @@ def _avatar(initials: str, color: str) -> str:
 
 LEGACY_DEMO_QR = "movegrid-demo"
 
-BOOTSTRAP_COMPETITION_NAMES = (
-    "Monthly Move Cup",
-    "Fall Campus Cup",
-    "Weekend Step Sprint",
-    "Streak Keepers Challenge",
-    "Sunrise 5K Relay",
-)
-
-
 async def _remove_bootstrap_competitions(db: AsyncSession) -> None:
     """Drop legacy seeded cups so only user-created competitions remain."""
-    for name in BOOTSTRAP_COMPETITION_NAMES:
+    for name in LEGACY_DEMO_COMPETITION_NAMES:
         comp = (await db.execute(select(Competition).where(Competition.name == name))).scalar_one_or_none()
         if not comp:
             continue
