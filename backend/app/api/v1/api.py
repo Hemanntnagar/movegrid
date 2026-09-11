@@ -37,7 +37,6 @@ from app.schemas.common import (
     Token,
     UserCreate,
     UserRead,
-    VerifyRequest,
 )
 from app.services.competition_service import create_competition, list_competitions, participate
 from app.services.fitness_assignment_service import complete_assignment, get_assignment_history, get_today_assignments
@@ -147,16 +146,15 @@ async def sync_steps(
 
 
 @api_router.post("/missions/{challenge_id}/verify")
-async def verify_mission(challenge_id: int, payload: VerifyRequest, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+async def verify_mission(challenge_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     challenge = await db.get(Challenge, challenge_id)
-    zone = await db.get(Zone, challenge.zone_id) if challenge else None
-    if not challenge or not zone: raise HTTPException(404, "Mission not found")
-    if payload.code != zone.qr_token: raise HTTPException(400, "Checkpoint code is invalid")
+    if not challenge or not challenge.is_active:
+        raise HTTPException(404, "Mission not found")
     return {"verified": True, "challenge_id": challenge_id}
 
 @api_router.post("/missions/{challenge_id}/complete")
-async def complete(challenge_id: int, payload: VerifyRequest, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    return await verify_and_complete(db, user, challenge_id, payload.code)
+async def complete(challenge_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return await verify_and_complete(db, user, challenge_id)
 
 @api_router.get("/missions/history", response_model=list[ActivityRead])
 async def history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):

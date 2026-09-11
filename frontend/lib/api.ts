@@ -69,7 +69,7 @@ export type ApiCompetitionCreate = {
   reward?: string
   eligibility?: string
   starts_at?: string
-  ends_at?: string | null
+  ends_at: string
   min_points?: number
   min_streak?: number
 }
@@ -121,6 +121,23 @@ export type ApiTodayFitness = {
   assignments: ApiDailyAssignment[]
   assigned: ApiDailyAssignment[]
   completed: ApiDailyAssignment[]
+}
+
+export type ApiMissionComplete = {
+  status: string
+  move_awarded: number
+  move_points: number
+  streak: number
+  streak_score: number
+  streak_gained: number
+}
+
+export const MOVEGRID_USER_UPDATED = 'movegrid:user-updated'
+
+export function notifyUserUpdated(detail?: { total_points?: number }) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(MOVEGRID_USER_UPDATED, { detail }))
+  }
 }
 
 export type ApiCompleteFitness = {
@@ -336,8 +353,6 @@ function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
 }
 
-export const CHECKPOINT_CODE_KEY = 'movegrid_checkpoint_code'
-
 export const movegridApi = {
   register: (name: string, email: string, password: string, fitness_level?: string) =>
     request<ApiUser>('/auth/register', {
@@ -394,11 +409,10 @@ export const movegridApi = {
         body: JSON.stringify({ steps, active_minutes }),
       },
     ),
-  completeMission: (token: string, id: number, code: string) =>
-    request(`/missions/${id}/complete`, {
+  completeMission: (token: string, id: number) =>
+    request<ApiMissionComplete>(`/missions/${id}/complete`, {
       method: 'POST',
       headers: authHeaders(token),
-      body: JSON.stringify({ code }),
     }),
   todayFitness: (token: string) =>
     request<ApiTodayFitness>('/daily-fitness/today', { headers: authHeaders(token) }),

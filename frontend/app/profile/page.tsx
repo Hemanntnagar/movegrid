@@ -22,7 +22,7 @@ import {
   UserPlus,
   Zap,
 } from 'lucide-react'
-import { ApiUser, clearToken, getStoredToken, movegridApi } from '../../lib/api'
+import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { getStoredPlan } from '../../lib/fitnessPlan'
 
@@ -33,9 +33,10 @@ export default function ProfilePage() {
   const [copiedEmail, setCopiedEmail] = useState(false)
   const plan = getStoredPlan()
 
-  useEffect(() => {
+  function refreshUser() {
     const token = getStoredToken()
     if (!token) {
+      setUser(null)
       setLoading(false)
       return
     }
@@ -47,6 +48,23 @@ export default function ProfilePage() {
         setUser(null)
       })
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    refreshUser()
+  }, [])
+
+  useEffect(() => {
+    const onUserUpdated = () => refreshUser()
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshUser()
+    }
+    window.addEventListener(MOVEGRID_USER_UPDATED, onUserUpdated)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener(MOVEGRID_USER_UPDATED, onUserUpdated)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [])
 
   function handleSignOut() {
@@ -85,15 +103,18 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="profile-hero-info">
-              <div className="profile-title-row">
-                <h1>{user ? user.name : 'Guest User'}</h1>
-                <span className="pill lime">{user?.role ? user.role.toUpperCase() : 'GUEST'}</span>
-                <span className="pill orange">
-                  {user?.fitness_level || plan?.fitnessLevel || 'Beginner'} Tier
-                </span>
+              <div className="profile-identity">
+                <p className="profile-identity-label">{user ? 'Your profile' : 'Guest session'}</p>
+                <h1 className="profile-display-name">{user ? user.name : 'Guest User'}</h1>
+                <div className="profile-badges-row">
+                  <span className="pill lime">{user?.role ? user.role.toUpperCase() : 'GUEST'}</span>
+                  <span className="pill orange">
+                    {user?.fitness_level || plan?.fitnessLevel || 'Beginner'} tier
+                  </span>
+                </div>
               </div>
               <p className="profile-email">
-                {user ? user.email : 'Not signed in'}
+                {user ? user.email : 'Sign in to sync MOVE points and streaks'}
               </p>
               <div className="profile-tags">
                 <span className="profile-tag">
@@ -141,7 +162,7 @@ export default function ProfilePage() {
             <div>
               <p>Total MOVE Points</p>
               <strong>{user ? user.total_points.toLocaleString() : '0'}</strong>
-              <small>Points earned from missions & daily path</small>
+              <small>From challenges, daily path, and missions</small>
             </div>
           </div>
 
@@ -266,7 +287,9 @@ export default function ProfilePage() {
             {user ? (
               <div className="auth-access-content">
                 <div>
-                  <h3>Logged in as <span>{user.name}</span></h3>
+                  <h3>
+                    Logged in as <span className="profile-logged-in-name">{user.name}</span>
+                  </h3>
                   <p>Your progress is saved locally and synced with MOVEGRID servers.</p>
                 </div>
                 <div className="auth-access-buttons">

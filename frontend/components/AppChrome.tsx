@@ -16,7 +16,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { ApiUser, clearToken, getStoredToken, movegridApi } from '../lib/api'
+import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi } from '../lib/api'
 
 export type MenuAction =
   | 'dashboard'
@@ -57,17 +57,23 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
   const token = getStoredToken()
 
   useEffect(() => {
-    if (!token) {
-      setUser(null)
-      return
-    }
-    movegridApi
-      .me(token)
-      .then(setUser)
-      .catch(() => {
-        clearToken()
+    function loadUser() {
+      if (!token) {
         setUser(null)
-      })
+        return
+      }
+      movegridApi
+        .me(token)
+        .then(setUser)
+        .catch(() => {
+          clearToken()
+          setUser(null)
+        })
+    }
+    loadUser()
+    const onUserUpdated = () => loadUser()
+    window.addEventListener(MOVEGRID_USER_UPDATED, onUserUpdated)
+    return () => window.removeEventListener(MOVEGRID_USER_UPDATED, onUserUpdated)
   }, [token])
 
   useEffect(() => {

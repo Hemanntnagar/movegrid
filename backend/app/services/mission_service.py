@@ -30,13 +30,10 @@ async def list_missions(db: AsyncSession) -> list[dict]:
     ]
 
 
-async def verify_and_complete(db: AsyncSession, user: User, challenge_id: int, code: str) -> dict:
+async def verify_and_complete(db: AsyncSession, user: User, challenge_id: int) -> dict:
     challenge = await db.get(Challenge, challenge_id)
-    if not challenge:
+    if not challenge or not challenge.is_active:
         raise HTTPException(404, "Mission not found")
-    zone = await db.get(Zone, challenge.zone_id)
-    if not zone or code != zone.qr_secret:
-        raise HTTPException(400, "Checkpoint code is invalid")
 
     now = datetime.utcnow()
     award = challenge.reward_points

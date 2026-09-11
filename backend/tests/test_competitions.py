@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -17,6 +19,7 @@ async def comp_client():
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
 
+    ends_at = datetime.utcnow() + timedelta(days=14)
     async with session_factory() as session:
         user = User(
             email="comp.user@example.com",
@@ -35,6 +38,7 @@ async def comp_client():
                 min_points=0,
                 min_streak=0,
                 is_active=True,
+                ends_at=ends_at,
             )
         )
         session.add(
@@ -45,6 +49,7 @@ async def comp_client():
                 min_points=0,
                 min_streak=10,
                 is_active=True,
+                ends_at=ends_at,
             )
         )
         await session.commit()
@@ -112,6 +117,7 @@ async def test_create_company_competition(comp_client):
         "eligibility": "Open to all members",
         "min_points": 0,
         "min_streak": 0,
+        "ends_at": (datetime.utcnow() + timedelta(days=30)).isoformat(),
     }
 
     res = await http.post("/api/v1/competitions", json=payload, headers=headers)

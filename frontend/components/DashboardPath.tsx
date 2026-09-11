@@ -28,6 +28,7 @@ import {
   ApiTodayFitness,
   getStoredToken,
   movegridApi,
+  notifyUserUpdated,
 } from '../lib/api'
 import { PenguinPathMap, PathLevel } from './PenguinPathMap'
 import {
@@ -569,6 +570,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     setError('')
     try {
       const result = await movegridApi.completeFitness(token, assignmentId)
+      notifyUserUpdated({ total_points: result.total_points })
       setJustCompletedId(assignmentId)
       setToast(`+${result.points_awarded} MOVE · ${result.exercise_name ?? 'Exercise'} done`)
       await load()

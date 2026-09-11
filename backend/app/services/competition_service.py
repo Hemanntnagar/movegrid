@@ -66,6 +66,8 @@ def serialize_competition(
 async def create_competition(db: AsyncSession, payload: CompetitionCreate, user: User | None = None) -> dict:
     now = _utcnow()
     starts_at = payload.starts_at or now
+    if payload.ends_at <= starts_at:
+        raise HTTPException(400, "End date must be after the start date")
     comp = Competition(
         name=payload.name,
         company_name=payload.company_name or "",
@@ -89,8 +91,17 @@ async def create_competition(db: AsyncSession, payload: CompetitionCreate, user:
 
 
 async def list_competitions(db: AsyncSession, user: User | None = None) -> list[dict]:
+    now = _utcnow()
     comps = (
-        await db.execute(select(Competition).order_by(Competition.starts_at.asc(), Competition.id.asc()))
+        await db.execute(
+            select(Competition)
+            .where(
+                Competition.is_active.is_(True),
+                Competition.ends_at.isnot(None),
+                Competition.ends_at > now,
+            )
+            .order_by(Competition.starts_at.asc(), Competition.id.asc())
+        )
     ).scalars().all()
     participating_ids: set[int] = set()
     if user:
@@ -101,7 +112,6 @@ async def list_competitions(db: AsyncSession, user: User | None = None) -> list[
         ).all()
         participating_ids = {row[0] for row in rows}
 
-    now = _utcnow()
     results = []
     for comp in comps:
         item = serialize_competition(comp, user=user, participating_ids=participating_ids, now=now)

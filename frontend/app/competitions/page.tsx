@@ -268,6 +268,22 @@ export default function CompetitionsPage() {
       .finally(() => setLoading(false))
   }, [load, router])
 
+  useEffect(() => {
+    if (!token) return
+    const refresh = () => {
+      load(token).catch(() => {})
+    }
+    const timer = window.setInterval(refresh, 60_000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [token, load])
+
   async function participate(id: number) {
     if (!token) return
     setBusyId(id)
@@ -297,6 +313,20 @@ export default function CompetitionsPage() {
       setCreateError('Reward / Prize is required')
       return
     }
+    if (!endDate) {
+      setCreateError('End date & time is required')
+      return
+    }
+    const startMs = startDate ? new Date(startDate).getTime() : Date.now()
+    const endMs = new Date(endDate).getTime()
+    if (!Number.isFinite(endMs)) {
+      setCreateError('Enter a valid end date & time')
+      return
+    }
+    if (endMs <= startMs) {
+      setCreateError('End date must be after the start date')
+      return
+    }
 
     setSubmitting(true)
     setCreateError('')
@@ -309,7 +339,7 @@ export default function CompetitionsPage() {
         reward: reward.trim(),
         eligibility: eligibility.trim() || 'Open to all members',
         starts_at: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
-        ends_at: endDate ? new Date(endDate).toISOString() : new Date(Date.now() + 14 * 86400000).toISOString(),
+        ends_at: new Date(endDate).toISOString(),
       }
 
       const created = await movegridApi.createCompetition(payload, token)
@@ -323,6 +353,8 @@ export default function CompetitionsPage() {
       setDescription('')
       setReward('')
       setEligibility('Open to all members')
+      setStartDate(toDatetimeLocalString(new Date()))
+      setEndDate(toDatetimeLocalString(new Date(Date.now() + 14 * 86400000)))
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Could not create competition')
     } finally {
@@ -398,7 +430,7 @@ export default function CompetitionsPage() {
         {error && <p className="form-error" style={{ marginBottom: '1rem' }}>{error}</p>}
 
         <section className="competition-grid">
-          {items.map((competition) => (
+          {items.filter((c) => c.status !== 'ended').map((competition) => (
             <CompetitionCard
               key={competition.id}
               competition={competition}
@@ -406,7 +438,7 @@ export default function CompetitionsPage() {
               onParticipate={participate}
             />
           ))}
-          {items.length === 0 && (
+          {items.filter((c) => c.status !== 'ended').length === 0 && (
             <div className="fitness-empty">
               <Swords size={22} />
               <strong>No competitions yet</strong>
@@ -444,7 +476,8 @@ export default function CompetitionsPage() {
             </div>
 
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
-              Fill in your company details, reward prize, eligibility, and dates to launch a competition on MOVEGRID.
+              Fill in your company details, reward prize, eligibility, start time, and a required end date. The
+              competition disappears from the board automatically after it ends.
             </p>
 
             {createError && (
@@ -590,10 +623,12 @@ export default function CompetitionsPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#475569', marginBottom: '5px' }}>
-                    End Date & Time
+                    End Date & Time <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
                     type="datetime-local"
+                    required
+                    min={startDate || undefined}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     style={{

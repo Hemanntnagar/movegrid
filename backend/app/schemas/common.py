@@ -59,7 +59,7 @@ class CompetitionCreate(BaseModel):
     reward: str = ""
     eligibility: str = "Open to all members"
     starts_at: datetime | None = None
-    ends_at: datetime | None = None
+    ends_at: datetime
     min_points: int = 0
     min_streak: int = 0
 
@@ -98,9 +98,6 @@ class MissionRead(BaseModel):
     move_reward: int
     minutes: int
     kind: str
-
-class VerifyRequest(BaseModel):
-    code: str = Field(min_length=1)
 
 class SquadCreate(BaseModel):
     name: str

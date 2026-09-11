@@ -11,10 +11,10 @@ import {
   ApiMission,
   ApiTodayFitness,
   ApiUser,
-  CHECKPOINT_CODE_KEY,
   clearToken,
   getStoredToken,
   movegridApi,
+  notifyUserUpdated,
 } from '../lib/api'
 import { AppChrome } from '../components/AppChrome'
 import { DashboardPath } from '../components/DashboardPath'
@@ -200,23 +200,16 @@ export default function Page() {
       localStorage.setItem(`movegrid_challenge_state_${today}`, 'completed')
 
       const authToken = getStoredToken()
-      const checkpointCode =
-        typeof window !== 'undefined' ? localStorage.getItem(CHECKPOINT_CODE_KEY)?.trim() : null
 
-      if (!authToken || !dailyMissionId || !checkpointCode) {
-        if (authToken) {
-          movegridApi.syncSteps(authToken, steps).catch(() => {})
-        }
-        setToast(
-          authToken
-            ? '🎉 Step goal reached! Enter your zone checkpoint code in Challenges to claim MOVE on the server.'
-            : '🎉 Daily step goal reached! Sign in to sync MOVE with the server.',
-        )
+      if (!authToken || !dailyMissionId) {
+        setToast('🎉 Daily step goal reached! Sign in to sync MOVE with the server.')
         return
       }
 
+      movegridApi.syncSteps(authToken, steps).catch(() => {})
+
       movegridApi
-        .completeMission(authToken, dailyMissionId, checkpointCode)
+        .completeMission(authToken, dailyMissionId)
         .then((res) => {
           const body = res as {
             total_points?: number
@@ -226,8 +219,10 @@ export default function Page() {
           }
           const total = body.total_points ?? body.move_points
           const awarded = body.points_awarded ?? body.move_awarded ?? challengeMove
-          if (total != null) setMove(total)
-          else setMove((prev) => prev + awarded)
+          if (total != null) {
+            setMove(total)
+            notifyUserUpdated({ total_points: total })
+          } else setMove((prev) => prev + awarded)
           setToast(`🎉 Daily Challenge Completed! +${awarded} MOVE points auto-fetched & awarded!`)
         })
         .catch(() => {

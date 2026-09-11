@@ -15,7 +15,6 @@ import {
   LoaderCircle,
   MapPin,
   Play,
-  QrCode,
   ShieldCheck,
   Sparkles,
   Target,
@@ -23,7 +22,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { ApiUser, CHECKPOINT_CODE_KEY, clearToken, getStoredToken, movegridApi } from '../../lib/api'
+import { ApiUser, clearToken, getStoredToken, movegridApi, notifyUserUpdated } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { useStepCounter } from '../../hooks/useStepCounter'
 import { apiMissionToUi, type UiMission } from '../../lib/missionUi'
@@ -219,15 +218,11 @@ function MissionModal({
 }: {
   mission: Mission
   onClose: () => void
-  onComplete: (checkpointCode: string) => void
+  onComplete: () => void
   loading: boolean
 }) {
   const [step, setStep] = useState(0)
-  const [checkpointCode, setCheckpointCode] = useState(() => {
-    if (typeof window === 'undefined') return ''
-    return localStorage.getItem(CHECKPOINT_CODE_KEY) ?? ''
-  })
-  const steps = ['Start activity', 'Perform task', 'Verify goal', 'Claim MOVE']
+  const steps = ['Start activity', 'Perform task', 'Confirm', 'Claim MOVE']
   const isWalkMission = mission.kind === 'Walk' || mission.kind === 'Climb'
 
   return (
@@ -269,29 +264,18 @@ function MissionModal({
             ) : mission.kind === 'Hydration' ? (
               <div className="qr-panel">
                 <Droplets size={80} style={{ color: '#38bdf8' }} />
-                <strong>Log your workout check-in</strong>
-                <span>Logged 2L water consumed!</span>
+                <strong>Hydration check-in</strong>
+                <span>Log 2L water consumed when you&apos;re done.</span>
               </div>
             ) : (
               <div className="qr-panel">
-                <div className="qr-art">
-                  <QrCode size={92} />
-                  <div className="scan-line" />
-                </div>
-                <strong>Log your workout check-in</strong>
-                <span>Scan or log GPS route confirmation.</span>
+                <Activity size={72} style={{ color: '#a3e635' }} />
+                <strong>Activity in progress</strong>
+                <span>
+                  Complete your session at {mission.zone} — about {mission.minutes} min.
+                </span>
               </div>
             )}
-            <label className="field" style={{ width: '100%', marginTop: '0.75rem' }}>
-              <span>Zone checkpoint code (from QR)</span>
-              <input
-                type="text"
-                value={checkpointCode}
-                onChange={(event) => setCheckpointCode(event.target.value)}
-                placeholder="Scan or enter checkpoint code"
-                autoComplete="off"
-              />
-            </label>
           </>
         )}
         {step === 2 && (
@@ -329,7 +313,7 @@ function MissionModal({
             type="button"
             className="primary-button"
             style={{ flex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-            disabled={loading || (step === 1 && !checkpointCode.trim())}
+            disabled={loading}
             onClick={() => {
               if (step === 0) {
                 const token = getStoredToken()
@@ -337,15 +321,10 @@ function MissionModal({
                   movegridApi.startMission(mission.id, 150, token).catch(() => {})
                 }
               }
-              if (step === 1) {
-                const code = checkpointCode.trim()
-                if (!code) return
-                localStorage.setItem(CHECKPOINT_CODE_KEY, code)
-              }
               if (step < 3) {
                 setStep(step + 1)
               } else {
-                onComplete(checkpointCode.trim())
+                onComplete()
               }
             }}
           >
@@ -354,9 +333,9 @@ function MissionModal({
             ) : step === 0 ? (
               'Start challenge'
             ) : step === 1 ? (
-              'Verify activity'
+              'Mark activity done'
             ) : step === 2 ? (
-              'Log progress'
+              'Continue'
             ) : (
               'Claim MOVE points'
             )}{' '}
@@ -376,6 +355,7 @@ export default function ChallengesPage() {
   const [missionsLoading, setMissionsLoading] = useState(true)
   const [loadingComplete, setLoadingComplete] = useState(false)
   const [complete, setComplete] = useState(false)
+  const [completeError, setCompleteError] = useState<string | null>(null)
   const [lastMove, setLastMove] = useState(150)
 
   const token = getStoredToken()
@@ -399,17 +379,27 @@ export default function ChallengesPage() {
 
   const start = (m: Mission) => setSelected(m)
 
-  const finish = async (checkpointCode: string) => {
+  const finish = async () => {
     if (!selected) return
+    if (!token) {
+      setCompleteError('Sign in to claim MOVE points on your account.')
+      return
+    }
+
     setLoadingComplete(true)
+    setCompleteError(null)
     try {
-      if (token && checkpointCode) {
-        await movegridApi.completeMission(token, selected.id, checkpointCode).catch(() => {})
-      }
-      setLastMove(selected.move)
+      const result = await movegridApi.completeMission(token, selected.id)
+      const awarded = result.move_awarded ?? selected.move
+      setLastMove(awarded)
+      notifyUserUpdated({ total_points: result.move_points })
+      const fresh = await movegridApi.me(token)
+      setUser(fresh)
       setSelected(null)
       setComplete(true)
       setTimeout(() => setComplete(false), 3500)
+    } catch (err) {
+      setCompleteError(err instanceof Error ? err.message : 'Could not award MOVE points. Try again.')
     } finally {
       setLoadingComplete(false)
     }
@@ -469,8 +459,25 @@ export default function ChallengesPage() {
         </div>
       )}
 
+      {completeError && (
+        <div className="toast error">
+          <span>{completeError}</span>
+          <button type="button" className="icon-button" aria-label="Dismiss" onClick={() => setCompleteError(null)}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {selected && (
-        <MissionModal mission={selected} onClose={() => setSelected(null)} onComplete={finish} loading={loadingComplete} />
+        <MissionModal
+          mission={selected}
+          onClose={() => {
+            setSelected(null)
+            setCompleteError(null)
+          }}
+          onComplete={finish}
+          loading={loadingComplete}
+        />
       )}
 
       <footer className="centered-nav-bar">
