@@ -268,6 +268,7 @@ export default function Page() {
     <div className="app-shell game-world">
       <GameWorldBackground />
       <AppChrome
+        showHamburgerMenu
         rightSlot={
           <button type="button" className="icon-button" aria-label="Notifications">
             <Bell size={18} />
