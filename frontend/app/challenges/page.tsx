@@ -48,7 +48,7 @@ function formatCountdown(totalSeconds: number) {
 // ─── 24-Hour Daily Gyro Challenge Widget ────────────────────────────────────
 
 function DailyGyroChallengeWidget() {
-  const { steps, goal, percent, active, startTracking, addSteps } = useStepCounter()
+  const { steps, goal, percent, active, startTracking } = useStepCounter()
   const [secondsRemaining, setSecondsRemaining] = useState<number>(0)
 
   useEffect(() => {
@@ -79,7 +79,7 @@ function DailyGyroChallengeWidget() {
         <div>
           <h2>10,000 Daily Steps Challenge</h2>
           <p className="daily-banner-sub">
-            Powered by your phone&apos;s gyroscope & accelerometer motion sensors. Keep moving to complete the 24-hour goal!
+            Uses your phone&apos;s motion sensors and live location while tracking — walk with the app open to count steps toward the 24-hour goal.
           </p>
         </div>
 
@@ -109,15 +109,7 @@ function DailyGyroChallengeWidget() {
           className="primary-button"
           onClick={() => startTracking()}
         >
-          <Play size={14} fill="currentColor" /> {active ? 'Sensors Tracking Live' : 'Start 24H Gyro Challenge'}
-        </button>
-        <button
-          type="button"
-          className="outline-button"
-          onClick={() => addSteps(100)}
-          title="Simulate step motion (useful for testing on desktop)"
-        >
-          +100 Steps (Test Motion)
+          <Play size={14} fill="currentColor" /> {active ? 'Sensors Tracking Live' : 'Start'}
         </button>
       </div>
     </div>

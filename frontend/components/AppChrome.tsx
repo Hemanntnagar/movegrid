@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  Bot,
   Flame,
   Gift,
   LayoutDashboard,
@@ -24,7 +23,6 @@ export type MenuAction =
   | 'buddies'
   | 'competitions'
   | 'reward-hub'
-  | 'assistant'
   | 'leaderboard'
 
 const MENU_ITEMS: {
@@ -40,7 +38,6 @@ const MENU_ITEMS: {
   { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
   { id: 'buddies', label: 'Buddies & Nearby', icon: Users, tone: 'lime', href: '/buddies' },
   { id: 'reward-hub', label: 'Reward Store', icon: Gift, tone: 'lime', href: '/rewards' },
-  { id: 'assistant', label: 'AI Coach Assistant', icon: Bot, tone: 'blue', href: '/assistant' },
 ]
 
 type AppChromeProps = {
