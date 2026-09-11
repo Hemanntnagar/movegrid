@@ -266,7 +266,6 @@ export default function Page() {
   return (
     <div className="app-shell">
       <AppChrome
-        showHamburgerMenu
         rightSlot={
           <button type="button" className="icon-button" aria-label="Notifications">
             <Bell size={18} />
