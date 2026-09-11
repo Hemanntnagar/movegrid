@@ -3,10 +3,35 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import not_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.demo_accounts import LEGACY_DEMO_EMAIL_SUFFIX, LEGACY_DEMO_TEAM_NAMES
 from app.models.entities import LeaderboardRank, Team, User
+
+_LEGACY_DEMO_TEAM_NAMES = frozenset(LEGACY_DEMO_TEAM_NAMES)
+
+
+def _ranked_member_filters():
+    return (User.role == "member", not_(User.email.ilike(f"%{LEGACY_DEMO_EMAIL_SUFFIX}")))
+
+
+async def _team_ids_with_real_members(db: AsyncSession) -> set[int]:
+    rows = (
+        await db.execute(
+            select(User.team_id).where(
+                User.team_id.is_not(None),
+                *_ranked_member_filters(),
+            )
+        )
+    ).scalars().all()
+    return {team_id for team_id in rows if team_id is not None}
+
+
+def _include_team_on_competition_board(team: Team, real_member_team_ids: set[int]) -> bool:
+    if team.id in real_member_team_ids:
+        return True
+    return team.name not in _LEGACY_DEMO_TEAM_NAMES
 
 
 def _utcnow() -> datetime:
@@ -72,7 +97,7 @@ async def refresh_all_leaderboard_ranks(db: AsyncSession) -> None:
     users = (
         await db.execute(
             select(User.id, User.total_points)
-            .where(User.role == "member")
+            .where(*_ranked_member_filters())
             .order_by(User.total_points.desc(), User.id.asc())
         )
     ).all()
@@ -86,7 +111,7 @@ async def refresh_all_leaderboard_ranks(db: AsyncSession) -> None:
     streak_users = (
         await db.execute(
             select(User.id, User.streak)
-            .where(User.role == "member")
+            .where(*_ranked_member_filters())
             .order_by(User.streak.desc(), User.id.asc())
         )
     ).all()
@@ -97,19 +122,18 @@ async def refresh_all_leaderboard_ranks(db: AsyncSession) -> None:
         ordered_ids_and_points=[(row.id, row.streak) for row in streak_users],
     )
 
-    teams = (
+    real_member_team_ids = await _team_ids_with_real_members(db)
+    all_teams = (
         await db.execute(
-            select(Team.id, Team.competition_points).order_by(
-                Team.competition_points.desc(),
-                Team.id.asc(),
-            )
+            select(Team).order_by(Team.competition_points.desc(), Team.id.asc())
         )
-    ).all()
+    ).scalars().all()
+    teams = [team for team in all_teams if _include_team_on_competition_board(team, real_member_team_ids)]
     await refresh_board_ranks(
         db,
         board=BOARD_COMPETITION,
         subject_type=SUBJECT_TEAM,
-        ordered_ids_and_points=[(row.id, row.competition_points) for row in teams],
+        ordered_ids_and_points=[(team.id, team.competition_points) for team in teams],
     )
 
 
@@ -141,7 +165,7 @@ async def get_move_leaderboard(
     users = (
         await db.execute(
             select(User)
-            .where(User.role == "member")
+            .where(*_ranked_member_filters())
             .order_by(User.total_points.desc(), User.id.asc())
         )
     ).scalars().all()
@@ -187,7 +211,7 @@ async def get_streak_leaderboard(
     users = (
         await db.execute(
             select(User)
-            .where(User.role == "member")
+            .where(*_ranked_member_filters())
             .order_by(User.streak.desc(), User.id.asc())
         )
     ).scalars().all()
@@ -230,11 +254,13 @@ async def get_competition_leaderboard(
     limit: int = 20,
 ) -> dict:
     limit = max(1, min(limit, 100))
-    teams = (
+    real_member_team_ids = await _team_ids_with_real_members(db)
+    all_teams = (
         await db.execute(
             select(Team).order_by(Team.competition_points.desc(), Team.id.asc())
         )
     ).scalars().all()
+    teams = [team for team in all_teams if _include_team_on_competition_board(team, real_member_team_ids)]
     ranks = await _rank_lookup(db, BOARD_COMPETITION, SUBJECT_TEAM)
     my_team_id = current_user.team_id if current_user else None
 
@@ -242,7 +268,7 @@ async def get_competition_leaderboard(
     if teams:
         members = (
             await db.execute(
-                select(User.team_id).where(User.team_id.is_not(None), User.role == "member")
+                select(User.team_id).where(User.team_id.is_not(None), *_ranked_member_filters())
             )
         ).scalars().all()
         for team_id in members:

@@ -145,6 +145,31 @@ async def test_competition_leaderboard_orders_teams(lb_client):
 
 
 @pytest.mark.asyncio
+async def test_move_leaderboard_excludes_legacy_demo_accounts(lb_client):
+    http, session_factory = lb_client
+    async with session_factory() as session:
+        session.add(
+            User(
+                email="legacy.demo@movegrid.demo",
+                name="Legacy Demo Mover",
+                password_hash=hash_password("test-pass-1234"),
+                role="member",
+                total_points=99999,
+                streak=99,
+            )
+        )
+        await session.commit()
+
+    token = await _login(http)
+    response = await http.get("/api/v1/leaderboard/move?limit=20", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    body = response.json()
+    names = [entry["name"] for entry in body["entries"]]
+    assert "Legacy Demo Mover" not in names
+    assert body["entries"][0]["points"] < 99999
+
+
+@pytest.mark.asyncio
 async def test_activity_updates_rankings_and_team_points(lb_client):
     http, session_factory = lb_client
     token = await _login(http)

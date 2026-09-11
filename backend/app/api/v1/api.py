@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import select
+from sqlalchemy import not_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.demo_accounts import LEGACY_DEMO_EMAIL_SUFFIX
 from app.core.database import get_db
 from app.core.security import create_access_token, decode_subject, hash_password, verify_password
 from app.models.entities import Activity, Challenge, Squad, SquadMember, User, Zone
@@ -319,7 +320,17 @@ async def competition_leaderboard(
 
 @api_router.get("/leaderboard/class")
 async def class_leaderboard(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    users = (await db.execute(select(User).where(User.class_id == user.class_id).order_by(User.total_points.desc()))).scalars()
+    users = (
+        await db.execute(
+            select(User)
+            .where(
+                User.class_id == user.class_id,
+                User.role == "member",
+                not_(User.email.ilike(f"%{LEGACY_DEMO_EMAIL_SUFFIX}")),
+            )
+            .order_by(User.total_points.desc())
+        )
+    ).scalars()
     return [{"rank": index, "name": u.name, "move": u.total_points} for index, u in enumerate(users, 1)]
 
 @api_router.get("/squads")
