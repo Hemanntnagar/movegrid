@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
-  Bell,
   CheckCircle2,
   Flame,
   Footprints,
@@ -85,13 +84,7 @@ export default function ProfilePage() {
 
   return (
     <div className="app-shell">
-      <AppChrome
-        rightSlot={
-          <button type="button" className="icon-button" aria-label="Notifications">
-            <Bell size={18} />
-          </button>
-        }
-      />
+      <AppChrome />
 
       <main className="main-content profile-page">
         <div className="profile-hero-card">

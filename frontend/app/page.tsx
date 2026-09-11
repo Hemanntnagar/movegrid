@@ -265,13 +265,7 @@ export default function Page() {
 
   return (
     <div className="app-shell">
-      <AppChrome
-        rightSlot={
-          <button type="button" className="icon-button" aria-label="Notifications">
-            <Bell size={18} />
-          </button>
-        }
-      />
+      <AppChrome />
 
       <main className="main-content dashboard-with-trail">
         {/* Top Floating Notification Pop-up for Daily Challenge */}

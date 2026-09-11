@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi } from '../lib/api'
+import { ExerciseReminderBell } from './ExerciseReminderBell'
 
 export type MenuAction =
   | 'dashboard'
@@ -135,6 +136,7 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
         </div>
 
         <div className="chrome-right">
+          <ExerciseReminderBell />
           {rightSlot}
           <button
             type="button"
