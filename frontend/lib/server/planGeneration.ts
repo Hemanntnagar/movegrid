@@ -1,5 +1,5 @@
 /**
- * Server-side plan generation (Vercel demo mode when no Python API is configured).
+ * Server-side plan generation for Next.js API routes.
  * Mirrors backend/app/services/plan_generation_service.py.
  */
 

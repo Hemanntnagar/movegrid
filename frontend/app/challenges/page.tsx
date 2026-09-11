@@ -23,7 +23,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { ApiUser, clearToken, getStoredToken, movegridApi } from '../../lib/api'
+import { ApiUser, CHECKPOINT_CODE_KEY, clearToken, getStoredToken, movegridApi } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { useStepCounter } from '../../hooks/useStepCounter'
 import { apiMissionToUi, type UiMission } from '../../lib/missionUi'
@@ -219,10 +219,14 @@ function MissionModal({
 }: {
   mission: Mission
   onClose: () => void
-  onComplete: () => void
+  onComplete: (checkpointCode: string) => void
   loading: boolean
 }) {
   const [step, setStep] = useState(0)
+  const [checkpointCode, setCheckpointCode] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem(CHECKPOINT_CODE_KEY) ?? ''
+  })
   const steps = ['Start activity', 'Perform task', 'Verify goal', 'Claim MOVE']
   const isWalkMission = mission.kind === 'Walk' || mission.kind === 'Climb'
 
@@ -278,6 +282,16 @@ function MissionModal({
                 <span>Scan or log GPS route confirmation.</span>
               </div>
             )}
+            <label className="field" style={{ width: '100%', marginTop: '0.75rem' }}>
+              <span>Zone checkpoint code (from QR)</span>
+              <input
+                type="text"
+                value={checkpointCode}
+                onChange={(event) => setCheckpointCode(event.target.value)}
+                placeholder="Scan or enter checkpoint code"
+                autoComplete="off"
+              />
+            </label>
           </>
         )}
         {step === 2 && (
@@ -315,7 +329,7 @@ function MissionModal({
             type="button"
             className="primary-button"
             style={{ flex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-            disabled={loading}
+            disabled={loading || (step === 1 && !checkpointCode.trim())}
             onClick={() => {
               if (step === 0) {
                 const token = getStoredToken()
@@ -323,10 +337,15 @@ function MissionModal({
                   movegridApi.startMission(mission.id, 150, token).catch(() => {})
                 }
               }
+              if (step === 1) {
+                const code = checkpointCode.trim()
+                if (!code) return
+                localStorage.setItem(CHECKPOINT_CODE_KEY, code)
+              }
               if (step < 3) {
                 setStep(step + 1)
               } else {
-                onComplete()
+                onComplete(checkpointCode.trim())
               }
             }}
           >
@@ -380,12 +399,12 @@ export default function ChallengesPage() {
 
   const start = (m: Mission) => setSelected(m)
 
-  const finish = async () => {
+  const finish = async (checkpointCode: string) => {
     if (!selected) return
     setLoadingComplete(true)
     try {
-      if (token) {
-        await movegridApi.completeMission(selected.id, 'movegrid-demo').catch(() => {})
+      if (token && checkpointCode) {
+        await movegridApi.completeMission(token, selected.id, checkpointCode).catch(() => {})
       }
       setLastMove(selected.move)
       setSelected(null)

@@ -9,7 +9,12 @@ import {
 } from 'lucide-react'
 import {
   ApiMission,
-  ApiTodayFitness, ApiUser, clearToken, getStoredToken, movegridApi
+  ApiTodayFitness,
+  ApiUser,
+  CHECKPOINT_CODE_KEY,
+  clearToken,
+  getStoredToken,
+  movegridApi,
 } from '../lib/api'
 import { AppChrome } from '../components/AppChrome'
 import { DashboardPath } from '../components/DashboardPath'
@@ -143,7 +148,7 @@ export default function Page() {
 
   const challengeTitle = dailyMission?.title ?? '10,000 Daily Steps Goal'
   const challengeMove = dailyMission?.move_reward ?? 150
-  const dailyMissionId = dailyMission?.id ?? 1
+  const dailyMissionId = dailyMission?.id
 
   const load = useCallback(async (authToken: string) => {
     const [me, board, missions] = await Promise.all([
@@ -194,8 +199,24 @@ export default function Page() {
       setChallengeState('completed')
       localStorage.setItem(`movegrid_challenge_state_${today}`, 'completed')
 
+      const authToken = getStoredToken()
+      const checkpointCode =
+        typeof window !== 'undefined' ? localStorage.getItem(CHECKPOINT_CODE_KEY)?.trim() : null
+
+      if (!authToken || !dailyMissionId || !checkpointCode) {
+        if (authToken) {
+          movegridApi.syncSteps(authToken, steps).catch(() => {})
+        }
+        setToast(
+          authToken
+            ? '🎉 Step goal reached! Enter your zone checkpoint code in Challenges to claim MOVE on the server.'
+            : '🎉 Daily step goal reached! Sign in to sync MOVE with the server.',
+        )
+        return
+      }
+
       movegridApi
-        .completeMission(dailyMissionId)
+        .completeMission(authToken, dailyMissionId, checkpointCode)
         .then((res) => {
           const body = res as {
             total_points?: number
@@ -214,7 +235,7 @@ export default function Page() {
           setToast(`🎉 Daily Challenge Completed! +${challengeMove} MOVE points awarded!`)
         })
     }
-  }, [steps, stepGoal, challengeState, dailyMissionId, challengeMove])
+  }, [steps, stepGoal, challengeState, dailyMissionId, challengeMove, token])
 
   const secondsRemaining = useMemo(() => {
     void tick
@@ -241,7 +262,7 @@ export default function Page() {
     localStorage.setItem(`movegrid_challenge_state_${today}`, 'active')
     startTracking()
     const token = getStoredToken()
-    if (token) {
+    if (token && dailyMissionId) {
       movegridApi.syncSteps(token, steps).catch(() => {})
       movegridApi.startMission(dailyMissionId, steps, token).catch(() => {})
     }

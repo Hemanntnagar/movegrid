@@ -1,49 +1,25 @@
-from datetime import date, datetime, timedelta
+import secrets
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exercise_catalog import SEED_EXERCISES
-from app.core.security import hash_password
 from app.models.entities import Challenge, ClassGroup, Competition, Exercise, Reward, Team, User, Zone
 from app.services.leaderboard_service import refresh_all_leaderboard_ranks
-
-AVATAR_COLORS = [
-    "#ffd447",
-    "#ff9a61",
-    "#8bd4f4",
-    "#f3a8c7",
-    "#b7e88f",
-    "#c7b6f5",
-    "#ffb36f",
-    "#7fd4c2",
-]
-
 
 def _avatar(initials: str, color: str) -> str:
     return f"initials:{initials}:{color}"
 
 
-SEED_MOVERS = [
-    # name, email, move, streak, streak_score, minutes, level, team_index, avatar initials
-    ("Maya Chen", "maya@movegrid.demo", 2840, 14, 420, 210, "Advanced", 0, "MC"),
-    ("Jordan Lee", "jordan@movegrid.demo", 2690, 11, 365, 188, "Intermediate", 0, "JL"),
-    ("Sam Rivera", "sam@movegrid.demo", 2210, 9, 290, 154, "Intermediate", 1, "SR"),
-    ("Priya Nair", "priya@movegrid.demo", 1985, 12, 340, 142, "Advanced", 1, "PN"),
-    ("Chris Park", "chris@movegrid.demo", 1760, 6, 180, 120, "Beginner", 2, "CP"),
-    ("Taylor Brooks", "taylor@movegrid.demo", 1640, 8, 250, 116, "Intermediate", 2, "TB"),
-    ("Riley Quinn", "riley@movegrid.demo", 1525, 5, 140, 98, "Beginner", 3, "RQ"),
-    ("Casey Nguyen", "casey@movegrid.demo", 1410, 7, 210, 104, "Intermediate", 3, "CN"),
-    ("Avery Kim", "avery@movegrid.demo", 1330, 4, 95, 86, "Beginner", 0, "AK"),
-    ("Morgan Diaz", "morgan@movegrid.demo", 1285, 10, 310, 132, "Advanced", 1, "MD"),
-    ("Jamie Ortiz", "jamie@movegrid.demo", 1190, 3, 70, 74, "Beginner", 2, "JO"),
-    ("Harper Ellis", "harper@movegrid.demo", 1120, 6, 165, 90, "Intermediate", 3, "HE"),
-    ("Drew Patel", "drew@movegrid.demo", 980, 2, 40, 58, "Beginner", 0, "DP"),
-    ("Sky Alvarez", "sky@movegrid.demo", 860, 5, 125, 66, "Beginner", 1, "SA"),
-]
+LEGACY_DEMO_QR = "movegrid-demo"
 
 
-async def seed_demo_data(db: AsyncSession) -> None:
+async def seed_bootstrap_data(db: AsyncSession) -> None:
+    for demo_user in (await db.execute(select(User).where(User.email.like("%@movegrid.demo")))).scalars().all():
+        await db.delete(demo_user)
+    await db.flush()
+
     cohort = (await db.execute(select(ClassGroup).where(ClassGroup.name == "City Movers"))).scalar_one_or_none()
     if not cohort:
         # Prefer renamed community group; fall back to older campus seed name.
@@ -156,33 +132,6 @@ async def seed_demo_data(db: AsyncSession) -> None:
             team.competition_id = competition.id
         teams.append(team)
 
-    month_key = f"{date.today().year:04d}-{date.today().month:02d}"
-    password = hash_password("movegrid-demo")
-
-    for index, (name, email, move, streak, streak_score, minutes, level, team_index, initials) in enumerate(SEED_MOVERS):
-        existing = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
-        if existing:
-            existing.role = "member"
-            continue
-        db.add(
-            User(
-                email=email,
-                name=name,
-                password_hash=password,
-                role="member",
-                class_id=cohort.id,
-                team_id=teams[team_index].id,
-                fitness_level=level,
-                total_points=move,
-                streak=streak,
-                streak_score=streak_score,
-                streak_month=month_key,
-                last_activity_date=date.today() - timedelta(days=(index % 3)),
-                active_minutes=minutes,
-                avatar=_avatar(initials, AVATAR_COLORS[index % len(AVATAR_COLORS)]),
-            )
-        )
-
     zone = (await db.execute(select(Zone).limit(1))).scalar_one_or_none()
     if not zone:
         zone = Zone(
@@ -190,7 +139,7 @@ async def seed_demo_data(db: AsyncSession) -> None:
             description="The neighborhood movement hub",
             latitude=40.7128,
             longitude=-74.006,
-            qr_token="movegrid-demo",
+            qr_token=secrets.token_urlsafe(24),
         )
         db.add(zone)
         await db.flush()
@@ -219,6 +168,8 @@ async def seed_demo_data(db: AsyncSession) -> None:
     else:
         if zone.description and "campus" in zone.description.lower():
             zone.description = "The neighborhood movement hub"
+        if zone.qr_token == LEGACY_DEMO_QR:
+            zone.qr_token = secrets.token_urlsafe(24)
 
     extra_missions = [
         (

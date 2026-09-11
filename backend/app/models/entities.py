@@ -88,7 +88,7 @@ class Zone(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     latitude: Mapped[float] = mapped_column(default=0)
     longitude: Mapped[float] = mapped_column(default=0)
-    qr_token: Mapped[str] = mapped_column(String(255), default="movegrid-demo")
+    qr_token: Mapped[str] = mapped_column(String(255), default="")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     @property

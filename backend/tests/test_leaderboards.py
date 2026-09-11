@@ -22,7 +22,7 @@ async def lb_client():
         await connection.run_sync(Base.metadata.create_all)
 
     month = f"{date.today().year:04d}-{date.today().month:02d}"
-    password = hash_password("movegrid-demo")
+    password = hash_password("test-pass-1234")
 
     async with session_factory() as session:
         competition = Competition(name="Monthly Move Cup", description="Test cup", is_active=True)
@@ -37,7 +37,7 @@ async def lb_client():
         session.add_all(
             [
                 User(
-                    email="demo@movegrid.demo",
+                    email="alex.morgan@example.com",
                     name="Alex Morgan",
                     password_hash=password,
                     role="member",
@@ -50,7 +50,7 @@ async def lb_client():
                     avatar="initials:AM:#f3a8c7",
                 ),
                 User(
-                    email="maya@movegrid.demo",
+                    email="maya.chen@example.com",
                     name="Maya Chen",
                     password_hash=password,
                     role="member",
@@ -62,7 +62,7 @@ async def lb_client():
                     avatar="initials:MC:#ffd447",
                 ),
                 User(
-                    email="sam@movegrid.demo",
+                    email="sam.rivera@example.com",
                     name="Sam Rivera",
                     password_hash=password,
                     role="member",
@@ -93,8 +93,8 @@ async def lb_client():
     await engine.dispose()
 
 
-async def _login(http: AsyncClient, email="demo@movegrid.demo") -> str:
-    response = await http.post("/api/v1/auth/login", json={"email": email, "password": "movegrid-demo"})
+async def _login(http: AsyncClient, email="alex.morgan@example.com") -> str:
+    response = await http.post("/api/v1/auth/login", json={"email": email, "password": "test-pass-1234"})
     assert response.status_code == 200
     return response.json()["access_token"]
 
@@ -154,7 +154,7 @@ async def test_activity_updates_rankings_and_team_points(lb_client):
     async with session_factory() as session:
         from sqlalchemy import select
 
-        user = (await session.execute(select(User).where(User.email == "demo@movegrid.demo"))).scalar_one()
+        user = (await session.execute(select(User).where(User.email == "alex.morgan@example.com"))).scalar_one()
         await record_activity_progress(session, user, move_awarded=500, active_minutes=10)
         await session.commit()
 

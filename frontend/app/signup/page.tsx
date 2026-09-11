@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn, UserPlus, Sparkles, Trophy } from 'lucide-react'
-import { clearToken, getStoredToken, isDemoMode, movegridApi, storeToken } from '../../lib/api'
+import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
 import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter } from 'next/navigation'
 
@@ -164,11 +164,6 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <p className="login-hint" style={{ fontSize: '10px', opacity: 0.85, marginTop: '8px' }}>
-            {isDemoMode
-              ? 'Offline demo — any email/password works without backend setup.'
-              : 'Demo mode active.'}
-          </p>
         </div>
       </main>
     </div>

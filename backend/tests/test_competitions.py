@@ -19,9 +19,9 @@ async def comp_client():
 
     async with session_factory() as session:
         user = User(
-            email="comp@movegrid.demo",
+            email="comp.user@example.com",
             name="Comp User",
-            password_hash=hash_password("movegrid-demo"),
+            password_hash=hash_password("test-pass-1234"),
             role="member",
             total_points=800,
             streak=5,
@@ -64,7 +64,7 @@ async def comp_client():
 @pytest.mark.asyncio
 async def test_list_competitions_includes_eligibility_and_dates(comp_client):
     http = comp_client
-    login = await http.post("/api/v1/auth/login", json={"email": "comp@movegrid.demo", "password": "movegrid-demo"})
+    login = await http.post("/api/v1/auth/login", json={"email": "comp.user@example.com", "password": "test-pass-1234"})
     token = login.json()["access_token"]
     response = await http.get("/api/v1/competitions", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
@@ -80,7 +80,7 @@ async def test_list_competitions_includes_eligibility_and_dates(comp_client):
 @pytest.mark.asyncio
 async def test_participate_respects_eligibility(comp_client):
     http = comp_client
-    login = await http.post("/api/v1/auth/login", json={"email": "comp@movegrid.demo", "password": "movegrid-demo"})
+    login = await http.post("/api/v1/auth/login", json={"email": "comp.user@example.com", "password": "test-pass-1234"})
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -100,7 +100,7 @@ async def test_participate_respects_eligibility(comp_client):
 @pytest.mark.asyncio
 async def test_create_company_competition(comp_client):
     http = comp_client
-    login = await http.post("/api/v1/auth/login", json={"email": "comp@movegrid.demo", "password": "movegrid-demo"})
+    login = await http.post("/api/v1/auth/login", json={"email": "comp.user@example.com", "password": "test-pass-1234"})
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

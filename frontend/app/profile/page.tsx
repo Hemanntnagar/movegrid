@@ -198,7 +198,7 @@ export default function ProfilePage() {
               </div>
               <div className="info-row">
                 <span>Email Address</span>
-                <strong>{user ? user.email : 'guest@movegrid.demo'}</strong>
+                <strong>{user ? user.email : 'Not signed in'}</strong>
               </div>
               <div className="info-row">
                 <span>User ID</span>

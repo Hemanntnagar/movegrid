@@ -1,21 +1,10 @@
-import { demoApi } from './demoApi'
-
 const configured = (process.env.NEXT_PUBLIC_API_URL ?? '').trim().replace(/\/$/, '')
-
-/**
- * Production with no NEXT_PUBLIC_API_URL → full in-browser demo (zero Vercel env).
- * Local/dev with no URL → localhost API for normal backend work.
- */
-export const isDemoMode =
-  configured.length === 0 && process.env.NODE_ENV === 'production'
 
 const API_URL = configured
   ? configured.endsWith('/api/v1')
     ? configured
     : `${configured}/api/v1`
-  : isDemoMode
-    ? ''
-    : 'http://localhost:8000/api/v1'
+  : 'http://localhost:8000/api/v1'
 
 export type ApiMission = { id: number; title: string; description: string; zone: string; move_reward: number; minutes: number; kind: string }
 export type ApiUser = {
@@ -347,179 +336,128 @@ function authHeaders(token: string): HeadersInit {
   return { Authorization: `Bearer ${token}` }
 }
 
-function asPromise<T>(value: T): Promise<T> {
-  return Promise.resolve(value)
-}
+export const CHECKPOINT_CODE_KEY = 'movegrid_checkpoint_code'
 
 export const movegridApi = {
   register: (name: string, email: string, password: string, fitness_level?: string) =>
-    isDemoMode
-      ? asPromise(demoApi.register(name, email, password, fitness_level))
-      : request<ApiUser>('/auth/register', {
-          method: 'POST',
-          body: JSON.stringify({ name, full_name: name, email, password, fitness_level }),
-        }),
+    request<ApiUser>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, full_name: name, email, password, fitness_level }),
+    }),
   login: (email: string, password: string) =>
-    isDemoMode
-      ? asPromise(demoApi.login(email, password))
-      : request<ApiToken>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-  me: (token: string) =>
-    isDemoMode ? asPromise(demoApi.me(token)) : request<ApiUser>('/auth/me', { headers: authHeaders(token) }),
-  missions: () =>
-    isDemoMode ? asPromise(demoApi.missions()) : request<ApiMission[]>('/missions'),
+    request<ApiToken>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  me: (token: string) => request<ApiUser>('/auth/me', { headers: authHeaders(token) }),
+  missions: () => request<ApiMission[]>('/missions'),
   leaderboard: (token?: string | null, limit = 20) =>
-    isDemoMode
-      ? asPromise(demoApi.leaderboardMove(limit))
-      : request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
-          headers: token ? authHeaders(token) : undefined,
-        }),
+    request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
+      headers: token ? authHeaders(token) : undefined,
+    }),
   leaderboardMove: (token?: string | null, limit = 20) =>
-    isDemoMode
-      ? asPromise(demoApi.leaderboardMove(limit))
-      : request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
-          headers: token ? authHeaders(token) : undefined,
-        }),
+    request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
+      headers: token ? authHeaders(token) : undefined,
+    }),
   leaderboardStreak: (token?: string | null, limit = 20) =>
-    isDemoMode
-      ? asPromise(demoApi.leaderboardStreak(limit))
-      : request<ApiLeaderboard>(`/leaderboard/streak?limit=${limit}`, {
-          headers: token ? authHeaders(token) : undefined,
-        }),
+    request<ApiLeaderboard>(`/leaderboard/streak?limit=${limit}`, {
+      headers: token ? authHeaders(token) : undefined,
+    }),
   leaderboardCompetition: (token?: string | null, limit = 20) =>
-    isDemoMode
-      ? asPromise(demoApi.leaderboardCompetition(limit))
-      : request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
-          headers: token ? authHeaders(token) : undefined,
-        }),
+    request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
+      headers: token ? authHeaders(token) : undefined,
+    }),
   competitions: (token?: string | null) =>
-    isDemoMode
-      ? asPromise(demoApi.competitions(token))
-      : request<ApiCompetition[]>('/competitions', {
-          headers: token ? authHeaders(token) : undefined,
-        }),
+    request<ApiCompetition[]>('/competitions', {
+      headers: token ? authHeaders(token) : undefined,
+    }),
   createCompetition: (data: ApiCompetitionCreate, token?: string | null) =>
-    isDemoMode
-      ? asPromise(demoApi.createCompetition(data))
-      : request<ApiCompetition>('/competitions', {
-          method: 'POST',
-          headers: token ? authHeaders(token) : { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        }),
+    request<ApiCompetition>('/competitions', {
+      method: 'POST',
+      headers: token ? authHeaders(token) : { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
   participateCompetition: (token: string, id: number) =>
-    isDemoMode
-      ? asPromise(demoApi.participateCompetition(token, id))
-      : request<ApiParticipateResult>(`/competitions/${id}/participate`, {
-          method: 'POST',
-          headers: authHeaders(token),
-        }),
+    request<ApiParticipateResult>(`/competitions/${id}/participate`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
   startMission: (id: number, steps = 0, token?: string | null) =>
-    isDemoMode
-      ? asPromise(demoApi.startMission(id, steps))
-      : request(`/missions/${id}/start`, {
-          method: 'POST',
-          headers: token ? authHeaders(token) : undefined,
-          body: JSON.stringify({ steps }),
-        }),
+    request(`/missions/${id}/start`, {
+      method: 'POST',
+      headers: token ? authHeaders(token) : undefined,
+      body: JSON.stringify({ steps }),
+    }),
   syncSteps: (token: string, steps: number, active_minutes?: number) =>
-    isDemoMode
-      ? asPromise(demoApi.syncSteps(token, steps, active_minutes))
-      : request<{ steps: number; total_points: number; streak: number; streak_score: number; streak_gained: number }>('/daily-fitness/steps', {
-          method: 'POST',
-          headers: authHeaders(token),
-          body: JSON.stringify({ steps, active_minutes }),
-        }),
-  completeMission: (id: number, code = 'movegrid-demo') =>
-    isDemoMode
-      ? asPromise(demoApi.completeMission(id, code))
-      : request(`/missions/${id}/complete`, { method: 'POST', body: JSON.stringify({ code }) }),
+    request<{ steps: number; total_points: number; streak: number; streak_score: number; streak_gained: number }>(
+      '/daily-fitness/steps',
+      {
+        method: 'POST',
+        headers: authHeaders(token),
+        body: JSON.stringify({ steps, active_minutes }),
+      },
+    ),
+  completeMission: (token: string, id: number, code: string) =>
+    request(`/missions/${id}/complete`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ code }),
+    }),
   todayFitness: (token: string) =>
-    isDemoMode
-      ? asPromise(demoApi.todayFitness(token))
-      : request<ApiTodayFitness>('/daily-fitness/today', { headers: authHeaders(token) }),
+    request<ApiTodayFitness>('/daily-fitness/today', { headers: authHeaders(token) }),
   completeFitness: (token: string, assignmentId: number) =>
-    isDemoMode
-      ? asPromise(demoApi.completeFitness(token, assignmentId))
-      : request<ApiCompleteFitness>(`/daily-fitness/${assignmentId}/complete`, {
-          method: 'POST',
-          headers: authHeaders(token),
-        }),
+    request<ApiCompleteFitness>(`/daily-fitness/${assignmentId}/complete`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
   fitnessHistory: (token: string) =>
-    isDemoMode
-      ? asPromise(demoApi.fitnessHistory(token))
-      : request<ApiFitnessHistory>('/daily-fitness/history', { headers: authHeaders(token) }),
-  rewards: () => (isDemoMode ? asPromise(demoApi.rewards()) : request<ApiReward[]>('/rewards')),
-  reward: (id: number) =>
-    isDemoMode ? asPromise(demoApi.reward(id)) : request<ApiReward>(`/rewards/${id}`),
+    request<ApiFitnessHistory>('/daily-fitness/history', { headers: authHeaders(token) }),
+  rewards: () => request<ApiReward[]>('/rewards'),
+  reward: (id: number) => request<ApiReward>(`/rewards/${id}`),
   redeemReward: (token: string, id: number) =>
-    isDemoMode
-      ? asPromise(demoApi.redeemReward(token, id))
-      : request<ApiRedeemResult>(`/rewards/${id}/redeem`, {
-          method: 'POST',
-          headers: authHeaders(token),
-        }),
+    request<ApiRedeemResult>(`/rewards/${id}/redeem`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
   rewardHistory: (token: string) =>
-    isDemoMode
-      ? asPromise(demoApi.rewardHistory(token))
-      : request<ApiRewardRedemption[]>('/rewards/history', { headers: authHeaders(token) }),
+    request<ApiRewardRedemption[]>('/rewards/history', { headers: authHeaders(token) }),
   updatePresence: (token: string, latitude: number, longitude: number, isSharing = true) =>
-    isDemoMode
-      ? asPromise(demoApi.updatePresence(token, latitude, longitude, isSharing))
-      : request<ApiPresence>('/presence', {
-          method: 'POST',
-          headers: authHeaders(token),
-          body: JSON.stringify({ latitude, longitude, is_sharing: isSharing }),
-        }),
+    request<ApiPresence>('/presence', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ latitude, longitude, is_sharing: isSharing }),
+    }),
   nearbyPresence: (latitude: number, longitude: number, token?: string | null, radiusM = 800) =>
-    isDemoMode
-      ? asPromise(demoApi.nearbyPresence(latitude, longitude, token, radiusM))
-      : request<ApiNearbyPresence>(
-          `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
-          { headers: token ? authHeaders(token) : undefined },
-        ),
-  listBuddies: (token: string) =>
-    isDemoMode
-      ? asPromise(demoApi.listBuddies(token))
-      : request<ApiBuddy[]>('/buddies', { headers: authHeaders(token) }),
+    request<ApiNearbyPresence>(
+      `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
+      { headers: token ? authHeaders(token) : undefined },
+    ),
+  listBuddies: (token: string) => request<ApiBuddy[]>('/buddies', { headers: authHeaders(token) }),
   buddyInvitesIncoming: (token: string) =>
-    isDemoMode
-      ? asPromise(demoApi.buddyInvitesIncoming(token))
-      : request<ApiBuddyInvite[]>('/buddies/invites/incoming', { headers: authHeaders(token) }),
+    request<ApiBuddyInvite[]>('/buddies/invites/incoming', { headers: authHeaders(token) }),
   sendBuddyInvite: (token: string, toUserId: number, message: string) =>
-    isDemoMode
-      ? asPromise(demoApi.sendBuddyInvite(token, toUserId, message))
-      : request<ApiBuddyInvite>('/buddies/invite', {
-          method: 'POST',
-          headers: authHeaders(token),
-          body: JSON.stringify({ to_user_id: toUserId, message }),
-        }),
+    request<ApiBuddyInvite>('/buddies/invite', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ to_user_id: toUserId, message }),
+    }),
   acceptBuddyInvite: (token: string, inviteId: number) =>
-    isDemoMode
-      ? asPromise(demoApi.acceptBuddyInvite(token, inviteId))
-      : request<ApiBuddyConnectResult>(`/buddies/invites/${inviteId}/accept`, {
-          method: 'POST',
-          headers: authHeaders(token),
-        }),
+    request<ApiBuddyConnectResult>(`/buddies/invites/${inviteId}/accept`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
   declineBuddyInvite: (token: string, inviteId: number) =>
-    isDemoMode
-      ? asPromise(demoApi.declineBuddyInvite(token, inviteId))
-      : request<{ status: string; invite_id: number }>(`/buddies/invites/${inviteId}/decline`, {
-          method: 'POST',
-          headers: authHeaders(token),
-        }),
+    request<{ status: string; invite_id: number }>(`/buddies/invites/${inviteId}/decline`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
   generateFitnessPlan: (payload: ApiFitnessPlanGeneratePayload, token?: string | null) =>
-    isDemoMode
-      ? demoApi.generateFitnessPlan(payload, token)
-      : request<ApiFitnessPlanGenerateResult>('/fitness-plan/generate', {
-          method: 'POST',
-          headers: token ? authHeaders(token) : undefined,
-          body: JSON.stringify(payload),
-        }),
+    request<ApiFitnessPlanGenerateResult>('/fitness-plan/generate', {
+      method: 'POST',
+      headers: token ? authHeaders(token) : undefined,
+      body: JSON.stringify(payload),
+    }),
   coachChat: (payload: ApiCoachChatPayload, token?: string | null) =>
-    isDemoMode
-      ? demoApi.coachChat(payload, token)
-      : request<ApiCoachChatResult>('/coach/chat', {
-          method: 'POST',
-          headers: token ? authHeaders(token) : undefined,
-          body: JSON.stringify(payload),
-        }),
+    request<ApiCoachChatResult>('/coach/chat', {
+      method: 'POST',
+      headers: token ? authHeaders(token) : undefined,
+      body: JSON.stringify(payload),
+    }),
 }

@@ -26,9 +26,9 @@ async def client():
         session.add_all(
             [
                 User(
-                    email="demo@movegrid.demo",
+                    email="alex.morgan@example.com",
                     name="Alex Morgan",
-                    password_hash=hash_password("movegrid-demo"),
+                    password_hash=hash_password("test-pass-1234"),
                     role="member",
                     fitness_level="Beginner",
                     total_points=1000,
@@ -71,7 +71,7 @@ async def test_daily_fitness_flow_awards_move(client):
     http, _ = client
     login = await http.post(
         "/api/v1/auth/login",
-        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
+        json={"email": "alex.morgan@example.com", "password": "test-pass-1234"},
     )
     assert login.status_code == 200
     token = login.json()["access_token"]
@@ -110,7 +110,7 @@ async def test_expired_assignment_cannot_complete(client):
     http, session_factory = client
     login = await http.post(
         "/api/v1/auth/login",
-        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
+        json={"email": "alex.morgan@example.com", "password": "test-pass-1234"},
     )
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -157,7 +157,7 @@ async def test_sync_steps_and_start_mission(client):
     http, session_factory = client
     login = await http.post(
         "/api/v1/auth/login",
-        json={"email": "demo@movegrid.demo", "password": "movegrid-demo"},
+        json={"email": "alex.morgan@example.com", "password": "test-pass-1234"},
     )
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -172,7 +172,7 @@ async def test_sync_steps_and_start_mission(client):
 
     # Test start mission with steps
     async with session_factory() as session:
-        zone = Zone(name="Test Zone", description="Test", latitude=0.0, longitude=0.0, qr_token="movegrid-demo")
+        zone = Zone(name="Test Zone", description="Test", latitude=0.0, longitude=0.0, qr_token="test-checkpoint-code")
         session.add(zone)
         await session.commit()
         await session.refresh(zone)

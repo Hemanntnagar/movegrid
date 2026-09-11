@@ -8,7 +8,7 @@ from app.api.v1 import api_router
 from app.core import database
 from app.core.config import settings
 from app.core.database import Base
-from app.core.seed import seed_demo_data
+from app.core.seed import seed_bootstrap_data
 
 logger = logging.getLogger("movegrid.api")
 
@@ -18,7 +18,7 @@ async def lifespan(_: FastAPI):
     async with database.engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     async with database.SessionLocal() as session:
-        await seed_demo_data(session)
+        await seed_bootstrap_data(session)
     yield
     await database.engine.dispose()
 
