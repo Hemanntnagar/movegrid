@@ -111,7 +111,6 @@ async def test_create_company_competition(comp_client):
 
     payload = {
         "company_name": "Nike Fitness",
-        "venue": "Nike World Headquarters Track, Beaverton OR",
         "name": "Nike 10K Step Challenge",
         "description": "Compete with movers globally to win exclusive gear.",
         "reward": "$500 Gift Card + Nike Running Shoes",
@@ -127,7 +126,6 @@ async def test_create_company_competition(comp_client):
     created = res.json()
     assert created["name"] == "Nike 10K Step Challenge"
     assert created["company_name"] == "Nike Fitness"
-    assert created["venue"] == "Nike World Headquarters Track, Beaverton OR"
     assert created["reward"] == "$500 Gift Card + Nike Running Shoes"
 
     # Verify it shows up in the competition listing

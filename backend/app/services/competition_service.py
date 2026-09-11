@@ -56,7 +56,6 @@ def serialize_competition(
         "id": comp.id,
         "name": comp.name,
         "company_name": getattr(comp, "company_name", "") or "",
-        "venue": getattr(comp, "venue", "") or "",
         "description": comp.description,
         "reward": getattr(comp, "reward", "") or "",
         "eligibility": comp.eligibility,
@@ -81,7 +80,6 @@ async def create_competition(db: AsyncSession, payload: CompetitionCreate, user:
     comp = Competition(
         name=payload.name,
         company_name=payload.company_name or "",
-        venue=payload.venue or "",
         description=payload.description or "",
         reward=payload.reward or "",
         eligibility=payload.eligibility or "Open to all members",

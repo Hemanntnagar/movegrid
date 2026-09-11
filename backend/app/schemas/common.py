@@ -54,7 +54,6 @@ class LeaderboardResponse(BaseModel):
 
 class CompetitionCreate(BaseModel):
     company_name: str | None = ""
-    venue: str = ""
     name: str
     description: str = ""
     reward: str = ""
@@ -69,7 +68,6 @@ class CompetitionRead(BaseModel):
     id: int
     name: str
     company_name: str | None = ""
-    venue: str = ""
     description: str
     reward: str | None = ""
     eligibility: str

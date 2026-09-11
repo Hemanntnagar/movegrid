@@ -12,7 +12,6 @@ import {
   Gift,
   LayoutDashboard,
   LoaderCircle,
-  MapPin,
   Plus,
   ShieldCheck,
   Swords,
@@ -177,22 +176,6 @@ function CompetitionCard({
         </div>
       )}
 
-      {competition.venue && (
-        <p
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '12px',
-            fontWeight: 700,
-            color: '#475569',
-            margin: '0 0 8px',
-          }}
-        >
-          <MapPin size={13} /> {competition.venue}
-        </p>
-      )}
-
       <dl className="competition-facts">
         <div>
           <dt>
@@ -252,7 +235,6 @@ export default function CompetitionsPage() {
   // Create Competition Modal state
   const [showModal, setShowModal] = useState(false)
   const [companyName, setCompanyName] = useState('')
-  const [venue, setVenue] = useState('')
   const [competitionName, setCompetitionName] = useState('')
   const [description, setDescription] = useState('')
   const [reward, setReward] = useState('')
@@ -352,7 +334,6 @@ export default function CompetitionsPage() {
     try {
       const payload = {
         company_name: companyName.trim(),
-        venue: venue.trim(),
         name: competitionName.trim(),
         description: description.trim(),
         reward: reward.trim(),
@@ -368,7 +349,6 @@ export default function CompetitionsPage() {
 
       // Reset form fields
       setCompanyName('')
-      setVenue('')
       setCompetitionName('')
       setDescription('')
       setReward('')
@@ -496,7 +476,7 @@ export default function CompetitionsPage() {
             </div>
 
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
-              Fill in your company details, venue, reward prize, eligibility, start time, and a required end date. The
+              Fill in your company details, reward prize, eligibility, start time, and a required end date. The
               competition disappears from the board automatically after it ends.
             </p>
 
@@ -518,28 +498,6 @@ export default function CompetitionsPage() {
                   placeholder="e.g. Nike Fitness, TechCorp, RedBull"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '11px 14px',
-                    borderRadius: '10px',
-                    border: '2px solid #cbd5e1',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
-              {/* Venue */}
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#475569', marginBottom: '5px' }}>
-                  Venue / Location
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Central Park, NYC · Online · City Gym Main Hall"
-                  value={venue}
-                  onChange={(e) => setVenue(e.target.value)}
                   style={{
                     width: '100%',
                     padding: '11px 14px',
