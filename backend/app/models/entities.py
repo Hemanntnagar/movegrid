@@ -14,6 +14,7 @@ class Competition(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(160))
     company_name: Mapped[str] = mapped_column(String(160), default="")
+    venue: Mapped[str] = mapped_column(String(255), default="")
     description: Mapped[str] = mapped_column(Text, default="")
     reward: Mapped[str] = mapped_column(String(255), default="")
     eligibility: Mapped[str] = mapped_column(String(255), default="Open to all members")

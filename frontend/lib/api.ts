@@ -48,6 +48,7 @@ export type ApiCompetition = {
   id: number
   name: string
   company_name?: string
+  venue?: string
   description: string
   reward?: string
   eligibility: string
@@ -64,6 +65,7 @@ export type ApiCompetition = {
 
 export type ApiCompetitionCreate = {
   company_name?: string
+  venue?: string
   name: string
   description?: string
   reward?: string
