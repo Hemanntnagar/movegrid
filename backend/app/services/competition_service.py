@@ -17,6 +17,13 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+def _naive_utc(dt: datetime) -> datetime:
+    """Store as naive UTC for PostgreSQL timestamp columns (asyncpg rejects mixed tz)."""
+    if dt.tzinfo is None:
+        return dt
+    return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 def _status_for(comp: Competition, now: datetime) -> str:
     if comp.ends_at and now > comp.ends_at:
         return "ended"
@@ -66,8 +73,9 @@ def serialize_competition(
 
 async def create_competition(db: AsyncSession, payload: CompetitionCreate, user: User | None = None) -> dict:
     now = _utcnow()
-    starts_at = payload.starts_at or now
-    if payload.ends_at <= starts_at:
+    starts_at = _naive_utc(payload.starts_at) if payload.starts_at else now
+    ends_at = _naive_utc(payload.ends_at)
+    if ends_at <= starts_at:
         raise HTTPException(400, "End date must be after the start date")
     comp = Competition(
         name=payload.name,
@@ -78,7 +86,7 @@ async def create_competition(db: AsyncSession, payload: CompetitionCreate, user:
         min_points=payload.min_points,
         min_streak=payload.min_streak,
         starts_at=starts_at,
-        ends_at=payload.ends_at,
+        ends_at=ends_at,
         is_active=True,
     )
     db.add(comp)

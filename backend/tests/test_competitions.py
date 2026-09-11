@@ -117,7 +117,8 @@ async def test_create_company_competition(comp_client):
         "eligibility": "Open to all members",
         "min_points": 0,
         "min_streak": 0,
-        "ends_at": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+        "starts_at": datetime.utcnow().isoformat() + "Z",
+        "ends_at": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z",
     }
 
     res = await http.post("/api/v1/competitions", json=payload, headers=headers)

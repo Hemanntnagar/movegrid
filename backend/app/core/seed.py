@@ -14,6 +14,7 @@ from app.models.entities import (
     Reward,
     Team,
     User,
+    UserPresence,
     Zone,
 )
 from app.core.demo_competitions import LEGACY_DEMO_COMPETITION_NAMES
@@ -43,6 +44,11 @@ async def _remove_bootstrap_competitions(db: AsyncSession) -> None:
 
 async def seed_bootstrap_data(db: AsyncSession) -> None:
     for demo_user in (await db.execute(select(User).where(User.email.like("%@movegrid.demo")))).scalars().all():
+        presence = (
+            await db.execute(select(UserPresence).where(UserPresence.user_id == demo_user.id))
+        ).scalar_one_or_none()
+        if presence:
+            await db.delete(presence)
         await db.delete(demo_user)
     await db.flush()
 
