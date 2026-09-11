@@ -8,14 +8,11 @@ from app.core.exercise_catalog import SEED_EXERCISES
 from app.models.entities import (
     Challenge,
     ClassGroup,
-    Competition,
-    CompetitionParticipant,
     Exercise,
     Reward,
     Team,
     Zone,
 )
-from app.core.demo_competitions import LEGACY_DEMO_COMPETITION_NAMES
 from app.services.leaderboard_service import refresh_all_leaderboard_ranks
 
 def _avatar(initials: str, color: str) -> str:
@@ -23,21 +20,6 @@ def _avatar(initials: str, color: str) -> str:
 
 
 LEGACY_DEMO_QR = "movegrid-demo"
-
-async def _remove_bootstrap_competitions(db: AsyncSession) -> None:
-    """Drop legacy seeded cups so only user-created competitions remain."""
-    for name in LEGACY_DEMO_COMPETITION_NAMES:
-        comp = (await db.execute(select(Competition).where(Competition.name == name))).scalar_one_or_none()
-        if not comp:
-            continue
-        for team in (await db.execute(select(Team).where(Team.competition_id == comp.id))).scalars():
-            team.competition_id = None
-        for participant in (
-            await db.execute(select(CompetitionParticipant).where(CompetitionParticipant.competition_id == comp.id))
-        ).scalars():
-            await db.delete(participant)
-        await db.delete(comp)
-    await db.flush()
 
 
 async def seed_bootstrap_data(db: AsyncSession) -> None:
@@ -55,8 +37,6 @@ async def seed_bootstrap_data(db: AsyncSession) -> None:
             cohort = ClassGroup(name="City Movers", department="Community")
             db.add(cohort)
             await db.flush()
-
-    await _remove_bootstrap_competitions(db)
 
     team_specs = [
         ("Late Night Legends", 6120, "LL", "#ffd447"),
