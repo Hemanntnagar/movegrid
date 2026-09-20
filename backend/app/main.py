@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 import logging
 
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,8 +16,20 @@ from app.core.seed import seed_bootstrap_data
 logger = logging.getLogger("movegrid.api")
 
 
+def _run_migrations() -> None:
+    """Apply pending Alembic revisions. create_all alone does not add columns."""
+    root = Path(__file__).resolve().parents[1]
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "migrations"))
+    command.upgrade(cfg, "head")
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    try:
+        _run_migrations()
+    except Exception:
+        logger.exception("Alembic upgrade failed; falling back to create_all only")
     async with database.engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     async with database.SessionLocal() as session:

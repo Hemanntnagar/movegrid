@@ -5,13 +5,23 @@ revision = "0010_exercise_tracking"
 down_revision = "0009_buddy_connections"
 
 
+def _column_names(table: str) -> set[str]:
+    return {col["name"] for col in sa.inspect(op.get_bind()).get_columns(table)}
+
+
 def upgrade():
-    op.add_column(
-        "exercises",
-        sa.Column("tracking_mode", sa.String(40), server_default="manual", nullable=False),
-    )
-    op.add_column("daily_assignments", sa.Column("reps_completed", sa.Integer(), nullable=True))
-    op.add_column("daily_assignments", sa.Column("form_score", sa.Integer(), nullable=True))
+    exercise_cols = _column_names("exercises")
+    assignment_cols = _column_names("daily_assignments")
+
+    if "tracking_mode" not in exercise_cols:
+        op.add_column(
+            "exercises",
+            sa.Column("tracking_mode", sa.String(40), server_default="manual", nullable=False),
+        )
+    if "reps_completed" not in assignment_cols:
+        op.add_column("daily_assignments", sa.Column("reps_completed", sa.Integer(), nullable=True))
+    if "form_score" not in assignment_cols:
+        op.add_column("daily_assignments", sa.Column("form_score", sa.Integer(), nullable=True))
 
     op.execute(
         """

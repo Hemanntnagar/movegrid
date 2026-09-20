@@ -11,7 +11,7 @@
     "start": "pnpm --dir frontend start",
     "frontend:dev": "pnpm --dir frontend dev",
     "frontend:build": "pnpm --dir frontend build",
-    "backend": "cd backend && uvicorn app.main:app --reload"
+    "backend": "cd backend && alembic upgrade head && uvicorn app.main:app --reload"
   },
   "devDependencies": {
     "typescript": "5.7.3"
