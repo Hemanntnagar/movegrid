@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
   Camera,
@@ -30,6 +30,7 @@ import {
   movegridApi,
   notifyUserUpdated,
 } from '../lib/api'
+import { repTargetForScheduledExercise } from '../lib/exerciseTracking'
 import { PenguinPathMap, PathLevel } from './PenguinPathMap'
 import {
   daysInIstMonth,
@@ -70,15 +71,25 @@ function ActiveExerciseModal({
 }: {
   assignment: ApiDailyAssignment
   onClose: () => void
-  onComplete: (id: number) => Promise<void>
+  onComplete: (id: number, metrics?: { reps_completed?: number; form_score?: number }) => Promise<void>
   completing: boolean
 }) {
   const exercise = assignment.exercise
-  const targetReps = exercise.target_reps || (exercise.duration_minutes ? exercise.duration_minutes * 10 : 10)
+  const targetReps = repTargetForScheduledExercise(exercise)
   const [repsDone, setRepsDone] = useState(0)
   const [formScore, setFormScore] = useState(90)
   const [isPostureCorrect, setIsPostureCorrect] = useState(true)
   const [goalCompleted, setGoalCompleted] = useState(false)
+  const repsDoneRef = useRef(0)
+  const formScoreRef = useRef(90)
+
+  useEffect(() => {
+    repsDoneRef.current = repsDone
+  }, [repsDone])
+
+  useEffect(() => {
+    formScoreRef.current = formScore
+  }, [formScore])
 
   const isFinished = repsDone >= targetReps || goalCompleted
 
@@ -86,7 +97,12 @@ function ActiveExerciseModal({
     setGoalCompleted(true)
     // Auto-complete after 1.8 seconds of celebration
     setTimeout(() => {
-      onComplete(assignment.id).then(() => onClose()).catch(() => {})
+      onComplete(assignment.id, {
+        reps_completed: repsDoneRef.current,
+        form_score: formScoreRef.current,
+      })
+        .then(() => onClose())
+        .catch(() => {})
     }, 1800)
   }, [assignment.id, onComplete, onClose])
 
@@ -116,11 +132,17 @@ function ActiveExerciseModal({
         {/* Live Camera & Posture Recording Stream */}
         <div className="exercise-runner-box posture-runner-box">
           <PostureCamera
+            key={assignment.id}
             enabled
-            exerciseName={exercise.name}
+            assignmentId={assignment.id}
+            scheduledExercise={exercise}
             targetReps={targetReps}
-            onRepsChange={(reps) => setRepsDone(reps)}
+            onRepsChange={(reps) => {
+              repsDoneRef.current = reps
+              setRepsDone(reps)
+            }}
             onPostureUpdate={(score, isCorrect) => {
+              formScoreRef.current = score
               setFormScore(score)
               setIsPostureCorrect(isCorrect)
             }}
@@ -142,7 +164,7 @@ function ActiveExerciseModal({
           className={`primary-button full complete-exercise-claim-btn ${isFinished ? 'pulse-gold' : ''}`}
           disabled={completing}
           onClick={async () => {
-            await onComplete(assignment.id)
+            await onComplete(assignment.id, { reps_completed: repsDone, form_score: formScore })
             onClose()
           }}
         >
@@ -563,13 +585,16 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     return () => window.clearTimeout(id)
   }, [autoCloseArmed, selectedDay, todayDay])
 
-  async function handleComplete(assignmentId: number) {
+  async function handleComplete(
+    assignmentId: number,
+    metrics?: { reps_completed?: number; form_score?: number },
+  ) {
     const token = getStoredToken()
     if (!token) return
     setCompletingId(assignmentId)
     setError('')
     try {
-      const result = await movegridApi.completeFitness(token, assignmentId)
+      const result = await movegridApi.completeFitness(token, assignmentId, metrics)
       notifyUserUpdated({ total_points: result.total_points })
       setJustCompletedId(assignmentId)
       setToast(`+${result.points_awarded} MOVE · ${result.exercise_name ?? 'Exercise'} done`)

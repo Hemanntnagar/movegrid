@@ -90,6 +90,7 @@ export type ApiExercise = {
   target_reps: number
   instructions: string
   points: number
+  tracking_mode?: string
 }
 
 export type ApiDailyAssignment = {
@@ -150,6 +151,13 @@ export type ApiCompleteFitness = {
   streak_gained?: number
   exercise_name: string | null
   completed_at: string | null
+  reps_completed?: number | null
+  form_score?: number | null
+}
+
+export type ApiCompleteFitnessPayload = {
+  reps_completed?: number
+  form_score?: number
 }
 
 export type ApiFitnessHistory = {
@@ -416,10 +424,11 @@ export const movegridApi = {
     }),
   todayFitness: (token: string) =>
     request<ApiTodayFitness>('/daily-fitness/today', { headers: authHeaders(token) }),
-  completeFitness: (token: string, assignmentId: number) =>
+  completeFitness: (token: string, assignmentId: number, payload?: ApiCompleteFitnessPayload) =>
     request<ApiCompleteFitness>(`/daily-fitness/${assignmentId}/complete`, {
       method: 'POST',
       headers: authHeaders(token),
+      body: payload ? JSON.stringify(payload) : undefined,
     }),
   fitnessHistory: (token: string) =>
     request<ApiFitnessHistory>('/daily-fitness/history', { headers: authHeaders(token) }),

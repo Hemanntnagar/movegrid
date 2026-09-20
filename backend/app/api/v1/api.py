@@ -14,6 +14,7 @@ from app.schemas.common import (
     BuddyUserRead,
     CoachChatRequest,
     CoachChatResponse,
+    CompleteAssignmentRequest,
     CompleteAssignmentResponse,
     CompetitionCreate,
     CompetitionRead,
@@ -166,8 +167,20 @@ async def daily_fitness_today(user: User = Depends(current_user), db: AsyncSessi
     return await get_today_assignments(db, user)
 
 @api_router.post("/daily-fitness/{assignment_id}/complete", response_model=CompleteAssignmentResponse)
-async def daily_fitness_complete(assignment_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    return await complete_assignment(db, user, assignment_id)
+async def daily_fitness_complete(
+    assignment_id: int,
+    payload: CompleteAssignmentRequest | None = None,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    body = payload or CompleteAssignmentRequest()
+    return await complete_assignment(
+        db,
+        user,
+        assignment_id,
+        reps_completed=body.reps_completed,
+        form_score=body.form_score,
+    )
 
 @api_router.get("/daily-fitness/history", response_model=FitnessHistoryResponse)
 async def daily_fitness_history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):

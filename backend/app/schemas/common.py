@@ -174,6 +174,7 @@ class ExerciseRead(BaseModel):
     target_reps: int
     instructions: str
     points: int
+    tracking_mode: str = "manual"
 
 class DailyAssignmentRead(BaseModel):
     id: int
@@ -205,6 +206,11 @@ class TodayFitnessResponse(BaseModel):
     assigned: list[DailyAssignmentRead]
     completed: list[DailyAssignmentRead]
 
+class CompleteAssignmentRequest(BaseModel):
+    reps_completed: int | None = None
+    form_score: int | None = None
+
+
 class CompleteAssignmentResponse(BaseModel):
     status: str
     assignment_id: int
@@ -215,6 +221,8 @@ class CompleteAssignmentResponse(BaseModel):
     streak_gained: int = 0
     exercise_name: str | None = None
     completed_at: datetime | None = None
+    reps_completed: int | None = None
+    form_score: int | None = None
 
 class FitnessHistoryResponse(BaseModel):
     total_points: int

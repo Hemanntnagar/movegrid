@@ -258,7 +258,14 @@ async def get_today_assignments(db: AsyncSession, user: User) -> dict:
     }
 
 
-async def complete_assignment(db: AsyncSession, user: User, assignment_id: int) -> dict:
+async def complete_assignment(
+    db: AsyncSession,
+    user: User,
+    assignment_id: int,
+    *,
+    reps_completed: int | None = None,
+    form_score: int | None = None,
+) -> dict:
     now = _utcnow()
     await expire_due_assignments(db, user_id=user.id, now=now)
 
@@ -278,6 +285,10 @@ async def complete_assignment(db: AsyncSession, user: User, assignment_id: int) 
     award = assignment.points
     assignment.status = STATUS_COMPLETED
     assignment.completed_at = now
+    if reps_completed is not None:
+        assignment.reps_completed = max(0, int(reps_completed))
+    if form_score is not None:
+        assignment.form_score = max(0, min(100, int(form_score)))
     minutes = exercise.duration_minutes if exercise else 0
     progress = await record_activity_progress(
         db,
@@ -298,6 +309,8 @@ async def complete_assignment(db: AsyncSession, user: User, assignment_id: int) 
         "streak_gained": progress["streak_gained"],
         "exercise_name": exercise.name if exercise else None,
         "completed_at": assignment.completed_at,
+        "reps_completed": assignment.reps_completed,
+        "form_score": assignment.form_score,
     }
 
 
@@ -350,5 +363,6 @@ def _serialize_assignment(assignment: DailyAssignment, exercise: Exercise, now: 
             "target_reps": exercise.target_reps,
             "instructions": exercise.instructions,
             "points": exercise.points,
+            "tracking_mode": exercise.tracking_mode or "manual",
         },
     }

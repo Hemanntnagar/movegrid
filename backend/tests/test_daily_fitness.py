@@ -43,6 +43,7 @@ async def client():
                         target_reps=item["target_reps"],
                         instructions=item["instructions"],
                         points=item["points"],
+                        tracking_mode=item.get("tracking_mode", "manual"),
                         requires_equipment=False,
                         is_active=True,
                     )

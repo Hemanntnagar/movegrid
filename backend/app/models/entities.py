@@ -214,6 +214,7 @@ class Exercise(Base):
     target_reps: Mapped[int] = mapped_column(Integer, default=0)
     instructions: Mapped[str] = mapped_column(Text, default="")
     points: Mapped[int] = mapped_column(Integer, default=15)
+    tracking_mode: Mapped[str] = mapped_column(String(40), default="manual")
     requires_equipment: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -227,6 +228,8 @@ class DailyAssignment(Base):
     status: Mapped[str] = mapped_column(String(20), default="ASSIGNED", index=True)
     points: Mapped[int] = mapped_column(Integer, default=0)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reps_completed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    form_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class UserPresence(Base):

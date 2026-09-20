@@ -11,6 +11,7 @@ SEED_EXERCISES = [
         "target_reps": 20,
         "instructions": "Stand with feet shoulder-width apart. Lower until thighs are parallel, then stand tall. Complete 20 controlled reps.",
         "points": 15,
+        "tracking_mode": "squat",
     },
     {
         "name": "Wall Push-ups",
@@ -21,6 +22,7 @@ SEED_EXERCISES = [
         "target_reps": 12,
         "instructions": "Place hands on a wall at shoulder height. Keep your body straight and do 12 slow push-ups.",
         "points": 15,
+        "tracking_mode": "pushup",
     },
     {
         "name": "Walking",
@@ -31,6 +33,7 @@ SEED_EXERCISES = [
         "target_reps": 0,
         "instructions": "Walk continuously for 10 minutes at a pace where you can still talk.",
         "points": 25,
+        "tracking_mode": "timed",
     },
     {
         "name": "Plank",
@@ -41,6 +44,7 @@ SEED_EXERCISES = [
         "target_reps": 30,
         "instructions": "Hold a forearm or high plank for 30 seconds with hips level and core braced.",
         "points": 15,
+        "tracking_mode": "plank_hold",
     },
     {
         "name": "Jumping Jacks",
@@ -51,6 +55,7 @@ SEED_EXERCISES = [
         "target_reps": 30,
         "instructions": "Jump feet out while raising arms overhead, then return. Complete 30 reps.",
         "points": 15,
+        "tracking_mode": "jumping_jack",
     },
     {
         "name": "Standing Marches",
@@ -61,6 +66,7 @@ SEED_EXERCISES = [
         "target_reps": 0,
         "instructions": "March in place for 3 minutes, lifting knees comfortably and swinging arms.",
         "points": 10,
+        "tracking_mode": "timed",
     },
     # Intermediate
     {
@@ -72,6 +78,7 @@ SEED_EXERCISES = [
         "target_reps": 20,
         "instructions": "Step forward into a lunge, then push back to stand. Alternate legs for 20 total reps.",
         "points": 20,
+        "tracking_mode": "lunge",
     },
     {
         "name": "Push-ups",
@@ -82,6 +89,7 @@ SEED_EXERCISES = [
         "target_reps": 15,
         "instructions": "Keep a straight line from head to heels. Complete 15 push-ups, dropping to knees if needed.",
         "points": 20,
+        "tracking_mode": "pushup",
     },
     {
         "name": "Mountain Climbers",
@@ -92,6 +100,7 @@ SEED_EXERCISES = [
         "target_reps": 40,
         "instructions": "From a high plank, drive knees toward your chest alternately for 40 total reps.",
         "points": 20,
+        "tracking_mode": "mountain_climber",
     },
     {
         "name": "Running",
@@ -102,6 +111,7 @@ SEED_EXERCISES = [
         "target_reps": 0,
         "instructions": "Run continuously for 12 minutes at a steady, conversational pace.",
         "points": 30,
+        "tracking_mode": "timed",
     },
     {
         "name": "Hip Circles",
@@ -112,6 +122,7 @@ SEED_EXERCISES = [
         "target_reps": 20,
         "instructions": "Standing on one leg, draw 10 controlled hip circles each side.",
         "points": 15,
+        "tracking_mode": "manual",
     },
     {
         "name": "Hollow Hold",
@@ -122,6 +133,7 @@ SEED_EXERCISES = [
         "target_reps": 40,
         "instructions": "Lie on your back, lift shoulders and legs slightly, and hold for 40 seconds.",
         "points": 20,
+        "tracking_mode": "plank_hold",
     },
     # Advanced
     {
@@ -133,6 +145,7 @@ SEED_EXERCISES = [
         "target_reps": 15,
         "instructions": "Drop to the floor, push up, jump feet in, and explode upward. Complete 15 burpees.",
         "points": 35,
+        "tracking_mode": "burpee",
     },
     {
         "name": "Advanced Squats",
@@ -143,6 +156,7 @@ SEED_EXERCISES = [
         "target_reps": 30,
         "instructions": "Perform 30 squats with a 2-second pause at the bottom and full hip extension at the top.",
         "points": 30,
+        "tracking_mode": "squat",
     },
     {
         "name": "Long Cardio Challenge",
@@ -153,6 +167,7 @@ SEED_EXERCISES = [
         "target_reps": 0,
         "instructions": "Run, jog, or brisk-walk continuously for 20 minutes without stopping.",
         "points": 40,
+        "tracking_mode": "timed",
     },
     {
         "name": "Pike Push-ups",
@@ -163,6 +178,7 @@ SEED_EXERCISES = [
         "target_reps": 12,
         "instructions": "From a pike position, bend elbows to lower your head, then press up for 12 reps.",
         "points": 30,
+        "tracking_mode": "pushup",
     },
     {
         "name": "V-ups",
@@ -173,6 +189,7 @@ SEED_EXERCISES = [
         "target_reps": 20,
         "instructions": "Lie flat, then lift arms and legs to meet above your hips. Complete 20 controlled V-ups.",
         "points": 25,
+        "tracking_mode": "manual",
     },
     {
         "name": "World's Greatest Stretch Flow",
@@ -183,5 +200,6 @@ SEED_EXERCISES = [
         "target_reps": 0,
         "instructions": "Flow through lunges with rotation for 8 minutes, switching sides smoothly.",
         "points": 25,
+        "tracking_mode": "timed",
     },
 ]
