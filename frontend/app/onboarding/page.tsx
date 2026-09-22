@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,6 +25,7 @@ import {
   TimeWindow,
   WINDOW_OPTIONS,
   createPlanFromGenerated,
+  getStoredPlan,
   goalLabel,
   hasCompletedOnboarding,
   saveFitnessPlan,
@@ -34,30 +35,48 @@ import { getStoredToken, movegridApi } from '../../lib/api'
 const STEPS = ['Level', 'Goal', 'Duration', 'When', 'Focus', 'Your plan'] as const
 const PLAN_STEP = STEPS.length - 1
 
+const DEFAULT_ANSWERS: OnboardingAnswers = {
+  fitnessLevel: 'Beginner',
+  goal: 'active',
+  dailyMinutes: 30,
+  preferredWindows: ['Morning', 'Evening'],
+  focusAreas: ['Walking', 'Strength'],
+}
+
 function toggleItem<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
 }
 
-export default function OnboardingPage() {
+function answersFromStoredPlan(): OnboardingAnswers {
+  const plan = getStoredPlan()
+  if (!plan) return DEFAULT_ANSWERS
+  return {
+    fitnessLevel: plan.fitnessLevel,
+    goal: plan.goal,
+    dailyMinutes: plan.dailyMinutes,
+    preferredWindows: plan.preferredWindows.length ? plan.preferredWindows : DEFAULT_ANSWERS.preferredWindows,
+    focusAreas: plan.focusAreas.length ? plan.focusAreas : DEFAULT_ANSWERS.focusAreas,
+  }
+}
+
+function OnboardingPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEdit = searchParams.get('edit') === '1' || searchParams.get('retake') === '1'
   const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState<OnboardingAnswers>({
-    fitnessLevel: 'Beginner',
-    goal: 'active',
-    dailyMinutes: 30,
-    preferredWindows: ['Morning', 'Evening'],
-    focusAreas: ['Walking', 'Strength'],
-  })
+  const [answers, setAnswers] = useState<OnboardingAnswers>(() =>
+    isEdit ? answersFromStoredPlan() : DEFAULT_ANSWERS,
+  )
   const [generatedSchedule, setGeneratedSchedule] = useState<TimetableSlot[] | null>(null)
   const [planSource, setPlanSource] = useState<string>('ai')
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (hasCompletedOnboarding()) {
+    if (!isEdit && hasCompletedOnboarding()) {
       router.replace('/')
     }
-  }, [router])
+  }, [router, isEdit])
 
   const generatePlan = useCallback(async () => {
     setGenerating(true)
@@ -108,19 +127,29 @@ export default function OnboardingPage() {
       source: planSource,
     })
     saveFitnessPlan(plan)
-    router.replace('/')
+    router.replace(isEdit ? '/profile' : '/')
   }
 
   return (
     <div className="app-shell onboarding-shell">
       <main className="onboarding-main">
         <div className="onboarding-card">
-          <p className="eyebrow">MOVEGRID SETUP · ONE TIME</p>
+          <p className="eyebrow">{isEdit ? 'MOVEGRID SETUP · RE-CUSTOMIZE' : 'MOVEGRID SETUP · ONE TIME'}</p>
           <h1>
-            Build your <span>daily timetable</span>
+            {isEdit ? (
+              <>
+                Update your <span>daily timetable</span>
+              </>
+            ) : (
+              <>
+                Build your <span>daily timetable</span>
+              </>
+            )}
           </h1>
           <p className="subhead">
-            Answer five questions once. Our AI coach designs a schedule from your goals. Customize later in Assistant.
+            {isEdit
+              ? 'Retake the questionnaire to regenerate a schedule that matches your current goals.'
+              : 'Answer five questions once. Our AI coach designs a schedule from your goals. Customize later in Assistant.'}
           </p>
 
           <div className="onboarding-steps" aria-label="Onboarding progress">
@@ -301,6 +330,10 @@ export default function OnboardingPage() {
               <button type="button" className="outline-button" onClick={() => setStep((s) => s - 1)}>
                 <ArrowLeft size={15} /> Back
               </button>
+            ) : isEdit ? (
+              <button type="button" className="outline-button" onClick={() => router.push('/profile')}>
+                <ArrowLeft size={15} /> Cancel
+              </button>
             ) : (
               <span />
             )}
@@ -320,12 +353,26 @@ export default function OnboardingPage() {
                 onClick={finish}
                 disabled={generating || !generatedSchedule?.length}
               >
-                <Target size={15} /> Start MOVEGRID
+                <Target size={15} /> {isEdit ? 'Save updated plan' : 'Start MOVEGRID'}
               </button>
             )}
           </div>
         </div>
       </main>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="app-shell fitness-loading">
+          <p>Loading…</p>
+        </div>
+      }
+    >
+      <OnboardingPageContent />
+    </Suspense>
   )
 }

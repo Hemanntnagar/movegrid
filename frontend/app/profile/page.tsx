@@ -126,7 +126,7 @@ export default function ProfilePage() {
           <div className="profile-hero-actions">
             {user ? (
               <>
-                <Link href="/onboarding" className="outline-button">
+                <Link href="/onboarding?edit=1" className="outline-button">
                   Update plan <ArrowRight size={14} />
                 </Link>
                 <button type="button" className="outline-button danger" onClick={handleSignOut}>
@@ -259,7 +259,7 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ marginTop: '20px' }}>
-              <Link href="/onboarding" className="outline-button full" style={{ textDecoration: 'none' }}>
+              <Link href="/onboarding?edit=1" className="outline-button full" style={{ textDecoration: 'none' }}>
                 <Sparkles size={15} /> Re-customize Fitness Questionnaire
               </Link>
             </div>

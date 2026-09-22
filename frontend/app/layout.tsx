@@ -1,5 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
 import { OnboardingGate } from '../components/OnboardingGate'
 import { StepCounterProvider } from '../context/StepCounterContext'
 import './globals.css'
@@ -21,9 +22,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="bg-background">
       <body className="antialiased">
-        <OnboardingGate>
-          <StepCounterProvider>{children}</StepCounterProvider>
-        </OnboardingGate>
+        <Suspense
+          fallback={
+            <div className="app-shell fitness-loading">
+              <p>Loading…</p>
+            </div>
+          }
+        >
+          <OnboardingGate>
+            <StepCounterProvider>{children}</StepCounterProvider>
+          </OnboardingGate>
+        </Suspense>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

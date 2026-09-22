@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { getStoredToken } from '../lib/api'
 import { hasCompletedOnboarding } from '../lib/fitnessPlan'
 import { GridCoach } from './GridCoach'
@@ -13,8 +13,11 @@ const ONBOARDING_OPTIONAL = new Set(['/profile'])
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isPublic = AUTH_PUBLIC.has(pathname)
   const [ready, setReady] = useState(isPublic)
+  const isOnboardingEdit =
+    pathname === '/onboarding' && (searchParams.get('edit') === '1' || searchParams.get('retake') === '1')
 
   useEffect(() => {
     if (AUTH_PUBLIC.has(pathname)) {
@@ -39,13 +42,13 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       return
     }
 
-    if (pathname === '/onboarding' && hasCompletedOnboarding()) {
+    if (pathname === '/onboarding' && hasCompletedOnboarding() && !isOnboardingEdit) {
       router.replace('/')
       return
     }
 
     setReady(true)
-  }, [pathname, router])
+  }, [pathname, router, isOnboardingEdit])
 
   if (isPublic) return <>{children}</>
   if (!ready) {
