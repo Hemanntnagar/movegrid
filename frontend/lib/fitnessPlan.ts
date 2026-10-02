@@ -1,4 +1,5 @@
 import { getStoredUserId, userStorageInfix } from './userStorageScope'
+import { resolveTrackingModeFromPlan } from './exerciseTracking'
 
 export type FitnessLevel = 'Beginner' | 'Intermediate' | 'Advanced'
 export type FitnessGoal =
@@ -24,7 +25,7 @@ export type WeeklyPlanDay = {
   day: string
   focus: string
   durationLabel: string
-  exercises: { name: string; prescription: string }[]
+  exercises: { name: string; prescription: string; tracking_mode?: string }[]
   isRest?: boolean
 }
 
@@ -165,7 +166,13 @@ export function createPlanFromGenerated(answers: OnboardingAnswers, generated: A
           category: slot.category as FocusArea,
         })),
     planLayout: isWeekly ? 'weekly' : 'daily',
-    weeklySchedule: generated.weekly_schedule,
+    weeklySchedule: generated.weekly_schedule?.map((day) => ({
+      ...day,
+      exercises: day.exercises.map((exercise) => ({
+        ...exercise,
+        tracking_mode: resolveTrackingModeFromPlan(exercise.name, exercise.prescription),
+      })),
+    })),
     planHeadline: generated.plan_headline,
     planSubtitle: generated.plan_subtitle,
     planSource: source,

@@ -25,6 +25,8 @@ export type PlanExerciseItem = {
   id: string
   name: string
   prescription: string
+  /** Set when the plan is saved; drives pose rep counter mode in the camera. */
+  tracking_mode?: string
 }
 
 export function getTodaysPlanExercises(planView: TodaysPlanView | null): PlanExerciseItem[] {
@@ -35,6 +37,7 @@ export function getTodaysPlanExercises(planView: TodaysPlanView | null): PlanExe
       id: `${planView.day.id}_${index}`,
       name: exercise.name,
       prescription: exercise.prescription,
+      tracking_mode: exercise.tracking_mode,
     }))
   }
   return planView.slots.map((slot) => ({

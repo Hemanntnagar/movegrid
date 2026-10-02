@@ -21,22 +21,121 @@ const REP_COUNTER_MODES: ExerciseTrackingMode[] = [
   'burpee',
 ]
 
+function inferTrackingModeFromName(name: string): ExerciseTrackingMode | null {
+  const n = name.toLowerCase().trim()
+  if (!n) return null
+
+  if (n.includes('push-up') || n.includes('push up') || n.includes('pushup')) return 'pushup'
+  if (n.includes('burpee')) return 'burpee'
+  if (n.includes('jumping jack') || n.includes('jump jack')) return 'jumping_jack'
+  if (n.includes('mountain climber')) return 'mountain_climber'
+  if (n.includes('plank') || n.includes('hollow hold') || n.includes('dead bug')) return 'plank_hold'
+
+  if (
+    n.includes('squat') ||
+    n.includes('leg press') ||
+    n.includes('lunge') ||
+    n.includes('split squat') ||
+    n.includes('step-up') ||
+    n.includes('step up') ||
+    n.includes('deadlift') ||
+    n.includes('rdl') ||
+    n.includes('hip thrust') ||
+    n.includes('glute bridge') ||
+    n.includes('calf raise')
+  ) {
+    return 'squat'
+  }
+
+  if (
+    n.includes('bench') ||
+    n.includes('press') ||
+    n.includes('fly') ||
+    n.includes('dip') ||
+    n.includes('triceps') ||
+    n.includes('tri extension') ||
+    n.includes('skull') ||
+    n.includes('shoulder') ||
+    n.includes('overhead') ||
+    n.includes('ohp') ||
+    n.includes('chest') ||
+    n.includes('push') ||
+    n.includes('row') ||
+    n.includes('pull') ||
+    n.includes('lat') ||
+    n.includes('curl') ||
+    n.includes('chin') ||
+    n.includes('bicep') ||
+    n.includes('extension')
+  ) {
+    return 'pushup'
+  }
+
+  if (
+    n.includes('core') ||
+    n.includes('crunch') ||
+    n.includes('sit-up') ||
+    n.includes('sit up') ||
+    n.includes('situp') ||
+    n.includes('ab ')
+  ) {
+    return 'plank_hold'
+  }
+
+  if (n.includes('walk') || n.includes('run') || n.includes('cardio') || n === 'training') return 'timed'
+
+  if (n.includes('v-up') || n.includes('v up') || n.includes('vup')) return 'plank_hold'
+  if (n.includes('hip circle') || n.includes('mobility') || n.includes('stretch') || n.includes('flow')) {
+    return 'timed'
+  }
+
+  return null
+}
+
+function inferTrackingModeFromText(...parts: (string | undefined)[]): ExerciseTrackingMode | null {
+  for (const part of parts) {
+    if (!part?.trim()) continue
+    const hit = inferTrackingModeFromName(part)
+    if (hit) return hit
+  }
+  return null
+}
+
+export function resolveTrackingModeFromPlan(name: string, prescription = ''): ExerciseTrackingMode {
+  const { target_reps, duration_minutes } = parsePlanPrescription(prescription)
+  return resolveTrackingMode({
+    id: 0,
+    name,
+    description: prescription,
+    category: 'Plan',
+    difficulty: '',
+    duration_minutes,
+    target_reps,
+    instructions: '',
+    points: 0,
+  })
+}
+
 export function resolveTrackingMode(exercise: ApiExercise): ExerciseTrackingMode {
   const fromApi = exercise.tracking_mode?.trim().toLowerCase()
   if (fromApi && fromApi !== 'manual') {
     return fromApi as ExerciseTrackingMode
   }
 
-  const name = exercise.name.toLowerCase()
-  if (name.includes('push-up') || name.includes('push up') || name.includes('pushup')) return 'pushup'
-  if (name.includes('squat')) return 'squat'
-  if (name.includes('lunge')) return 'lunge'
-  if (name.includes('jumping jack')) return 'jumping_jack'
-  if (name.includes('mountain climber')) return 'mountain_climber'
-  if (name.includes('plank') || name.includes('hollow hold')) return 'plank_hold'
-  if (name.includes('burpee')) return 'burpee'
+  const inferred = inferTrackingModeFromText(
+    exercise.name,
+    exercise.description,
+    exercise.instructions,
+  )
+  if (inferred) return inferred
+
   if (exercise.duration_minutes > 0 && exercise.target_reps === 0) return 'timed'
   return 'manual'
+}
+
+/** MediaPipe pose runs for every mode, including catalog `manual` exercises. */
+export function exerciseUsesPoseModel(_mode: ExerciseTrackingMode): boolean {
+  return true
 }
 
 export function usesPoseRepCounter(mode: ExerciseTrackingMode): boolean {
@@ -49,8 +148,9 @@ export function repTargetForScheduledExercise(exercise: ApiExercise): number {
   return 10
 }
 
-export function exerciseSupportsLiveCamera(exercise: ApiExercise): boolean {
-  return resolveTrackingMode(exercise) !== 'manual'
+/** All plan and assignment exercises can use live pose + camera; mode selects rep logic. */
+export function exerciseSupportsLiveCamera(_exercise: ApiExercise): boolean {
+  return true
 }
 
 function stableNumericId(key: string): number {
@@ -89,7 +189,7 @@ export function parsePlanPrescription(prescription: string): {
 
 export function planExerciseToApiExercise(item: PlanExerciseItem): ApiExercise {
   const { target_reps, duration_minutes } = parsePlanPrescription(item.prescription)
-  return {
+  const draft: ApiExercise = {
     id: stableNumericId(item.id),
     name: item.name,
     description: item.prescription,
@@ -99,14 +199,16 @@ export function planExerciseToApiExercise(item: PlanExerciseItem): ApiExercise {
     target_reps,
     instructions: '',
     points: 0,
+    tracking_mode: item.tracking_mode?.trim() || undefined,
   }
+  return { ...draft, tracking_mode: resolveTrackingMode(draft) }
 }
 
 export function liveCameraStartHint(mode: ExerciseTrackingMode): string {
   switch (mode) {
     case 'pushup':
     case 'burpee':
-      return 'Use rear camera, side view — show arms and torso'
+      return 'Use rear camera, side view — show arms and torso (works for presses, rows, and curls)'
     case 'squat':
     case 'lunge':
       return 'Use rear camera, side view — frame hips to ankles'
@@ -118,6 +220,8 @@ export function liveCameraStartHint(mode: ExerciseTrackingMode): string {
       return 'Side view — hold steady; tap +1 or Complete when finished'
     case 'timed':
       return 'Keep moving — tap Complete when your timed set is done'
+    case 'manual':
+      return 'Pose model tracks your form — tap +1 for each rep you complete'
     default:
       return 'Tap Start when you are ready to track form with the camera'
   }

@@ -1,13 +1,14 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Camera, Check, ChevronRight, LoaderCircle, Play, Sparkles, X } from 'lucide-react'
 import type { PlanExerciseItem } from '../lib/todaysPlan'
 import {
-  exerciseSupportsLiveCamera,
+  liveCameraStartHint,
   planExerciseToApiExercise,
   repTargetForScheduledExercise,
+  resolveTrackingMode,
 } from '../lib/exerciseTracking'
 import { useBodyScrollLock } from '../lib/useBodyScrollLock'
 
@@ -36,6 +37,7 @@ export function PlanWorkoutModal({
   onAllComplete,
 }: PlanWorkoutModalProps) {
   const [index, setIndex] = useState(() => Math.max(0, Math.min(initialIndex, exercises.length - 1)))
+  const [cameraSessionActive, setCameraSessionActive] = useState(false)
   const current = exercises[index]
   const doneCount = exercises.filter((ex) => doneIds.has(ex.id)).length
 
@@ -43,8 +45,13 @@ export function PlanWorkoutModal({
     () => (current ? planExerciseToApiExercise(current) : null),
     [current],
   )
-  const showCamera = scheduledExercise ? exerciseSupportsLiveCamera(scheduledExercise) : false
+  const trackingMode = scheduledExercise ? resolveTrackingMode(scheduledExercise) : 'manual'
   const targetReps = scheduledExercise ? repTargetForScheduledExercise(scheduledExercise) : 10
+  const cameraHint = liveCameraStartHint(trackingMode)
+
+  useEffect(() => {
+    setCameraSessionActive(false)
+  }, [current?.id])
 
   useBodyScrollLock(Boolean(current))
 
@@ -77,11 +84,26 @@ export function PlanWorkoutModal({
         <h2>{current.name}</h2>
         <p className="plan-workout-prescription">{current.prescription}</p>
 
-        {showCamera && scheduledExercise && (
-          <div className="plan-workout-camera-section">
-            <div className="modal-kicker plan-workout-camera-kicker">
-              <Camera size={15} /> LIVE POSTURE TRACKING
+        <div className="plan-workout-camera-section">
+          <div className="modal-kicker plan-workout-camera-kicker">
+            <Camera size={15} /> LIVE POSTURE TRACKING
+          </div>
+
+          {!cameraSessionActive && (
+            <div className="plan-workout-camera-start">
+              <p className="plan-workout-camera-start-hint">{cameraHint}</p>
+              <button
+                type="button"
+                className="primary-button full plan-workout-start-camera-btn"
+                onClick={() => setCameraSessionActive(true)}
+              >
+                <Play size={16} fill="currentColor" />
+                Start {current.name}
+              </button>
             </div>
+          )}
+
+          {cameraSessionActive && scheduledExercise && (
             <div className="exercise-runner-box posture-runner-box">
               <PostureCamera
                 key={current.id}
@@ -90,8 +112,8 @@ export function PlanWorkoutModal({
                 targetReps={targetReps}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="day-level-progress">
           <strong>

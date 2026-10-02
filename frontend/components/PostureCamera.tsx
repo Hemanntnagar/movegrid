@@ -108,6 +108,7 @@ export function PostureCamera({
         ? Math.max(10, scheduledExercise.duration_minutes * 10)
         : 15)
   const autoRepCountEnabled = usesPoseRepCounter(trackingMode)
+  const isManualCatalogExercise = trackingMode === 'manual'
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animationFrameId = useRef<number | null>(null)
@@ -417,6 +418,14 @@ export function PostureCamera({
         feedback = `Timed session: finish ${scheduledExerciseRef.current.duration_minutes} min, then tap Complete`
       } else if (mode === 'plank_hold') {
         feedback = `Hold ${exerciseNameRef.current} — use +1 or Complete when done`
+      } else if (mode === 'manual') {
+        if (elbowAngle !== null || kneeAngle !== null) {
+          feedback = `${exerciseNameRef.current}: pose locked — tap +1 per rep (${reps}/${target})`
+          score = 94
+        } else {
+          feedback = `${exerciseNameRef.current}: step back — full body in frame for pose model`
+          score = 85
+        }
       } else {
         feedback = `Tracking ${exerciseNameRef.current} — use +1 for reps (${reps}/${target})`
       }
@@ -655,7 +664,9 @@ export function PostureCamera({
   const showStartScreen = enabled && !cameraStarted && !cameraError
 
   return (
-    <div className={`posture-camera-wrapper${isEnlarged ? ' is-enlarged' : ''}`}>
+    <div
+      className={`posture-camera-wrapper${isEnlarged ? ' is-enlarged' : ''}${isManualCatalogExercise ? ' tracking-manual' : ''}`}
+    >
       {/* Header Bar */}
       <div className="posture-status-header">
         <div className={`rec-live-badge${cameraActive ? '' : ' idle'}`}>
@@ -684,7 +695,11 @@ export function PostureCamera({
         {showStartScreen && (
           <div className="camera-start-overlay">
             <Camera size={36} />
-            <p className="camera-start-title">{repCounterLabel(trackingMode, exerciseName)}</p>
+            {isManualCatalogExercise && (
+              <span className="camera-manual-badge">System exercise · pose model</span>
+            )}
+            <p className="camera-start-title">{exerciseName}</p>
+            <p className="camera-start-subtitle">{repCounterLabel(trackingMode, exerciseName)}</p>
             <p>{cameraStartHint}</p>
             <button
               type="button"

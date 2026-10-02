@@ -301,7 +301,7 @@ function DayLevelModal({
   onClose: () => void
   completingId: number | null
   levelClosed: boolean
-  onStartPlanWorkout: () => void
+  onStartPlanWorkout: (exerciseId?: string) => void
   onCompleteRestDay: () => void
   todaysPlanView: ReturnType<typeof getTodaysPlanView>
   planExercises: PlanExerciseItem[]
@@ -339,7 +339,11 @@ function DayLevelModal({
 
         {!allDone && !levelClosed && !isRestDay && usePlanWorkout && planExercises.length > 0 && (
           <div className="day-level-header-actions">
-            <button type="button" className="primary-button start-level-workout-btn" onClick={onStartPlanWorkout}>
+            <button
+              type="button"
+              className="primary-button start-level-workout-btn"
+              onClick={() => onStartPlanWorkout()}
+            >
               <Play size={16} fill="currentColor" />
               <span>Start workout · {planExercises.length} exercises</span>
             </button>
@@ -366,7 +370,15 @@ function DayLevelModal({
           </div>
         )}
 
-        {todaysPlanView && <TodaysPlanPanel planView={todaysPlanView} />}
+        {todaysPlanView && (
+          <TodaysPlanPanel
+            planView={todaysPlanView}
+            planExercises={planExercises}
+            doneIds={planDoneIds}
+            showExerciseActions={!allDone && !levelClosed && !isRestDay && usePlanWorkout}
+            onStartExercise={(exerciseId) => onStartPlanWorkout(exerciseId)}
+          />
+        )}
 
         {usePlanWorkout && planExercises.length > 0 && (
           <div className="day-level-progress">
@@ -628,11 +640,21 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     }
   }, [today, todayDay, monthKey, load])
 
-  const handleStartPlanWorkout = useCallback(() => {
-    const firstIncomplete = planExercises.findIndex((exercise) => !planDoneIds.has(exercise.id))
-    setPlanWorkoutStartIndex(firstIncomplete >= 0 ? firstIncomplete : 0)
-    setPlanWorkoutOpen(true)
-  }, [planExercises, planDoneIds])
+  const handleStartPlanWorkout = useCallback(
+    (exerciseId?: string) => {
+      let startIndex = 0
+      if (exerciseId) {
+        const idx = planExercises.findIndex((exercise) => exercise.id === exerciseId)
+        if (idx >= 0) startIndex = idx
+      } else {
+        const firstIncomplete = planExercises.findIndex((exercise) => !planDoneIds.has(exercise.id))
+        startIndex = firstIncomplete >= 0 ? firstIncomplete : 0
+      }
+      setPlanWorkoutStartIndex(startIndex)
+      setPlanWorkoutOpen(true)
+    },
+    [planExercises, planDoneIds],
+  )
 
   const handlePlanMarkDone = useCallback((exerciseId: string) => {
     markPlanExerciseDone(exerciseId)

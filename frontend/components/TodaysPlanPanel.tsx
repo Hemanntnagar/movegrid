@@ -1,10 +1,47 @@
-import type { TodaysPlanView } from '../lib/todaysPlan'
+import { Camera, Check } from 'lucide-react'
+import type { PlanExerciseItem, TodaysPlanView } from '../lib/todaysPlan'
 
 type TodaysPlanPanelProps = {
   planView: TodaysPlanView
+  planExercises?: PlanExerciseItem[]
+  doneIds?: Set<string>
+  onStartExercise?: (exerciseId: string) => void
+  showExerciseActions?: boolean
 }
 
-export function TodaysPlanPanel({ planView }: TodaysPlanPanelProps) {
+export function TodaysPlanPanel({
+  planView,
+  planExercises = [],
+  doneIds,
+  onStartExercise,
+  showExerciseActions = false,
+}: TodaysPlanPanelProps) {
+  const exerciseByName = new Map(planExercises.map((ex) => [ex.name, ex]))
+
+  function renderExerciseAction(name: string) {
+    if (!showExerciseActions || !onStartExercise) return null
+    const item = exerciseByName.get(name)
+    if (!item) return null
+    const done = doneIds?.has(item.id)
+    if (done) {
+      return (
+        <span className="plan-exercise-done-badge" aria-label="Completed">
+          <Check size={14} /> Done
+        </span>
+      )
+    }
+    return (
+      <button
+        type="button"
+        className="plan-exercise-start-btn"
+        onClick={() => onStartExercise(item.id)}
+      >
+        <Camera size={14} />
+        Start
+      </button>
+    )
+  }
+
   if (planView.kind === 'weekly') {
     const { day, weekday, fitnessLevel, goalLabel, headline, subtitle } = planView
     return (
@@ -29,7 +66,10 @@ export function TodaysPlanPanel({ planView }: TodaysPlanPanelProps) {
               {day.exercises.map((exercise) => (
                 <li key={`${day.id}_${exercise.name}`}>
                   <span>{exercise.name}</span>
-                  <small>{exercise.prescription}</small>
+                  <div className="todays-plan-exercise-actions">
+                    <small>{exercise.prescription}</small>
+                    {renderExerciseAction(exercise.name)}
+                  </div>
                 </li>
               ))}
             </ol>
@@ -51,9 +91,12 @@ export function TodaysPlanPanel({ planView }: TodaysPlanPanelProps) {
         {planView.slots.map((slot) => (
           <li key={slot.id}>
             <span>{slot.title}</span>
-            <small>
-              {slot.duration} min · {slot.notes || slot.category}
-            </small>
+            <div className="todays-plan-exercise-actions">
+              <small>
+                {slot.duration} min · {slot.notes || slot.category}
+              </small>
+              {renderExerciseAction(slot.title)}
+            </div>
           </li>
         ))}
       </ol>
