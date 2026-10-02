@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { OnboardingGate } from '../components/OnboardingGate'
 import { StepCounterProvider } from '../context/StepCounterContext'
 import './globals.css'
+import './mobile-ui.css'
 
 export const metadata: Metadata = {
   title: 'MOVEGRID — Move & Play',

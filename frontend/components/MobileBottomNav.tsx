@@ -6,17 +6,17 @@ import { Gift, LayoutDashboard, Target, Trophy } from 'lucide-react'
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/', Icon: LayoutDashboard, mobileHidden: true },
-  { label: 'Challenges', href: '/challenges', Icon: Target },
-  { label: 'Competitions', href: '/competitions', Icon: Trophy },
-  { label: 'Rewards', href: '/rewards', Icon: Gift },
+  { label: 'Challenges', href: '/challenges', Icon: Target, shortLabel: 'Quests' },
+  { label: 'Competitions', href: '/competitions', Icon: Trophy, shortLabel: 'Cups' },
+  { label: 'Rewards', href: '/rewards', Icon: Gift, shortLabel: 'Store' },
 ] as const
 
 export function MobileBottomNav() {
   const pathname = usePathname()
 
   return (
-    <footer className="centered-nav-bar">
-      {NAV_ITEMS.map(({ label, href, Icon, mobileHidden }) => {
+    <footer className="centered-nav-bar mobile-tab-bar">
+      {NAV_ITEMS.map(({ label, href, Icon, mobileHidden, shortLabel }) => {
         const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
         return (
           <Link
@@ -26,8 +26,8 @@ export function MobileBottomNav() {
             aria-label={label}
             title={label}
           >
-            <Icon size={18} />
-            <span className="nav-bar-label">{label}</span>
+            <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+            <span className="nav-bar-label">{shortLabel ?? label}</span>
           </Link>
         )
       })}

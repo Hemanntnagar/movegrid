@@ -1,0 +1,404 @@
+/* Clean mobile layout — primary breakpoint 640px */
+
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .app-shell .main-content {
+    padding: 10px 14px calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .dashboard-with-trail {
+    padding-bottom: 0;
+  }
+
+  /* Top bar */
+  .topbar.app-chrome-topbar {
+    height: 52px;
+    padding: 0 12px;
+    border-bottom: 1px solid #e8ecef;
+    box-shadow: none;
+  }
+
+  .chrome-left,
+  .chrome-right {
+    gap: 8px;
+  }
+
+  .chrome-brand .brand > span {
+    display: none;
+  }
+
+  .chrome-brand .brand-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .profile-orb,
+  .hamburger-btn,
+  .exercise-reminder-bell {
+    width: 38px;
+    height: 38px;
+    border-width: 2px;
+    box-shadow: none;
+    border-radius: 12px;
+  }
+
+  .profile-orb {
+    font-size: 11px;
+  }
+
+  .chrome-right .outline-button,
+  .chrome-right .move-chip {
+    display: none !important;
+  }
+
+  .side-panel-item.side-panel-secondary {
+    display: none;
+  }
+
+  .side-panel-head .eyebrow {
+    display: none;
+  }
+
+  .side-panel-head strong {
+    font-size: 15px;
+  }
+
+  /* Page heroes — one line, no fluff */
+  .page-hero {
+    margin-bottom: 10px !important;
+    gap: 8px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .page-hero .cartoon-speech-bubble,
+  .page-hero .subhead,
+  .page-hero .text-button,
+  .page-hero .eyebrow,
+  .page-hero .penguin-mascot-wrap,
+  .penguin-mascot-container {
+    display: none !important;
+  }
+
+  .page-hero h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .page-hero h1 span {
+    text-shadow: none;
+  }
+
+  .trail-welcome {
+    margin-bottom: 8px;
+  }
+
+  .welcome .move-chip {
+    display: none;
+  }
+
+  .section-heading.compact {
+    margin-bottom: 10px;
+  }
+
+  .section-heading.compact .eyebrow,
+  .section-heading.compact h2 {
+    display: none;
+  }
+
+  .section-heading.compact {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .section-heading.compact::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Bottom tab bar */
+  .centered-nav-bar.mobile-tab-bar {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-top: 1px solid #e2e8f0 !important;
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.06) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    justify-content: space-around !important;
+    gap: 4px !important;
+  }
+
+  .centered-nav-bar.mobile-tab-bar a {
+    flex: 1;
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 6px 4px !important;
+    min-width: 0 !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    box-shadow: none !important;
+  }
+
+  .centered-nav-bar.mobile-tab-bar a svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .centered-nav-bar.mobile-tab-bar a.active {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .centered-nav-bar.mobile-tab-bar a:hover {
+    transform: none !important;
+    background: #f8fafc !important;
+  }
+
+  .centered-nav-bar.mobile-tab-bar .nav-bar-label {
+    display: block !important;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .centered-nav-bar.mobile-tab-bar a.nav-home-link {
+    display: none !important;
+  }
+
+  /* Daily step strip (dashboard) */
+  .top-daily-challenge-banner {
+    margin-bottom: 8px;
+  }
+
+  .top-daily-challenge-banner .daily-challenge-notification {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    border-radius: 12px;
+    padding: 8px 10px;
+  }
+
+  .challenge-box-header .notification-title {
+    display: none;
+  }
+
+  .challenge-box-header {
+    justify-content: space-between;
+  }
+
+  .notification-badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 700;
+  }
+
+  .notification-timer-chip {
+    background: #0f172a;
+    color: #fff;
+  }
+
+  .meta-pill.reward {
+    display: none;
+  }
+
+  .challenge-status-chip.success span,
+  .start-challenge-btn span {
+    display: none;
+  }
+
+  .start-challenge-btn {
+    min-width: 36px;
+    padding: 6px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Stat chips */
+  .stats-vertical-stack .compact-stat-card {
+    background: #fff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+  }
+
+  .stats-vertical-stack .compact-stat-card:hover {
+    transform: none;
+    box-shadow: none !important;
+  }
+
+  .mobile-stat-hide {
+    display: none !important;
+  }
+
+  /* Trail map */
+  .trail-map {
+    margin: 8px -14px 0;
+  }
+
+  .trail-map-head {
+    padding: 0 14px;
+    margin-bottom: 0;
+  }
+
+  .trail-map-head h2 {
+    font-size: 1.1rem;
+    text-shadow: none;
+  }
+
+  .trail-map-badge {
+    font-size: 10px;
+    padding: 4px 8px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+
+  .trail-map-scroll {
+    height: min(52vh, 300px);
+  }
+
+  .trail-slide-btn {
+    width: 36px;
+    height: 32px;
+  }
+
+  /* Today plan */
+  .todays-plan-panel {
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
+  }
+
+  .todays-plan-panel-head .eyebrow,
+  .todays-plan-panel-head strong,
+  .todays-plan-subtitle {
+    display: none;
+  }
+
+  .todays-plan-panel-head h3 {
+    font-size: 1rem;
+    margin: 0 0 8px;
+  }
+
+  .todays-plan-day-card {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .todays-plan-exercises li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* Challenges gyro banner — compact */
+  .challenges-daily-banner {
+    border: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+  }
+
+  .daily-banner-sub,
+  .daily-banner-body h2 {
+    display: none;
+  }
+
+  .daily-banner-header {
+    margin-bottom: 4px;
+  }
+
+  .daily-banner-reward {
+    font-size: 12px;
+  }
+
+  .gyro-status-chip {
+    display: none;
+  }
+
+  .daily-banner-actions .primary-button {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  /* Mission cards */
+  .mission-list {
+    gap: 10px;
+  }
+
+  .mission-card {
+    border-radius: 14px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+
+  /* Rewards grid */
+  .rewards-grid {
+    gap: 10px;
+  }
+
+  .reward-store-card {
+    border-radius: 14px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+
+  .rewards-balance-badge {
+    margin-bottom: 10px;
+  }
+
+  /* Toast above tab bar */
+  .toast {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    max-width: calc(100vw - 28px);
+  }
+
+  /* Coach FAB */
+  .grid-coach-fab {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .grid-coach-panel {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Competitions */
+  .competitions-page .welcome h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .competitions-page .text-button {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .centered-nav-bar.mobile-tab-bar .nav-bar-label {
+    display: inline !important;
+  }
+}

@@ -3903,23 +3903,8 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   }
 }
 
-/* Mobile dashboard: compact step banner, horizontal stat chips, icon-only bottom nav */
+/* Mobile dashboard: compact step banner + horizontal stat chips (tab bar → mobile-ui.css) */
 @media (max-width: 640px) {
-  .centered-nav-bar a.nav-home-link {
-    display: none !important;
-  }
-  .centered-nav-bar .nav-bar-label {
-    display: none !important;
-  }
-  .centered-nav-bar a {
-    padding: 8px 11px !important;
-    min-width: 42px;
-    justify-content: center !important;
-  }
-  .centered-nav-bar a:hover {
-    transform: scale(1.05) !important;
-  }
-
   .top-daily-challenge-banner {
     max-width: 100%;
     margin: 0 auto 10px;

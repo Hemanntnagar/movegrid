@@ -233,7 +233,7 @@ export default function RewardsPage() {
               <Zap size={14} fill="currentColor" />
               {user.total_points.toLocaleString()} MOVE
             </div>
-            <button className="outline-button" onClick={logout}>
+            <button type="button" className="outline-button hide-on-mobile" onClick={logout}>
               Log out
             </button>
           </>
@@ -241,9 +241,9 @@ export default function RewardsPage() {
       />
 
       <main className="main-content rewards-page">
-        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="welcome page-hero" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <Link className="text-button" href="/">
+            <Link className="text-button hide-on-mobile" href="/">
               <ArrowLeft size={14} /> Back to dashboard
             </Link>
             <p className="eyebrow">MOVE REWARD STORE</p>

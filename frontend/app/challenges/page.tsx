@@ -397,14 +397,14 @@ export default function ChallengesPage() {
     <div className="app-shell">
       <AppChrome
         rightSlot={
-          <Link href="/" className="outline-button" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Link href="/" className="outline-button hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
             <ArrowLeft size={15} /> Back
           </Link>
         }
       />
 
       <main className="main-content">
-        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="welcome page-hero" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <p className="eyebrow">CHALLENGES</p>
             <h1>Pick your challenge{user ? `, ${user.name.split(' ')[0]}` : ''}.</h1>

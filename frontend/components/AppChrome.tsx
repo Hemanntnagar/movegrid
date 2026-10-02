@@ -32,12 +32,13 @@ const MENU_ITEMS: {
   href?: string
   icon: typeof Users
   tone: string
+  secondary?: boolean
 }[] = [
   { id: 'dashboard', label: 'Dashboard Trail', icon: LayoutDashboard, tone: 'lime', href: '/' },
   { id: 'challenges', label: 'Challenges', icon: Target, tone: 'mint', href: '/challenges' },
-  { id: 'leaderboard', label: 'Leaderboards', icon: Flame, tone: 'orange', href: '/leaderboard' },
+  { id: 'leaderboard', label: 'Leaderboards', icon: Flame, tone: 'orange', href: '/leaderboard', secondary: true },
   { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
-  { id: 'buddies', label: 'Buddies & Nearby', icon: Users, tone: 'lime', href: '/buddies' },
+  { id: 'buddies', label: 'Buddies & Nearby', icon: Users, tone: 'lime', href: '/buddies', secondary: true },
   { id: 'reward-hub', label: 'Reward Store', icon: Gift, tone: 'lime', href: '/rewards' },
 ]
 
@@ -184,7 +185,7 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
               <button
                 key={item.id}
                 type="button"
-                className={`side-panel-item tone-${item.tone}`}
+                className={`side-panel-item tone-${item.tone}${item.secondary ? ' side-panel-secondary' : ''}`}
                 onClick={() => handleSelect(item)}
               >
                 <span className="side-panel-icon">

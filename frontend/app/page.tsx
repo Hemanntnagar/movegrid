@@ -281,7 +281,7 @@ export default function Page() {
           />
         </div>
 
-        <div className="welcome trail-welcome">
+        <div className="welcome trail-welcome page-hero">
           <div>
             <div className="cartoon-speech-bubble">
               <Sparkles size={13} /> POWER UP YOUR DAY! 🚀
@@ -290,7 +290,6 @@ export default function Page() {
             <h1>
               Keep moving, <span className="dashboard-greeting-name">{user ? user.name.split(' ')[0] : 'Mover'}!</span> 💪
             </h1>
-            <p className="subhead">Tap today&apos;s level · finish before the 24-hour IST window ends!</p>
           </div>
           <div className="move-chip">
             <Zap size={15} fill="currentColor" />
@@ -321,14 +320,16 @@ export default function Page() {
                 tone="orange"
                 badgeSymbol="🔥"
               />
-              <StatCard
-                icon={<Footprints size={14} />}
-                label="Steps today"
-                value={steps.toLocaleString()}
-                detail={`${stepPercent}% of goal`}
-                tone="blue"
-                badgeSymbol="👟"
-              />
+              <div className="mobile-stat-hide">
+                <StatCard
+                  icon={<Footprints size={14} />}
+                  label="Steps today"
+                  value={steps.toLocaleString()}
+                  detail={`${stepPercent}% of goal`}
+                  tone="blue"
+                  badgeSymbol="👟"
+                />
+              </div>
               <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                 <StatCard
                   icon={<Trophy size={14} />}

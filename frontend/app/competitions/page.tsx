@@ -29,6 +29,7 @@ import {
   movegridApi,
 } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
+import { MobileBottomNav } from '../../components/MobileBottomNav'
 
 function PenguinMascot({ message = 'Pick a competition or register your company to host one!' }: { message?: string }) {
   return (
@@ -385,7 +386,7 @@ export default function CompetitionsPage() {
               <Zap size={14} fill="currentColor" />
               {user.total_points.toLocaleString()} MOVE
             </div>
-            <button className="outline-button" onClick={logout}>
+            <button type="button" className="outline-button hide-on-mobile" onClick={logout}>
               Log out
             </button>
           </>
@@ -393,9 +394,9 @@ export default function CompetitionsPage() {
       />
 
       <main className="main-content competitions-page">
-        <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="welcome page-hero" style={{ flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <Link className="text-button" href="/">
+            <Link className="text-button hide-on-mobile" href="/">
               <ArrowLeft size={14} /> Back to dashboard
             </Link>
             <p className="eyebrow">MOVEGRID COMPETITIONS</p>
@@ -691,6 +692,8 @@ export default function CompetitionsPage() {
           </div>
         </div>
       )}
+
+      <MobileBottomNav />
     </div>
   )
 }

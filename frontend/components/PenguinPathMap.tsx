@@ -273,7 +273,6 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
     <section className={`trail-map ${compact ? 'is-compact' : ''}`} aria-label={`${label} movement path`}>
       <div className="trail-map-head">
         <div>
-          <p className="eyebrow">MONTHLY PATH · IST</p>
           <h2>
             {label} <span>trail</span>
           </h2>
