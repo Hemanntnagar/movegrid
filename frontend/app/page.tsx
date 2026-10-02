@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import {
-  Bell, CheckCircle2, Flame, Footprints, Gift, LayoutDashboard,
-  Play, Sparkles, Target, Trophy, Zap
+  Bell, CheckCircle2, Flame, Footprints,
+  Play, Sparkles, Trophy, Zap
 } from 'lucide-react'
 import {
   ApiMission,
@@ -17,6 +16,7 @@ import {
   notifyUserUpdated,
 } from '../lib/api'
 import { AppChrome } from '../components/AppChrome'
+import { MobileBottomNav } from '../components/MobileBottomNav'
 import { DashboardPath } from '../components/DashboardPath'
 import { useStepCounter } from '../hooks/useStepCounter'
 import { istDateKey } from '../lib/ist'
@@ -130,7 +130,6 @@ function DailyChallengeBar({
 }
 
 export default function Page() {
-  const pathname = usePathname()
   const [move, setMove] = useState(0)
   const [user, setUser] = useState<ApiUser | null>(null)
   const [fitness, setFitness] = useState<ApiTodayFitness | null>(null)
@@ -361,24 +360,7 @@ export default function Page() {
         </div>
       )}
 
-      <footer className="centered-nav-bar">
-        {(
-          [
-            ['Home', LayoutDashboard, '/'],
-            ['Challenges', Target, '/challenges'],
-            ['Competitions', Trophy, '/competitions'],
-            ['Rewards', Gift, '/rewards'],
-          ] as const
-        ).map(([label, Icon, path]) => {
-          const active = path === '/' ? pathname === '/' : pathname.startsWith(path)
-          return (
-            <Link className={active ? 'active' : ''} href={path} key={label}>
-              <Icon size={18} />
-              <span>{label}</span>
-            </Link>
-          )
-        })}
-      </footer>
+      <MobileBottomNav />
     </div>
   )
 }

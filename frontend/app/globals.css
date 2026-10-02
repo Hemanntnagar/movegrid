@@ -3882,38 +3882,13 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   transform: scale(1.1) translateY(-2px) !important;
 }
 
-/* Enhanced Mobile UI: 4 options take very little space on the LEFT */
 @media (max-width: 860px) {
-  .dashboard-grid-layout {
-    grid-template-columns: 120px 1fr;
-    gap: 10px;
-  }
   .top-daily-challenge-banner {
     max-width: 100%;
-  }
-  .stats-vertical-stack .compact-stat-card {
-    padding: 6px 7px;
-    gap: 5px;
-  }
-  .stats-vertical-stack .compact-stat-card p {
-    font-size: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .stats-vertical-stack .compact-stat-card strong {
-    font-size: 12px;
-  }
-  .stats-vertical-stack .compact-stat-card small {
-    display: none;
   }
 }
 
 @media (max-width: 520px) {
-  .dashboard-grid-layout {
-    grid-template-columns: 105px 1fr;
-    gap: 8px;
-  }
   .stat-badge-tag {
     top: -5px;
     right: -5px;
@@ -3925,6 +3900,152 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
     bottom: 12px !important;
     padding: 5px 10px !important;
     gap: 6px !important;
+  }
+}
+
+/* Mobile dashboard: compact step banner, horizontal stat chips, icon-only bottom nav */
+@media (max-width: 640px) {
+  .centered-nav-bar a.nav-home-link {
+    display: none !important;
+  }
+  .centered-nav-bar .nav-bar-label {
+    display: none !important;
+  }
+  .centered-nav-bar a {
+    padding: 8px 11px !important;
+    min-width: 42px;
+    justify-content: center !important;
+  }
+  .centered-nav-bar a:hover {
+    transform: scale(1.05) !important;
+  }
+
+  .top-daily-challenge-banner {
+    max-width: 100%;
+    margin: 0 auto 10px;
+  }
+  .top-daily-challenge-banner .daily-challenge-notification {
+    padding: 6px 10px;
+    border-radius: 14px;
+    border-width: 2.5px;
+    box-shadow: 0 4px 0 #0f172a, 0 6px 16px rgba(15, 23, 42, 0.12);
+    gap: 5px;
+  }
+  .daily-challenge-notification {
+    gap: 5px;
+  }
+  .challenge-box-header {
+    gap: 4px;
+  }
+  .challenge-box-header .notification-title {
+    font-size: 10px;
+  }
+  .notification-badge {
+    font-size: 7.5px;
+    padding: 2px 5px;
+    gap: 3px;
+  }
+  .notification-badge svg {
+    width: 10px;
+    height: 10px;
+  }
+  .notification-timer-chip {
+    font-size: 8.5px;
+    padding: 2px 6px;
+  }
+  .meta-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  .meta-pill svg {
+    width: 10px;
+    height: 10px;
+  }
+  .challenge-box-body {
+    gap: 6px;
+  }
+  .start-challenge-btn {
+    padding: 5px 10px !important;
+    font-size: 9px !important;
+  }
+  .challenge-status-chip {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+  .notification-progress-track {
+    height: 4px;
+  }
+
+  .challenges-daily-banner {
+    padding: 12px 14px;
+    gap: 10px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+  }
+  .daily-banner-body h2 {
+    font-size: 1rem;
+  }
+  .daily-banner-sub {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .daily-banner-progress .progress-labels {
+    font-size: 11px;
+  }
+
+  .dashboard-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .dashboard-sidebar-left {
+    width: 100%;
+  }
+  .stats-vertical-stack {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: 100%;
+  }
+  .stats-vertical-stack > a,
+  .stats-vertical-stack > .stat-card-link {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .stats-vertical-stack .compact-stat-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 5px 4px;
+    gap: 3px;
+    border-width: 2px;
+    border-radius: 10px;
+    box-shadow: 0 2px 0 #0f172a;
+  }
+  .stats-vertical-stack .compact-stat-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 3px 0 #0f172a;
+  }
+  .stats-vertical-stack .compact-stat-card .stat-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+  }
+  .stats-vertical-stack .compact-stat-card .stat-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+  .stats-vertical-stack .compact-stat-card p {
+    display: none;
+  }
+  .stats-vertical-stack .compact-stat-card strong {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+  .stats-vertical-stack .compact-stat-card small {
+    display: none;
+  }
+  .stats-vertical-stack .stat-badge-tag {
+    display: none;
   }
 }
 

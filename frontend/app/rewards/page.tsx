@@ -2,19 +2,17 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   Bolt,
   Check,
   Gift,
-  LayoutDashboard,
   LoaderCircle,
   Package,
   QrCode,
   ShoppingBag,
   Sparkles,
-  Target,
   Ticket,
   Trophy,
   Utensils,
@@ -31,6 +29,7 @@ import {
   movegridApi,
 } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
+import { MobileBottomNav } from '../../components/MobileBottomNav'
 
 function Brand() {
   return (
@@ -150,7 +149,6 @@ function RewardCard({
 }
 
 export default function RewardsPage() {
-  const pathname = usePathname()
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<ApiUser | null>(null)
@@ -382,24 +380,7 @@ export default function RewardsPage() {
         </div>
       )}
 
-      <footer className="centered-nav-bar">
-        {(
-          [
-            ['Home', LayoutDashboard, '/'],
-            ['Challenges', Target, '/challenges'],
-            ['Competitions', Trophy, '/competitions'],
-            ['Rewards', Gift, '/rewards'],
-          ] as const
-        ).map(([label, Icon, path]) => {
-          const active = path === '/' ? pathname === '/' : pathname.startsWith(path)
-          return (
-            <Link className={active ? 'active' : ''} href={path} key={label}>
-              <Icon size={18} />
-              <span>{label}</span>
-            </Link>
-          )
-        })}
-      </footer>
+      <MobileBottomNav />
     </div>
   )
 }
