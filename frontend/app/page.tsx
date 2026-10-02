@@ -22,14 +22,33 @@ import { useStepCounter } from '../hooks/useStepCounter'
 import { istDateKey } from '../lib/ist'
 import { pickDailyStepMission, rankMovementDetail, streakBadgeDetail } from '../lib/missionUi'
 
-function StatCard({ icon, label, value, detail, tone, badgeSymbol }: { icon: React.ReactNode; label: string; value: string; detail: string; tone: string; badgeSymbol?: string }) {
+function StatCard({
+  icon,
+  label,
+  shortLabel,
+  value,
+  detail,
+  tone,
+  badgeSymbol,
+}: {
+  icon: React.ReactNode
+  label: string
+  shortLabel: string
+  value: string
+  detail: string
+  tone: string
+  badgeSymbol?: string
+}) {
   return (
     <div className={`stat-card compact-stat-card ${tone}`}>
       {badgeSymbol && <span className="stat-badge-tag">{badgeSymbol}</span>}
       <div className="stat-icon">{icon}</div>
-      <div>
-        <p>{label}</p>
-        <strong>{value}</strong>
+      <div className="stat-card-copy">
+        <p>
+          <span className="stat-label-full">{label}</span>
+          <span className="stat-label-short">{shortLabel}</span>
+        </p>
+        <strong title={value}>{value}</strong>
         <small>{detail}</small>
       </div>
     </div>
@@ -299,10 +318,11 @@ export default function Page() {
 
         <div className="dashboard-grid-layout">
           <aside className="dashboard-sidebar-left">
-            <div className="stats-vertical-stack">
+            <div className="stats-vertical-stack dashboard-stat-row">
               <StatCard
                 icon={<Zap size={14} />}
                 label="MOVE points"
+                shortLabel="MOVE"
                 value={`${move.toLocaleString()}`}
                 detail={
                   fitness?.progress.points_earned
@@ -315,25 +335,26 @@ export default function Page() {
               <StatCard
                 icon={<Flame size={14} />}
                 label="Current streak"
-                value={`${user?.streak ?? 0} days`}
+                shortLabel="Streak"
+                value={String(user?.streak ?? 0)}
                 detail={streakBadgeDetail(user?.streak ?? 0)}
                 tone="orange"
                 badgeSymbol="🔥"
               />
-              <div className="mobile-stat-hide">
-                <StatCard
-                  icon={<Footprints size={14} />}
-                  label="Steps today"
-                  value={steps.toLocaleString()}
-                  detail={`${stepPercent}% of goal`}
-                  tone="blue"
-                  badgeSymbol="👟"
-                />
-              </div>
-              <Link href="/standings" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+              <StatCard
+                icon={<Footprints size={14} />}
+                label="Steps today"
+                shortLabel="Steps"
+                value={steps.toLocaleString()}
+                detail={`${stepPercent}%`}
+                tone="blue"
+                badgeSymbol="👟"
+              />
+              <Link className="dashboard-stat-link" href="/standings">
                 <StatCard
                   icon={<Trophy size={14} />}
                   label="Global rank"
+                  shortLabel="Rank"
                   value={rankLabel}
                   detail={rankMovementDetail(rankDelta)}
                   tone="purple"

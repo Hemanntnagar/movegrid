@@ -235,20 +235,121 @@
     border-radius: 8px !important;
   }
 
-  /* Stat chips */
-  .stats-vertical-stack .compact-stat-card {
-    background: #fff !important;
+  /* Four stat buttons — equal width grid */
+  .dashboard-stat-row {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    width: 100%;
+  }
+
+  .dashboard-stat-row > .compact-stat-card,
+  .dashboard-stat-row > .dashboard-stat-link {
+    min-width: 0;
+  }
+
+  .dashboard-stat-link {
+    display: block;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .dashboard-stat-row .compact-stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 56px;
+    padding: 5px 3px 6px;
+    gap: 3px;
+    overflow: hidden;
     border: 1px solid #e2e8f0 !important;
+    border-radius: 10px;
     box-shadow: none !important;
+    background: #fff !important;
+    transform: none !important;
   }
 
-  .stats-vertical-stack .compact-stat-card:hover {
-    transform: none;
+  .dashboard-stat-row .compact-stat-card:hover {
+    transform: none !important;
     box-shadow: none !important;
+    filter: none;
   }
 
-  .mobile-stat-hide {
+  .dashboard-stat-row .compact-stat-card .stat-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    border-width: 1.5px;
+    flex-shrink: 0;
+  }
+
+  .dashboard-stat-row .compact-stat-card .stat-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .dashboard-stat-row .stat-card-copy {
+    min-width: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .dashboard-stat-row .compact-stat-card p {
+    display: block !important;
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .dashboard-stat-row .stat-label-full {
+    display: none;
+  }
+
+  .dashboard-stat-row .stat-label-short {
+    display: block;
+    font-size: 8px;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-stat-row .compact-stat-card strong {
+    display: block;
+    font-size: clamp(9px, 2.65vw, 11px);
+    font-weight: 900;
+    line-height: 1.15;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #0f172a;
+  }
+
+  .dashboard-stat-row .compact-stat-card small {
     display: none !important;
+  }
+
+  .dashboard-stat-row .stat-badge-tag {
+    display: none !important;
+  }
+
+  .dashboard-stat-row .compact-stat-card.lime {
+    background: linear-gradient(180deg, #f7fee7 0%, #ecfccb 100%) !important;
+  }
+
+  .dashboard-stat-row .compact-stat-card.orange {
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%) !important;
+  }
+
+  .dashboard-stat-row .compact-stat-card.blue {
+    background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  }
+
+  .dashboard-stat-row .compact-stat-card.purple {
+    background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%) !important;
   }
 
   /* Trail map */
