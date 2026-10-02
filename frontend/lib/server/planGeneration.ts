@@ -3,6 +3,8 @@
  * Mirrors backend/app/services/plan_generation_service.py.
  */
 
+import { buildWeeklyPlanApiResponse } from '../goalWeeklyPlans'
+
 export type PlanAnswers = {
   fitness_level: string
   goal: string
@@ -14,10 +16,26 @@ export type PlanAnswers = {
 const FOCUS_AREAS = new Set(['Cardio', 'Strength', 'Core', 'Walking', 'Mobility'])
 const TIME_WINDOWS = new Set(['Morning', 'Midday', 'Evening'])
 const GOAL_LABELS: Record<string, string> = {
-  strength: 'Build strength',
-  weight: 'Lose weight / burn calories',
-  active: 'Stay active daily',
-  flexibility: 'Improve flexibility',
+  height: 'Height increase',
+  weight_gain: 'Weight gain',
+  weight_loss: 'Weight loss',
+  strength: 'Strength',
+  daily_fitness: 'Daily fitness',
+}
+const LEGACY_GOAL_IDS: Record<string, string> = {
+  weight: 'weight_loss',
+  active: 'daily_fitness',
+  flexibility: 'daily_fitness',
+}
+const GOAL_PREFIX: Record<string, string> = {
+  height: 'Posture and mobility',
+  weight_gain: 'Muscle-building',
+  weight_loss: 'Fat-burn',
+  strength: 'Strength-building',
+  daily_fitness: 'Energy',
+  weight: 'Fat-burn',
+  active: 'Energy',
+  flexibility: 'Mobility-focused',
 }
 const WINDOW_TIMES: Record<string, string[]> = {
   Morning: ['07:00', '07:30', '08:00'],
@@ -40,8 +58,9 @@ Respond with JSON only, no markdown.`
 function normalizeAnswers(raw: Record<string, unknown>): PlanAnswers {
   const levelRaw = String(raw.fitness_level ?? raw.fitnessLevel ?? 'Beginner').trim()
   const level = ['Beginner', 'Intermediate', 'Advanced'].includes(levelRaw) ? levelRaw : 'Beginner'
-  const goal = String(raw.goal ?? 'active').trim().toLowerCase()
-  const safeGoal = goal in GOAL_LABELS ? goal : 'active'
+  const goal = String(raw.goal ?? 'daily_fitness').trim().toLowerCase()
+  const safeGoal =
+    goal in GOAL_LABELS ? goal : (LEGACY_GOAL_IDS[goal] ?? 'daily_fitness')
   const dailyMinutes = Math.max(15, Math.min(120, Number(raw.daily_minutes ?? raw.dailyMinutes ?? 30) || 30))
   const windowsRaw = (raw.preferred_windows ?? raw.preferredWindows ?? ['Morning', 'Evening']) as string[]
   const windows = windowsRaw.filter((w) => TIME_WINDOWS.has(w))
@@ -130,12 +149,7 @@ function fallbackSchedule(answers: PlanAnswers) {
   const { fitness_level: level, goal, focus_areas: focus, preferred_windows: windows, daily_minutes } = answers
   const slotCount = Math.min(4, Math.max(2, windows.length, focus.length >= 2 ? focus.length : 2))
   const perSlot = Math.max(5, Math.floor(daily_minutes / slotCount))
-  const goalPrefix: Record<string, string> = {
-    strength: 'Strength-building',
-    weight: 'Fat-burn',
-    active: 'Energy',
-    flexibility: 'Mobility-focused',
-  }
+  const goalPrefix = GOAL_PREFIX
   const intensity: Record<string, string> = {
     Beginner: 'gentle',
     Intermediate: 'moderate',
@@ -202,6 +216,8 @@ async function geminiSchedule(answers: PlanAnswers, apiKey: string, model: strin
 
 export async function generateFitnessPlanServer(raw: Record<string, unknown>) {
   const answers = normalizeAnswers(raw)
+  const weekly = buildWeeklyPlanApiResponse(answers)
+  if (weekly) return weekly
   const apiKey = (process.env.GEMINI_API_KEY ?? '').trim()
   const model = (process.env.GEMINI_MODEL ?? 'gemini-3.8-flash').trim()
   const schedule = apiKey

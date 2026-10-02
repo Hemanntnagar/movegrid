@@ -320,6 +320,15 @@ class FitnessPlanSlotRead(BaseModel):
     notes: str
 
 
+class FitnessPlanWeeklyDayRead(BaseModel):
+    id: str
+    day: str
+    focus: str
+    durationLabel: str
+    exercises: list[dict[str, str]] = Field(default_factory=list)
+    isRest: bool | None = None
+
+
 class FitnessPlanGenerateResponse(BaseModel):
     fitness_level: str
     goal: str
@@ -327,6 +336,10 @@ class FitnessPlanGenerateResponse(BaseModel):
     preferred_windows: list[str]
     focus_areas: list[str]
     schedule: list[FitnessPlanSlotRead]
+    weekly_schedule: list[FitnessPlanWeeklyDayRead] | None = None
+    plan_layout: str | None = None
+    plan_headline: str | None = None
+    plan_subtitle: str | None = None
     source: str = "ai"
 
 

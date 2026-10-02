@@ -1,0 +1,5153 @@
+{
+  "height": {
+    "goal": "height",
+    "headline": "Height / posture plan",
+    "subtitle": "Posture, spinal mobility, and stretching \u2014 schedules scale by level and daily time.",
+    "variants": {
+      "beginner_30": {
+        "days": [
+          {
+            "id": "height_monday",
+            "day": "Monday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "2 \u00d7 10"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 20 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_tuesday",
+            "day": "Tuesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "2 \u00d7 10"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "2 \u00d7 10/side"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 20 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Calf stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_wednesday",
+            "day": "Wednesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 20 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "2 \u00d7 10"
+              },
+              {
+                "name": "Posture walking",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_thursday",
+            "day": "Thursday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "2 \u00d7 10/side"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "2 \u00d7 10"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 20 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_friday",
+            "day": "Friday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "2 \u00d7 10/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_saturday",
+            "day": "Saturday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "2 \u00d7 10"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 20 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 30 sec"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "2 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "beginner_60": {
+        "days": [
+          {
+            "id": "height_monday",
+            "day": "Monday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 30 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_tuesday",
+            "day": "Tuesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 30 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Calf stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_wednesday",
+            "day": "Wednesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 30 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Posture walking",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_thursday",
+            "day": "Thursday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 30 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_friday",
+            "day": "Friday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 30 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_saturday",
+            "day": "Saturday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 30 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_30": {
+        "days": [
+          {
+            "id": "height_monday",
+            "day": "Monday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip stretch",
+                "prescription": "3 \u00d7 40 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "height_tuesday",
+            "day": "Tuesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 40 sec/side"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 40 sec/side"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              }
+            ]
+          },
+          {
+            "id": "height_wednesday",
+            "day": "Wednesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Hamstring mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_thursday",
+            "day": "Thursday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 40 sec/side"
+              },
+              {
+                "name": "Calf stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_friday",
+            "day": "Friday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 40 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 40 sec/side"
+              },
+              {
+                "name": "Hip stretch",
+                "prescription": "3 \u00d7 40 sec/side"
+              },
+              {
+                "name": "Posture walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_saturday",
+            "day": "Saturday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_60": {
+        "days": [
+          {
+            "id": "height_monday",
+            "day": "Monday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 45 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_tuesday",
+            "day": "Tuesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 45 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_wednesday",
+            "day": "Wednesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 45 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "12 min"
+              },
+              {
+                "name": "Hamstring mobility",
+                "prescription": "12 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_thursday",
+            "day": "Thursday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 45 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Calf stretch",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_friday",
+            "day": "Friday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 50 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Hip stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Posture walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_saturday",
+            "day": "Saturday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "4 \u00d7 45 sec"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "12 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_30": {
+        "days": [
+          {
+            "id": "height_monday",
+            "day": "Monday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 60 sec"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 45 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Hamstring mobility",
+                "prescription": "8 min"
+              }
+            ]
+          },
+          {
+            "id": "height_tuesday",
+            "day": "Tuesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 60 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Posture work",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_wednesday",
+            "day": "Wednesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 60 sec"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 45 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_thursday",
+            "day": "Thursday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 60 sec"
+              },
+              {
+                "name": "Child's pose",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Hamstring stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Hip-flexor stretch",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Posture work",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_friday",
+            "day": "Friday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 60 sec"
+              },
+              {
+                "name": "Thoracic mobility",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cobra stretch",
+                "prescription": "2 \u00d7 45 sec"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Hamstring mobility",
+                "prescription": "8 min"
+              }
+            ]
+          },
+          {
+            "id": "height_saturday",
+            "day": "Saturday",
+            "focus": "Posture & mobility",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "3 \u00d7 60 sec"
+              },
+              {
+                "name": "Cat-cow",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Thoracic rotation",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "8 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "height_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_60": {
+        "days": [
+          {
+            "id": "height_monday",
+            "day": "Monday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Thoracic mobility",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Dead hang",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Posture and core",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_tuesday",
+            "day": "Tuesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hanging",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hamstring work",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Hip work",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Posture work",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_wednesday",
+            "day": "Wednesday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Spine mobility",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Hanging",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_thursday",
+            "day": "Thursday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Thoracic work",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Hanging",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hamstring work",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Posture work",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_friday",
+            "day": "Friday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hanging",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hip mobility",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Spine mobility",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_saturday",
+            "day": "Saturday",
+            "focus": "Posture & mobility",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Hanging",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Posture work",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "height_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      }
+    }
+  },
+  "weight_gain": {
+    "goal": "weight_gain",
+    "headline": "Weight gain / muscle gain plan",
+    "subtitle": "Build muscle and strength with structured full-body and split emphasis days.",
+    "variants": {
+      "beginner_30": {
+        "days": [
+          {
+            "id": "weight_gain_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "2 \u00d7 30 sec"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Reverse lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "2 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "2 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Plank",
+                "prescription": "2 \u00d7 30 sec"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "2 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "2 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "beginner_60": {
+        "days": [
+          {
+            "id": "weight_gain_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 40 sec"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Reverse lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Goblet squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "4 \u00d7 12"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Bulgarian split squat",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_30": {
+        "days": [
+          {
+            "id": "weight_gain_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Bench press or push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 40 sec"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Pull-up or lat pulldown",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Bulgarian split squat",
+                "prescription": "3 \u00d7 8/leg"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_60": {
+        "days": [
+          {
+            "id": "weight_gain_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Incline press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Pull-up",
+                "prescription": "4 \u00d7 6\u20138"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Lat pulldown",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_thursday",
+            "day": "Thursday",
+            "focus": "Recovery",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Easy walk",
+                "prescription": "30 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Core",
+                "prescription": "3 sets"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Bulgarian split squat",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 15"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_30": {
+        "days": [
+          {
+            "id": "weight_gain_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Pull-up",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Hip thrust",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Bulgarian split squat",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_60": {
+        "days": [
+          {
+            "id": "weight_gain_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Incline press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Core",
+                "prescription": "3 sets"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Pull-up",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Lat pulldown",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Biceps curl",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Core",
+                "prescription": "3 sets"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_thursday",
+            "day": "Thursday",
+            "focus": "Rest / recovery",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Easy walk",
+                "prescription": "30 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Triceps extension",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Core",
+                "prescription": "3 sets"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Bulgarian split squat",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Calf raise",
+                "prescription": "3 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "weight_gain_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      }
+    }
+  },
+  "weight_loss": {
+    "goal": "weight_loss",
+    "headline": "Weight loss / fat loss plan",
+    "subtitle": "Strength circuits plus brisk cardio to increase calorie burn while keeping muscle.",
+    "variants": {
+      "beginner_30": {
+        "days": [
+          {
+            "id": "weight_loss_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cycling or brisk walking",
+                "prescription": "25 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "beginner_60": {
+        "days": [
+          {
+            "id": "weight_loss_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Brisk walking or cycling",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 15"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cycling or walking",
+                "prescription": "45 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_30": {
+        "days": [
+          {
+            "id": "weight_loss_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Jog or cycle",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Brisk cardio",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "25 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_60": {
+        "days": [
+          {
+            "id": "weight_loss_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Brisk walk",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Jog or cycle",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 15"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Brisk cardio",
+                "prescription": "45 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "4 \u00d7 10/leg"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_30": {
+        "days": [
+          {
+            "id": "weight_loss_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Jogging or cycling",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_60": {
+        "days": [
+          {
+            "id": "weight_loss_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "45 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Moderate cardio",
+                "prescription": "45 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "weight_loss_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      }
+    }
+  },
+  "strength": {
+    "goal": "strength",
+    "headline": "Strength + core plan",
+    "subtitle": "Full-body strength with dedicated core work \u2014 progress reps before adding load.",
+    "variants": {
+      "beginner_30": {
+        "days": [
+          {
+            "id": "strength_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 30 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "2 \u00d7 20 sec/side"
+              },
+              {
+                "name": "Bird dog",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 12"
+              }
+            ]
+          },
+          {
+            "id": "strength_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Reverse lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 30 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "2 \u00d7 20 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 10/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Bird dog",
+                "prescription": "3 \u00d7 10/side"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "beginner_60": {
+        "days": [
+          {
+            "id": "strength_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Bird dog",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 15"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "20 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Hip thrust",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 12/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Bird dog",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "30 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_30": {
+        "days": [
+          {
+            "id": "strength_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 6"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_wednesday",
+            "day": "Wednesday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          },
+          {
+            "id": "strength_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 12/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 6"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Bird dog",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "15 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_60": {
+        "days": [
+          {
+            "id": "strength_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 5\u20138"
+              },
+              {
+                "name": "Bench press or push-up",
+                "prescription": "4 \u00d7 6\u20138"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 6\u20138"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 6\u20138"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_wednesday",
+            "day": "Wednesday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          },
+          {
+            "id": "strength_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Deadlift",
+                "prescription": "4 \u00d7 4\u20136"
+              },
+              {
+                "name": "Bench press or push-up",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Hanging knee raise",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "strength_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Pull-up",
+                "prescription": "3 \u00d7 6\u20138"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 60 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Core circuit",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "30 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_30": {
+        "days": [
+          {
+            "id": "strength_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 5"
+              },
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 5"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 60 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Deadlift",
+                "prescription": "4 \u00d7 3"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 45 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_wednesday",
+            "day": "Wednesday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          },
+          {
+            "id": "strength_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 5"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 5"
+              },
+              {
+                "name": "Hanging knee raise",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "strength_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Pull-up",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 60 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Dead bug",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Bird dog",
+                "prescription": "3 \u00d7 12/side"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_60": {
+        "days": [
+          {
+            "id": "strength_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "5 \u00d7 3\u20135"
+              },
+              {
+                "name": "Bench press",
+                "prescription": "5 \u00d7 3\u20135"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 60 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Deadlift",
+                "prescription": "5 \u00d7 3"
+              },
+              {
+                "name": "Overhead press",
+                "prescription": "4 \u00d7 5"
+              },
+              {
+                "name": "Pull-up",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 45 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "strength_wednesday",
+            "day": "Wednesday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          },
+          {
+            "id": "strength_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "5 \u00d7 3\u20135"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 6"
+              },
+              {
+                "name": "Bench press",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Hanging knee raise",
+                "prescription": "3 \u00d7 10"
+              }
+            ]
+          },
+          {
+            "id": "strength_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Deadlift",
+                "prescription": "4 \u00d7 3"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 5"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 6"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 60 sec"
+              }
+            ]
+          },
+          {
+            "id": "strength_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Core work",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Easy cardio",
+                "prescription": "30 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "strength_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      }
+    }
+  },
+  "daily_fitness": {
+    "goal": "daily_fitness",
+    "headline": "Daily fitness / general fitness plan",
+    "subtitle": "Balanced strength, cardio, and mobility for everyday energy and health.",
+    "variants": {
+      "beginner_30": {
+        "days": [
+          {
+            "id": "daily_fitness_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "2 \u00d7 30 sec"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Brisk walking",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 12"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "2 \u00d7 20 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Mobility",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Cycling or walking",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Plank",
+                "prescription": "2 \u00d7 30 sec"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "5 min"
+              },
+              {
+                "name": "Easy jog or cycle",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "beginner_60": {
+        "days": [
+          {
+            "id": "daily_fitness_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "15 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Brisk walking",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 15"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "15 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cycling or walking",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "15 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Easy cardio",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_30": {
+        "days": [
+          {
+            "id": "daily_fitness_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Brisk cardio",
+                "prescription": "25 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 30 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 30 sec"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Cycling or jogging",
+                "prescription": "25 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "intermediate_60": {
+        "days": [
+          {
+            "id": "daily_fitness_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "4 \u00d7 10/leg"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Glute bridge",
+                "prescription": "3 \u00d7 15"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Core work",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 40 sec"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "15 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Cardio",
+                "prescription": "45 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "15 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_30": {
+        "days": [
+          {
+            "id": "daily_fitness_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Cardio",
+                "prescription": "25 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Romanian deadlift",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 8/leg"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 45 sec/side"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Cardio",
+                "prescription": "20 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Squat",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "3 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "3 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "30 min",
+            "exercises": [
+              {
+                "name": "Cardio",
+                "prescription": "25 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      },
+      "advanced_60": {
+        "days": [
+          {
+            "id": "daily_fitness_monday",
+            "day": "Monday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_tuesday",
+            "day": "Tuesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_wednesday",
+            "day": "Wednesday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Romanian deadlift",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Shoulder press",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Lunge",
+                "prescription": "3 \u00d7 10/leg"
+              },
+              {
+                "name": "Side plank",
+                "prescription": "3 \u00d7 45 sec/side"
+              },
+              {
+                "name": "Easy walk",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_thursday",
+            "day": "Thursday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "35 min"
+              },
+              {
+                "name": "Core work",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Stretching",
+                "prescription": "5 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_friday",
+            "day": "Friday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Squat",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Row",
+                "prescription": "4 \u00d7 8"
+              },
+              {
+                "name": "Push-up",
+                "prescription": "4 \u00d7 10"
+              },
+              {
+                "name": "Plank",
+                "prescription": "3 \u00d7 45 sec"
+              },
+              {
+                "name": "Cardio",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_saturday",
+            "day": "Saturday",
+            "focus": "Training",
+            "durationLabel": "60 min",
+            "exercises": [
+              {
+                "name": "Warm-up",
+                "prescription": "10 min"
+              },
+              {
+                "name": "Cycling, jogging, or walking",
+                "prescription": "40 min"
+              },
+              {
+                "name": "Mobility",
+                "prescription": "10 min"
+              }
+            ]
+          },
+          {
+            "id": "daily_fitness_sunday",
+            "day": "Sunday",
+            "focus": "Rest",
+            "durationLabel": "Rest",
+            "exercises": [],
+            "isRest": true
+          }
+        ]
+      }
+    }
+  }
+}

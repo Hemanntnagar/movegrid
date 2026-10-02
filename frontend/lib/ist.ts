@@ -38,6 +38,13 @@ export function getIstParts(date: Date = new Date()): IstParts {
   }
 }
 
+export function getIstWeekdayName(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: IST_TIMEZONE,
+    weekday: 'long',
+  }).format(date)
+}
+
 export function istDateKey(date: Date = new Date()): string {
   const { year, month, day } = getIstParts(date)
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`

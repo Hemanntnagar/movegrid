@@ -8,14 +8,31 @@ from typing import Any
 import httpx
 
 from app.core.config import settings
+from app.core.goal_weekly_plans import build_weekly_plan_response
 
 FOCUS_AREAS = {"Cardio", "Strength", "Core", "Walking", "Mobility"}
 TIME_WINDOWS = {"Morning", "Midday", "Evening"}
 GOAL_LABELS = {
-    "strength": "Build strength",
-    "weight": "Lose weight / burn calories",
-    "active": "Stay active daily",
-    "flexibility": "Improve flexibility",
+    "height": "Height increase",
+    "weight_gain": "Weight gain",
+    "weight_loss": "Weight loss",
+    "strength": "Strength",
+    "daily_fitness": "Daily fitness",
+}
+LEGACY_GOAL_IDS = {
+    "weight": "weight_loss",
+    "active": "daily_fitness",
+    "flexibility": "daily_fitness",
+}
+GOAL_PREFIX = {
+    "height": "Posture and mobility",
+    "weight_gain": "Muscle-building",
+    "weight_loss": "Fat-burn",
+    "strength": "Strength-building",
+    "daily_fitness": "Energy",
+    "weight": "Fat-burn",
+    "active": "Energy",
+    "flexibility": "Mobility-focused",
 }
 WINDOW_TIMES = {
     "Morning": ["07:00", "07:30", "08:00"],
@@ -40,9 +57,9 @@ def _normalize_answers(raw: dict[str, Any]) -> dict[str, Any]:
     level = (raw.get("fitness_level") or raw.get("fitnessLevel") or "Beginner").strip().title()
     if level not in {"Beginner", "Intermediate", "Advanced"}:
         level = "Beginner"
-    goal = (raw.get("goal") or "active").strip().lower()
+    goal = (raw.get("goal") or "daily_fitness").strip().lower()
     if goal not in GOAL_LABELS:
-        goal = "active"
+        goal = LEGACY_GOAL_IDS.get(goal, "daily_fitness")
     try:
         daily_minutes = int(raw.get("daily_minutes") or raw.get("dailyMinutes") or 30)
     except (TypeError, ValueError):
@@ -155,12 +172,7 @@ def _fallback_schedule(answers: dict[str, Any]) -> list[dict[str, Any]]:
     slot_count = min(4, max(2, len(windows), len(focus) if len(focus) >= 2 else 2))
     per_slot = max(5, answers["daily_minutes"] // slot_count)
 
-    goal_prefix = {
-        "strength": "Strength-building",
-        "weight": "Fat-burn",
-        "active": "Energy",
-        "flexibility": "Mobility-focused",
-    }[goal]
+    goal_prefix = GOAL_PREFIX.get(goal, "Energy")
 
     slots: list[dict[str, Any]] = []
     for i in range(slot_count):
@@ -229,6 +241,9 @@ async def _gemini_schedule(answers: dict[str, Any]) -> list[dict[str, Any]]:
 
 async def generate_fitness_plan(raw_answers: dict[str, Any]) -> dict[str, Any]:
     answers = _normalize_answers(raw_answers)
+    weekly = build_weekly_plan_response(answers)
+    if weekly:
+        return weekly
     schedule = await _gemini_schedule(answers)
     return {
         "fitness_level": answers["fitness_level"],

@@ -48,6 +48,17 @@ import {
   markDayMissed,
   mergeHistoryIntoProgress,
 } from '../lib/monthProgress'
+import { getStoredPlan } from '../lib/fitnessPlan'
+import {
+  getPlanExerciseDoneIds,
+  isRestDayMarkedComplete,
+  markPlanExerciseDone,
+  markRestDayComplete,
+} from '../lib/planProgress'
+import { getTodaysPlanExercises, getTodaysPlanView, type PlanExerciseItem } from '../lib/todaysPlan'
+import { useBodyScrollLock } from '../lib/useBodyScrollLock'
+import { PlanWorkoutModal } from './PlanWorkoutModal'
+import { TodaysPlanPanel } from './TodaysPlanPanel'
 
 function taskTitle(assignment: ApiDailyAssignment) {
   const exercise = assignment.exercise
@@ -272,27 +283,39 @@ function DayLevelModal({
   today,
   secondsRemaining,
   onClose,
-  onComplete,
   completingId,
-  justCompletedId,
-  onInspect,
   levelClosed,
-  onStartExercise,
+  onStartPlanWorkout,
+  onCompleteRestDay,
+  todaysPlanView,
+  planExercises,
+  planDoneIds,
+  isRestDay,
+  restDayDone,
+  usePlanWorkout,
 }: {
   day: number
   monthLabel: string
   today: ApiTodayFitness
   secondsRemaining: number
   onClose: () => void
-  onComplete: (id: number) => void
   completingId: number | null
-  justCompletedId: number | null
-  onInspect: (assignment: ApiDailyAssignment) => void
   levelClosed: boolean
-  onStartExercise: (assignment: ApiDailyAssignment) => void
+  onStartPlanWorkout: () => void
+  onCompleteRestDay: () => void
+  todaysPlanView: ReturnType<typeof getTodaysPlanView>
+  planExercises: PlanExerciseItem[]
+  planDoneIds: Set<string>
+  isRestDay: boolean
+  restDayDone: boolean
+  usePlanWorkout: boolean
 }) {
-  const allDone = today.progress.total > 0 && today.progress.completed >= today.progress.total
-  const firstAssigned = today.assignments.find((a) => a.status === 'ASSIGNED')
+  const planDoneCount = planExercises.filter((ex) => planDoneIds.has(ex.id)).length
+  const planAllDone = planExercises.length > 0 && planDoneCount >= planExercises.length
+  const legacyAllDone = today.progress.total > 0 && today.progress.completed >= today.progress.total
+  const allDone = usePlanWorkout ? planAllDone || restDayDone : legacyAllDone
+
+  useBodyScrollLock(true)
 
   return (
     <div className="modal-backdrop day-level-backdrop" onClick={onClose}>
@@ -303,25 +326,35 @@ function DayLevelModal({
         <button className="close-button" onClick={onClose} aria-label="Close">
           <X size={18} />
         </button>
+        <div className="day-level-modal-scroll">
         <div className="modal-kicker">
           <Zap size={15} /> LEVEL {day} · {monthLabel.toUpperCase()}
         </div>
-        <h2>{allDone || levelClosed ? 'Level complete!' : `Day ${day} exercises`}</h2>
+        <h2>{allDone || levelClosed ? 'Level complete!' : `Day ${day} workout`}</h2>
         <p>
           {allDone || levelClosed
             ? 'This level is closed. Come back tomorrow for the next date.'
             : `Finish before the 24-hour IST timer ends · ${today.fitness_level}`}
         </p>
 
-        {!allDone && !levelClosed && firstAssigned && (
+        {!allDone && !levelClosed && !isRestDay && usePlanWorkout && planExercises.length > 0 && (
+          <div className="day-level-header-actions">
+            <button type="button" className="primary-button start-level-workout-btn" onClick={onStartPlanWorkout}>
+              <Play size={16} fill="currentColor" />
+              <span>Start workout · {planExercises.length} exercises</span>
+            </button>
+          </div>
+        )}
+
+        {!allDone && !levelClosed && isRestDay && (
           <div className="day-level-header-actions">
             <button
               type="button"
-              className="primary-button start-level-workout-btn"
-              onClick={() => onStartExercise(firstAssigned)}
+              className="outline-button"
+              disabled={Boolean(completingId)}
+              onClick={onCompleteRestDay}
             >
-              <Play size={16} fill="currentColor" />
-              <span>Start Exercise</span>
+              Mark rest day complete
             </button>
           </div>
         )}
@@ -333,68 +366,36 @@ function DayLevelModal({
           </div>
         )}
 
-        <div className="day-level-progress">
-          <strong>
-            {today.progress.completed}/{today.progress.total} done
-          </strong>
-          <div className="fitness-progress-bar">
-            <span style={{ width: `${today.progress.percent}%` }} />
-          </div>
-        </div>
+        {todaysPlanView && <TodaysPlanPanel planView={todaysPlanView} />}
 
-        {(allDone || levelClosed) && (
-          <div className="day-level-closed-banner">
-            <Check size={18} /> Level closed · +{today.progress.points_earned} MOVE
+        {usePlanWorkout && planExercises.length > 0 && (
+          <div className="day-level-progress">
+            <strong>
+              {planDoneCount}/{planExercises.length} done
+            </strong>
+            <div className="fitness-progress-bar">
+              <span style={{ width: `${(planDoneCount / planExercises.length) * 100}%` }} />
+            </div>
           </div>
         )}
 
-        <div className="day-level-list">
-          {today.assignments.map((assignment) => {
-            const done = assignment.status === 'COMPLETED'
-            const expired = assignment.status === 'EXPIRED'
-            return (
-              <article
-                key={assignment.id}
-                className={`day-exercise-row ${done ? 'done' : ''} ${expired ? 'expired' : ''} ${justCompletedId === assignment.id ? 'pop' : ''}`}
-              >
-                <div>
-                  <div className="day-exercise-top">
-                    <span className="pill lime">{assignment.exercise.category}</span>
-                    <span className="move-value">
-                      <Zap size={12} fill="currentColor" /> +{assignment.points}
-                    </span>
-                  </div>
-                  <h3>{taskTitle(assignment)}</h3>
-                  <p>{assignment.exercise.description}</p>
-                </div>
-                <div className="day-exercise-actions">
-                  <button type="button" className="icon-button" onClick={() => onInspect(assignment)} title="View guide">
-                    <Info size={16} />
-                  </button>
-                  {assignment.status === 'ASSIGNED' && !levelClosed && (
-                    <button
-                      type="button"
-                      className="primary-button start-exercise-row-btn"
-                      onClick={() => onStartExercise(assignment)}
-                    >
-                      <Play size={14} fill="currentColor" />
-                      Start Exercise
-                    </button>
-                  )}
-                  {done && (
-                    <span className="day-exercise-status ok">
-                      <Check size={14} /> Done
-                    </span>
-                  )}
-                  {expired && (
-                    <span className="day-exercise-status miss">
-                      <Clock3 size={14} /> Expired
-                    </span>
-                  )}
-                </div>
-              </article>
-            )
-          })}
+        {!usePlanWorkout && (
+          <div className="day-level-progress">
+            <strong>
+              {today.progress.completed}/{today.progress.total} done
+            </strong>
+            <div className="fitness-progress-bar">
+              <span style={{ width: `${today.progress.percent}%` }} />
+            </div>
+          </div>
+        )}
+
+        {(allDone || levelClosed) && (
+          <div className="day-level-closed-banner">
+            <Check size={18} /> Level closed
+            {!usePlanWorkout && today.progress.points_earned > 0 && <> · +{today.progress.points_earned} MOVE</>}
+          </div>
+        )}
         </div>
       </div>
     </div>
@@ -469,12 +470,10 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   )
   const [monthProgress, setMonthProgress] = useState(() => getMonthProgress())
   const [autoCloseArmed, setAutoCloseArmed] = useState(false)
-
-  const handleStartExercise = useCallback((assignment: ApiDailyAssignment) => {
-    setSelectedDay(null)
-    setInspectAssignment(null)
-    setActiveExerciseAssignment(assignment)
-  }, [])
+  const [planProgressTick, setPlanProgressTick] = useState(0)
+  const [planWorkoutOpen, setPlanWorkoutOpen] = useState(false)
+  const [planWorkoutStartIndex, setPlanWorkoutStartIndex] = useState(0)
+  const [syncingPlan, setSyncingPlan] = useState(false)
 
   const istToday = getIstParts()
   const todayDay = istToday.day
@@ -560,8 +559,19 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     return list
   }, [dayCount, monthProgress, todayDay])
 
+  const todaysPlanView = useMemo(() => getTodaysPlanView(getStoredPlan()), [tick, todayDay, planProgressTick])
+  const planExercises = useMemo(() => getTodaysPlanExercises(todaysPlanView), [todaysPlanView])
+  const planDoneIds = useMemo(() => getPlanExerciseDoneIds(), [planProgressTick, todayDay])
+  const isRestDay = todaysPlanView?.kind === 'weekly' && Boolean(todaysPlanView.day.isRest)
+  const usePlanWorkout = Boolean(todaysPlanView) && (planExercises.length > 0 || isRestDay)
+  const planAllDone =
+    planExercises.length > 0 && planExercises.every((exercise) => planDoneIds.has(exercise.id))
+  const restDayDone = isRestDay && isRestDayMarkedComplete()
+
   const todayLevelClosed =
-    Boolean(today && today.progress.total > 0 && today.progress.completed >= today.progress.total) ||
+    (usePlanWorkout && (planAllDone || restDayDone)) ||
+    (!usePlanWorkout &&
+      Boolean(today && today.progress.total > 0 && today.progress.completed >= today.progress.total)) ||
     monthProgress.completedDays.includes(todayDay)
 
   useEffect(() => {
@@ -569,10 +579,14 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
       setAutoCloseArmed(false)
       return
     }
-    if (today.progress.total > 0 && today.progress.completed >= today.progress.total) {
+    if (usePlanWorkout && (planAllDone || restDayDone)) {
+      setAutoCloseArmed(true)
+      return
+    }
+    if (!usePlanWorkout && today.progress.total > 0 && today.progress.completed >= today.progress.total) {
       setAutoCloseArmed(true)
     }
-  }, [today, selectedDay, todayDay])
+  }, [today, selectedDay, todayDay, usePlanWorkout, planAllDone, restDayDone])
 
   useEffect(() => {
     if (!autoCloseArmed || selectedDay !== todayDay) return
@@ -584,6 +598,52 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     }, 1600)
     return () => window.clearTimeout(id)
   }, [autoCloseArmed, selectedDay, todayDay])
+
+  const completeAllTrailAssignments = useCallback(async () => {
+    const token = getStoredToken()
+    if (!token || !today) return
+    setSyncingPlan(true)
+    setError('')
+    try {
+      let totalAwarded = 0
+      for (const assignment of today.assignments) {
+        if (assignment.status !== 'ASSIGNED') continue
+        const result = await movegridApi.completeFitness(token, assignment.id)
+        totalAwarded += result.points_awarded ?? 0
+        notifyUserUpdated({ total_points: result.total_points })
+      }
+      setMonthProgress(markDayCompleted(todayDay, monthKey))
+      await load()
+      if (totalAwarded > 0) {
+        setToast(`Workout complete · +${totalAwarded} MOVE`)
+      } else {
+        setToast('Workout complete · see you tomorrow')
+      }
+      window.setTimeout(() => setToast(''), 2800)
+      setAutoCloseArmed(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save workout progress')
+    } finally {
+      setSyncingPlan(false)
+    }
+  }, [today, todayDay, monthKey, load])
+
+  const handleStartPlanWorkout = useCallback(() => {
+    const firstIncomplete = planExercises.findIndex((exercise) => !planDoneIds.has(exercise.id))
+    setPlanWorkoutStartIndex(firstIncomplete >= 0 ? firstIncomplete : 0)
+    setPlanWorkoutOpen(true)
+  }, [planExercises, planDoneIds])
+
+  const handlePlanMarkDone = useCallback((exerciseId: string) => {
+    markPlanExerciseDone(exerciseId)
+    setPlanProgressTick((value) => value + 1)
+  }, [])
+
+  const handleCompleteRestDay = useCallback(async () => {
+    markRestDayComplete()
+    setPlanProgressTick((value) => value + 1)
+    await completeAllTrailAssignments()
+  }, [completeAllTrailAssignments])
 
   async function handleComplete(
     assignmentId: number,
@@ -614,7 +674,9 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
     const level = levels.find((item) => item.day === day)
     if (!level) return
     if (day === todayDay) {
-      if (secondsRemaining <= 0 && today && today.progress.completed < today.progress.total) {
+      const workoutIncomplete = usePlanWorkout && !(planAllDone || restDayDone)
+      const legacyIncomplete = !usePlanWorkout && today && today.progress.completed < today.progress.total
+      if (secondsRemaining <= 0 && (workoutIncomplete || legacyIncomplete)) {
         setMonthProgress(markDayMissed(todayDay, monthKey))
         setGateDay({ day, reason: 'missed' })
         return
@@ -657,28 +719,50 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
           today={today}
           secondsRemaining={secondsRemaining}
           onClose={() => setSelectedDay(null)}
-          onComplete={handleComplete}
-          completingId={completingId}
-          justCompletedId={justCompletedId}
-          onInspect={setInspectAssignment}
-          levelClosed={todayLevelClosed && today.progress.completed >= today.progress.total}
-          onStartExercise={handleStartExercise}
+          completingId={syncingPlan ? -1 : completingId}
+          levelClosed={todayLevelClosed}
+          onStartPlanWorkout={handleStartPlanWorkout}
+          onCompleteRestDay={() => void handleCompleteRestDay()}
+          todaysPlanView={todaysPlanView}
+          planExercises={planExercises}
+          planDoneIds={planDoneIds}
+          isRestDay={isRestDay}
+          restDayDone={restDayDone}
+          usePlanWorkout={usePlanWorkout}
+        />
+      )}
+
+      {planWorkoutOpen && planExercises.length > 0 && (
+        <PlanWorkoutModal
+          exercises={planExercises}
+          initialIndex={planWorkoutStartIndex}
+          doneIds={planDoneIds}
+          completing={syncingPlan}
+          onClose={() => setPlanWorkoutOpen(false)}
+          onMarkDone={handlePlanMarkDone}
+          onAllComplete={async () => {
+            setPlanWorkoutOpen(false)
+            await completeAllTrailAssignments()
+          }}
         />
       )}
 
       {gateDay && <LockedDayModal day={gateDay.day} reason={gateDay.reason} onClose={() => setGateDay(null)} />}
 
-      {inspectAssignment && (
+      {!usePlanWorkout && inspectAssignment && (
         <ExerciseGuideModal
           assignment={inspectAssignment}
           onClose={() => setInspectAssignment(null)}
           onComplete={handleComplete}
           completing={completingId === inspectAssignment.id}
-          onStartExercise={handleStartExercise}
+          onStartExercise={(assignment) => {
+            setInspectAssignment(null)
+            setActiveExerciseAssignment(assignment)
+          }}
         />
       )}
 
-      {activeExerciseAssignment && (
+      {!usePlanWorkout && activeExerciseAssignment && (
         <ActiveExerciseModal
           assignment={activeExerciseAssignment}
           onClose={() => setActiveExerciseAssignment(null)}

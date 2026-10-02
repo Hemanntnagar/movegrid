@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
-import { getStoredPlan } from '../../lib/fitnessPlan'
+import { getStoredPlan, goalLabel } from '../../lib/fitnessPlan'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -246,11 +246,15 @@ export default function ProfilePage() {
               </div>
               <div className="info-row">
                 <span>Primary Goal</span>
-                <strong>{plan?.goal || 'Build daily movement & habits'}</strong>
+                <strong>{plan ? goalLabel(plan.goal) : 'Build daily movement & habits'}</strong>
               </div>
               <div className="info-row">
                 <span>Scheduled Exercises</span>
-                <strong>{plan?.schedule?.length ?? 2} daily workouts</strong>
+                <strong>
+                  {plan?.planLayout === 'weekly'
+                    ? `${plan.weeklySchedule?.length ?? 7}-day weekly plan`
+                    : `${plan?.schedule?.length ?? 2} daily workouts`}
+                </strong>
               </div>
               <div className="info-row">
                 <span>Reset Window</span>

@@ -227,6 +227,18 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
     const el = scrollerRef.current
     if (!el) return
 
+    const onWheel = (event: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = el
+      const delta = event.deltaY
+      const atTop = scrollTop <= 0
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1
+      if ((delta < 0 && atTop) || (delta > 0 && atBottom)) return
+      el.scrollTop += delta
+      event.preventDefault()
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false })
+
     const onScroll = () => {
       if (skipScrollSync.current || points.length === 0 || height <= 0) return
       const centerY = ((el.scrollTop + el.clientHeight / 2) / el.scrollHeight) * height
@@ -243,7 +255,10 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
     }
 
     el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('scroll', onScroll)
+    }
   }, [points, height])
 
   const canSlideUp = focusDay < dayCount

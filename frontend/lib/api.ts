@@ -277,6 +277,15 @@ export type ApiFitnessPlanSlot = {
   notes: string
 }
 
+export type ApiWeeklyPlanDay = {
+  id: string
+  day: string
+  focus: string
+  durationLabel: string
+  exercises: { name: string; prescription: string }[]
+  isRest?: boolean
+}
+
 export type ApiFitnessPlanGenerateResult = {
   fitness_level: string
   goal: string
@@ -284,6 +293,10 @@ export type ApiFitnessPlanGenerateResult = {
   preferred_windows: string[]
   focus_areas: string[]
   schedule: ApiFitnessPlanSlot[]
+  weekly_schedule?: ApiWeeklyPlanDay[]
+  plan_layout?: 'daily' | 'weekly'
+  plan_headline?: string
+  plan_subtitle?: string
   source: string
 }
 

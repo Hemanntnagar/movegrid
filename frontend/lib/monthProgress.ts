@@ -1,4 +1,5 @@
 import { istMonthKey } from './ist'
+import { userStorageInfix } from './userStorageScope'
 
 const PREFIX = 'movegrid_month_levels_'
 
@@ -11,7 +12,7 @@ export type MonthProgress = {
 }
 
 function storageKey(month = istMonthKey()) {
-  return `${PREFIX}${month}`
+  return `${PREFIX}${userStorageInfix()}${month}`
 }
 
 export function getMonthProgress(month = istMonthKey()): MonthProgress {

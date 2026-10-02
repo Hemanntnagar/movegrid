@@ -13,6 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { AppChrome } from '../../components/AppChrome'
+import { WeeklyPlanSchedule } from '../../components/WeeklyPlanSchedule'
 import {
   FOCUS_OPTIONS,
   FitnessPlan,
@@ -83,6 +84,43 @@ export default function AssistantPage() {
     return (
       <div className="app-shell fitness-loading">
         <p>Loading assistant…</p>
+      </div>
+    )
+  }
+
+  const isWeekly = plan.planLayout === 'weekly' && (plan.weeklySchedule?.length ?? 0) > 0
+
+  if (isWeekly && plan.weeklySchedule) {
+    return (
+      <div className="app-shell">
+        <AppChrome
+          rightSlot={
+            <Link href="/" className="outline-button" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <ArrowLeft size={15} /> Home
+            </Link>
+          }
+        />
+        <main className="main-content">
+          <div className="welcome" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <p className="eyebrow">ASSISTANT</p>
+              <h1>
+                Your <span>weekly schedule</span>
+              </h1>
+              <p className="subhead">
+                {plan.fitnessLevel} · {plan.dailyMinutes} min/day target · no fixed workout times
+              </p>
+            </div>
+          </div>
+          <WeeklyPlanSchedule
+            headline={plan.planHeadline ?? 'Weekly plan'}
+            subtitle={plan.planSubtitle ?? ''}
+            days={plan.weeklySchedule}
+          />
+          <p className="onboarding-note" style={{ marginTop: '1.2rem' }}>
+            <Sparkles size={14} /> Retake onboarding from Profile to switch goals or regenerate this schedule.
+          </p>
+        </main>
       </div>
     )
   }

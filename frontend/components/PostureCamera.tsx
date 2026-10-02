@@ -9,8 +9,8 @@ import {
   Flame,
   Info,
   RefreshCw,
+  Play,
   RotateCcw,
-  Sparkles,
   Trophy,
   Maximize2,
   Minimize2,
@@ -23,6 +23,7 @@ import type { KeyPoint } from '../lib/poseLandmarker'
 import { getPoseLandmarker, landmarksToKeypoints } from '../lib/poseLandmarker'
 import {
   type ExerciseTrackingMode,
+  liveCameraStartHint,
   repCounterLabel,
   resolveTrackingMode,
   usesPoseRepCounter,
@@ -111,6 +112,7 @@ export function PostureCamera({
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animationFrameId = useRef<number | null>(null)
 
+  const [cameraStarted, setCameraStarted] = useState(false)
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraLoading, setCameraLoading] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
@@ -163,7 +165,7 @@ export function PostureCamera({
   }, [])
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !cameraStarted) {
       poseLandmarkerRef.current = null
       setPoseModelReady(false)
       setPoseModelLoading(false)
@@ -193,7 +195,7 @@ export function PostureCamera({
     return () => {
       cancelled = true
     }
-  }, [enabled])
+  }, [enabled, cameraStarted])
 
   useEffect(() => {
     if (!isEnlarged) return
@@ -252,6 +254,8 @@ export function PostureCamera({
         videoRef.current.srcObject = mediaStream
         await videoRef.current.play()
         setCameraActive(true)
+      } else {
+        mediaStream.getTracks().forEach((track) => track.stop())
       }
     } catch (err) {
       console.error('Camera access error:', err)
@@ -275,7 +279,7 @@ export function PostureCamera({
   }, [])
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !cameraStarted) {
       stopCamera()
       setCameraLoading(false)
       setCameraError(null)
@@ -283,7 +287,23 @@ export function PostureCamera({
     }
     startCamera()
     return () => stopCamera()
-  }, [enabled, facingMode, startCamera, stopCamera])
+  }, [enabled, cameraStarted, facingMode, startCamera, stopCamera])
+
+  useEffect(() => {
+    if (!enabled) {
+      setCameraStarted(false)
+    }
+  }, [enabled])
+
+  useEffect(() => {
+    setCameraStarted(false)
+    stopCamera()
+    setRecSeconds(0)
+    setRepsDone(0)
+    setIsGoalReached(false)
+    autoGoalTriggeredRef.current = false
+    resetRepTracking()
+  }, [scheduledExercise.id, assignmentId, resetRepTracking, stopCamera])
 
   const exerciseNameRef = useRef(exerciseName)
   const trackingModeRef = useRef<ExerciseTrackingMode>(trackingMode)
@@ -631,14 +651,18 @@ export function PostureCamera({
   }
 
   const percentProgress = Math.min(100, Math.round((repsDone / (targetReps || 1)) * 100))
+  const cameraStartHint = liveCameraStartHint(trackingMode)
+  const showStartScreen = enabled && !cameraStarted && !cameraError
 
   return (
     <div className={`posture-camera-wrapper${isEnlarged ? ' is-enlarged' : ''}`}>
       {/* Header Bar */}
       <div className="posture-status-header">
-        <div className="rec-live-badge">
-          <span className="rec-dot-pulse" />
-          <span className="rec-text">REC {formatRecTime(recSeconds)}</span>
+        <div className={`rec-live-badge${cameraActive ? '' : ' idle'}`}>
+          {cameraActive ? <span className="rec-dot-pulse" /> : null}
+          <span className="rec-text">
+            {cameraActive ? `REC ${formatRecTime(recSeconds)}` : 'Camera off'}
+          </span>
         </div>
 
         <div className={`posture-accuracy-chip ${isGoalReached ? 'goal' : isPostureCorrect ? 'good' : 'warning'}`}>
@@ -657,7 +681,22 @@ export function PostureCamera({
 
       {/* Main Video Viewport & Canvas Overlay */}
       <div className="posture-video-container">
-        {(cameraLoading || poseModelLoading) && (
+        {showStartScreen && (
+          <div className="camera-start-overlay">
+            <Camera size={36} />
+            <p className="camera-start-title">{repCounterLabel(trackingMode, exerciseName)}</p>
+            <p>{cameraStartHint}</p>
+            <button
+              type="button"
+              className="primary-button camera-start-btn"
+              onClick={() => setCameraStarted(true)}
+            >
+              <Play size={16} fill="currentColor" /> Start camera
+            </button>
+          </div>
+        )}
+
+        {(cameraLoading || poseModelLoading) && cameraStarted && (
           <div className="camera-loading-overlay">
             <RefreshCw size={28} className="spin" />
             <p>
@@ -668,7 +707,7 @@ export function PostureCamera({
           </div>
         )}
 
-        {poseModelError && !cameraError && (
+        {poseModelError && !cameraError && cameraStarted && (
           <div className="camera-error-box">
             <VideoOff size={36} />
             <p>{poseModelError}</p>
@@ -693,6 +732,19 @@ export function PostureCamera({
           </div>
         )}
 
+        {cameraStarted && !cameraError && (
+          <>
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              autoPlay
+              className="posture-video-feed"
+            />
+            <canvas ref={canvasRef} className="posture-canvas-overlay" />
+          </>
+        )}
+
         {cameraError ? (
           <div className="camera-error-box">
             <VideoOff size={36} />
@@ -705,17 +757,6 @@ export function PostureCamera({
               <RefreshCw size={14} /> Retry Camera
             </button>
           </div>
-        ) : !poseModelError ? (
-          <>
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              autoPlay
-              className="posture-video-feed"
-            />
-            <canvas ref={canvasRef} className="posture-canvas-overlay" />
-          </>
         ) : null}
 
         {/* Goal Completion Celebration Overlay */}
@@ -737,7 +778,7 @@ export function PostureCamera({
           </div>
         )}
 
-        {!isGoalReached && (
+        {!isGoalReached && cameraStarted && (
           <div className={`posture-guidance-banner ${isPostureCorrect ? 'good' : 'warn'}`}>
             <Info size={15} />
             <span>{feedbackMsg}</span>
@@ -745,6 +786,7 @@ export function PostureCamera({
         )}
 
         {/* Camera Control Pills */}
+        {cameraActive && (
         <div className="posture-camera-controls">
           <button
             type="button"
@@ -779,17 +821,21 @@ export function PostureCamera({
             <span>Recalibrate</span>
           </button>
         </div>
+        )}
       </div>
 
       {/* Progress Bar Track */}
+      {cameraStarted && (
       <div className="rep-progress-track">
         <div
           className={`rep-progress-fill ${isGoalReached ? 'complete' : ''}`}
           style={{ width: `${percentProgress}%` }}
         />
       </div>
+      )}
 
       {/* Rep / Movement Counter Bar */}
+      {cameraStarted && (
       <div className="posture-rep-tracker-bar">
         <div className="rep-count-label">
           <span className="rep-number">{repsDone}</span>
@@ -817,6 +863,7 @@ export function PostureCamera({
           )}
         </div>
       </div>
+      )}
     </div>
   )
 }

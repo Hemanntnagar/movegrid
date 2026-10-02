@@ -1907,6 +1907,84 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   font-weight: 700;
   color: #2e6177;
 }
+.weekly-plan-intro h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #163a4a;
+}
+.weekly-plan-intro p {
+  margin: 0;
+  font-size: 13px;
+  color: #567889;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.weekly-plan-timing-note {
+  margin-top: 8px !important;
+  font-size: 12px !important;
+  color: #2e6177 !important;
+}
+.weekly-plan-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.weekly-plan-list > li {
+  border: 1px solid rgba(46, 97, 119, 0.14);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+.weekly-plan-list > li.rest-day {
+  background: rgba(245, 248, 250, 0.9);
+}
+.weekly-plan-day-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.weekly-plan-day-label strong {
+  font-size: 14px;
+  color: #163a4a;
+}
+.weekly-plan-day-label span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #2e6177;
+}
+.weekly-plan-focus {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2e6177;
+}
+.weekly-plan-day-body ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.weekly-plan-day-body li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #163a4a;
+}
+.weekly-plan-day-body li small {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #567889;
+}
 .home-timetable {
   margin: 8px 0 8px;
 }
@@ -2074,6 +2152,7 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   scrollbar-width: none;
   overscroll-behavior: contain;
   mask-image: linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
@@ -2177,6 +2256,7 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   box-shadow: none;
   padding: 0;
   pointer-events: auto;
+  touch-action: pan-y;
   z-index: 3;
 }
 .trail-hotspot:hover,
@@ -2278,13 +2358,31 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
 
 .day-level-backdrop {
   z-index: 30;
-  align-items: end;
+  align-items: center;
+  justify-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+    max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
 }
 .day-level-modal {
   width: min(520px, 100%);
   max-height: min(88vh, 760px);
-  overflow: auto;
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+  min-height: 0;
+}
+.day-level-modal-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 .day-level-modal.level-closed {
   background: #eef8d4;
@@ -2374,6 +2472,146 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
 }
 .day-exercise-status.ok { color: #183d59; }
 .day-exercise-status.miss { color: #8a2f4a; }
+.trail-today-plan-wrap {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.trail-today-plan-wrap .outline-button {
+  align-self: flex-start;
+}
+.todays-plan-panel {
+  border: 1px solid rgba(46, 97, 119, 0.16);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+.todays-plan-panel-head .eyebrow {
+  margin-bottom: 4px;
+}
+.todays-plan-panel-head strong {
+  display: block;
+  font-size: 13px;
+  color: #163a4a;
+  margin-bottom: 6px;
+}
+.todays-plan-panel-head h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: #163a4a;
+}
+.todays-plan-subtitle {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #567889;
+  line-height: 1.4;
+}
+.todays-plan-day-card {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(46, 97, 119, 0.12);
+}
+.todays-plan-day-card.rest {
+  background: rgba(245, 248, 250, 0.6);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.todays-plan-day-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2e6177;
+  margin-bottom: 8px;
+}
+.todays-plan-day-meta em {
+  font-style: normal;
+  font-size: 12px;
+  color: #567889;
+}
+.todays-plan-rest {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #567889;
+}
+.todays-plan-exercises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.todays-plan-exercises li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #163a4a;
+}
+.todays-plan-exercises li small {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #567889;
+  text-align: right;
+}
+.day-level-trail-note {
+  margin: 12px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #567889;
+}
+.plan-workout-modal h2 {
+  margin-bottom: 6px;
+}
+.plan-workout-prescription {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2e6177;
+}
+.plan-workout-queue {
+  list-style: none;
+  margin: 12px 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.plan-workout-queue li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #567889;
+  background: rgba(245, 248, 250, 0.9);
+}
+.plan-workout-queue li.active {
+  background: rgba(46, 97, 119, 0.12);
+  color: #163a4a;
+}
+.plan-workout-queue li[data-done='1'] span {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+.plan-workout-queue li small {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+}
+.plan-workout-actions {
+  margin-top: 4px;
+}
 
 /* Start Exercise Feature Styles */
 .day-level-header-actions {
@@ -2687,6 +2925,7 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   transform: scaleX(-1);
 }
 
+.camera-start-overlay,
 .camera-loading-overlay,
 .camera-error-box {
   position: absolute;
@@ -2703,10 +2942,37 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
 }
 
 .camera-loading-overlay p,
-.camera-error-box p {
+.camera-error-box p,
+.camera-start-overlay p {
   font-size: 13px;
   margin: 0;
   opacity: 0.9;
+}
+
+.camera-start-overlay .camera-start-title {
+  font-size: 1rem;
+  font-weight: 800;
+  opacity: 1;
+}
+
+.camera-start-btn {
+  margin-top: 4px;
+  min-width: 11rem;
+}
+
+.rec-live-badge.idle {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #c9d1d9;
+}
+
+.plan-workout-camera-section {
+  margin: 12px 0 4px;
+}
+
+.plan-workout-camera-kicker {
+  margin-bottom: 8px;
+  justify-content: flex-start;
 }
 
 .posture-mobile-tip {

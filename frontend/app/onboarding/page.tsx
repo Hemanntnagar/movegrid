@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
@@ -12,39 +12,32 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react'
+import { WeeklyPlanSchedule } from '../../components/WeeklyPlanSchedule'
 import {
-  FOCUS_OPTIONS,
   FitnessGoal,
   FitnessLevel,
-  FocusArea,
   GOAL_OPTIONS,
   LEVEL_OPTIONS,
   MINUTE_OPTIONS,
   OnboardingAnswers,
   TimetableSlot,
-  TimeWindow,
-  WINDOW_OPTIONS,
   createPlanFromGenerated,
   getStoredPlan,
   goalLabel,
   hasCompletedOnboarding,
   saveFitnessPlan,
 } from '../../lib/fitnessPlan'
-import { getStoredToken, movegridApi } from '../../lib/api'
+import { ApiFitnessPlanGenerateResult, getStoredToken, movegridApi } from '../../lib/api'
 
-const STEPS = ['Level', 'Goal', 'Duration', 'When', 'Focus', 'Your plan'] as const
+const STEPS = ['Level', 'Goal', 'Duration', 'Your plan'] as const
 const PLAN_STEP = STEPS.length - 1
 
 const DEFAULT_ANSWERS: OnboardingAnswers = {
   fitnessLevel: 'Beginner',
-  goal: 'active',
+  goal: 'daily_fitness',
   dailyMinutes: 30,
   preferredWindows: ['Morning', 'Evening'],
   focusAreas: ['Walking', 'Strength'],
-}
-
-function toggleItem<T>(list: T[], value: T): T[] {
-  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
 }
 
 function answersFromStoredPlan(): OnboardingAnswers {
@@ -67,8 +60,7 @@ function OnboardingPageContent() {
   const [answers, setAnswers] = useState<OnboardingAnswers>(() =>
     isEdit ? answersFromStoredPlan() : DEFAULT_ANSWERS,
   )
-  const [generatedSchedule, setGeneratedSchedule] = useState<TimetableSlot[] | null>(null)
-  const [planSource, setPlanSource] = useState<string>('ai')
+  const [generatedPlan, setGeneratedPlan] = useState<ApiFitnessPlanGenerateResult | null>(null)
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
 
@@ -93,11 +85,10 @@ function OnboardingPageContent() {
         },
         token,
       )
-      setGeneratedSchedule(generated.schedule)
-      setPlanSource(generated.source)
+      setGeneratedPlan(generated)
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : 'Could not generate your plan')
-      setGeneratedSchedule(null)
+      setGeneratedPlan(null)
     } finally {
       setGenerating(false)
     }
@@ -109,22 +100,25 @@ function OnboardingPageContent() {
     }
   }, [step, generatePlan])
 
-  const canContinue = useMemo(() => {
-    if (step === 3) return answers.preferredWindows.length > 0
-    if (step === 4) return answers.focusAreas.length > 0
-    return true
-  }, [answers.focusAreas.length, answers.preferredWindows.length, step])
+  const isWeeklyPlan = generatedPlan?.plan_layout === 'weekly' || (generatedPlan?.weekly_schedule?.length ?? 0) > 0
+  const planReady = Boolean(
+    isWeeklyPlan ? generatedPlan?.weekly_schedule?.length : generatedPlan?.schedule?.length,
+  )
 
   function finish() {
-    if (!generatedSchedule?.length) return
+    if (!generatedPlan || !planReady) return
     const plan = createPlanFromGenerated(answers, {
-      fitness_level: answers.fitnessLevel,
-      goal: answers.goal,
-      daily_minutes: answers.dailyMinutes,
-      preferred_windows: answers.preferredWindows,
-      focus_areas: answers.focusAreas,
-      schedule: generatedSchedule,
-      source: planSource,
+      fitness_level: generatedPlan.fitness_level,
+      goal: generatedPlan.goal,
+      daily_minutes: generatedPlan.daily_minutes,
+      preferred_windows: generatedPlan.preferred_windows,
+      focus_areas: generatedPlan.focus_areas,
+      schedule: generatedPlan.schedule as TimetableSlot[],
+      weekly_schedule: generatedPlan.weekly_schedule,
+      plan_layout: generatedPlan.plan_layout,
+      plan_headline: generatedPlan.plan_headline,
+      plan_subtitle: generatedPlan.plan_subtitle,
+      source: generatedPlan.source,
     })
     saveFitnessPlan(plan)
     router.replace(isEdit ? '/profile' : '/')
@@ -149,7 +143,7 @@ function OnboardingPageContent() {
           <p className="subhead">
             {isEdit
               ? 'Retake the questionnaire to regenerate a schedule that matches your current goals.'
-              : 'Answer five questions once. Our AI coach designs a schedule from your goals. Customize later in Assistant.'}
+              : 'Answer three questions once. Our AI coach designs a schedule from your goals. Customize later in Assistant.'}
           </p>
 
           <div className="onboarding-steps" aria-label="Onboarding progress">
@@ -215,64 +209,12 @@ function OnboardingPageContent() {
             </section>
           )}
 
-          {step === 3 && (
-            <section className="onboarding-section">
-              <h2>4. When do you prefer to move?</h2>
-              <p className="subhead" style={{ marginBottom: '0.9rem' }}>
-                Pick at least one time window.
-              </p>
-              <div className="choice-grid">
-                {WINDOW_OPTIONS.map((window) => (
-                  <button
-                    key={window}
-                    type="button"
-                    className={`choice-chip ${answers.preferredWindows.includes(window) ? 'selected' : ''}`}
-                    onClick={() =>
-                      setAnswers((prev) => ({
-                        ...prev,
-                        preferredWindows: toggleItem(prev.preferredWindows, window as TimeWindow),
-                      }))
-                    }
-                  >
-                    {window}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {step === 4 && (
-            <section className="onboarding-section">
-              <h2>5. Which focus areas matter most?</h2>
-              <p className="subhead" style={{ marginBottom: '0.9rem' }}>
-                Pick at least one. The AI will blend these into your daily timetable.
-              </p>
-              <div className="choice-grid">
-                {FOCUS_OPTIONS.map((area) => (
-                  <button
-                    key={area}
-                    type="button"
-                    className={`choice-chip ${answers.focusAreas.includes(area) ? 'selected' : ''}`}
-                    onClick={() =>
-                      setAnswers((prev) => ({
-                        ...prev,
-                        focusAreas: toggleItem(prev.focusAreas, area as FocusArea),
-                      }))
-                    }
-                  >
-                    {area}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
           {step === PLAN_STEP && (
             <section className="onboarding-section">
               <div className="timetable-summary">
                 <div>
-                  <p className="eyebrow">YOUR AI PLAN</p>
-                  <h2>Daily timetable</h2>
+                  <p className="eyebrow">YOUR PLAN</p>
+                  <h2>{isWeeklyPlan ? 'Weekly schedule' : 'Daily timetable'}</h2>
                   <p className="subhead">
                     {answers.fitnessLevel} · {goalLabel(answers.goal)} · {answers.dailyMinutes} min/day
                   </p>
@@ -292,10 +234,26 @@ function OnboardingPageContent() {
                 </p>
               )}
 
-              {!generating && generatedSchedule && generatedSchedule.length > 0 && (
+              {!generating && planReady && isWeeklyPlan && generatedPlan?.weekly_schedule && (
+                <>
+                  <WeeklyPlanSchedule
+                    headline={generatedPlan.plan_headline ?? goalLabel(answers.goal)}
+                    subtitle={generatedPlan.plan_subtitle ?? ''}
+                    days={generatedPlan.weekly_schedule}
+                  />
+                  <p className="onboarding-note">
+                    <Sparkles size={14} /> Goal-based weekly schedule — no fixed times. Review anytime in Assistant.
+                  </p>
+                  <button type="button" className="outline-button" onClick={() => void generatePlan()} disabled={generating}>
+                    Reload schedule
+                  </button>
+                </>
+              )}
+
+              {!generating && planReady && !isWeeklyPlan && generatedPlan?.schedule && (
                 <>
                   <ol className="timetable-list">
-                    {generatedSchedule.map((slot) => (
+                    {generatedPlan.schedule.map((slot) => (
                       <li key={slot.id}>
                         <div className="timetable-time">
                           <Clock3 size={14} />
@@ -313,7 +271,7 @@ function OnboardingPageContent() {
                   </ol>
                   <p className="onboarding-note">
                     <Sparkles size={14} />{' '}
-                    {planSource === 'ai'
+                    {generatedPlan.source === 'ai'
                       ? 'Built by AI from your answers. Customize anytime in Assistant.'
                       : 'Personalized from your answers. Add GEMINI_API_KEY for full AI coaching.'}
                   </p>
@@ -341,7 +299,6 @@ function OnboardingPageContent() {
               <button
                 type="button"
                 className="primary-button"
-                disabled={!canContinue}
                 onClick={() => setStep((s) => s + 1)}
               >
                 Continue <ArrowRight size={15} />
@@ -351,7 +308,7 @@ function OnboardingPageContent() {
                 type="button"
                 className="primary-button"
                 onClick={finish}
-                disabled={generating || !generatedSchedule?.length}
+                disabled={generating || !planReady}
               >
                 <Target size={15} /> {isEdit ? 'Save updated plan' : 'Start MOVEGRID'}
               </button>
