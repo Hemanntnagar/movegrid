@@ -4398,5 +4398,42 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   width: 100%;
   justify-content: center;
 }
+.exercise-reminder-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.exercise-reminder-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #f5f7f4;
+}
+.exercise-reminder-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.exercise-reminder-row-text strong {
+  font-size: 13px;
+  margin: 0;
+}
+.exercise-reminder-row-text span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+.exercise-reminder-row-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+  min-height: 32px;
+}
 
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { getStoredToken } from '../lib/api'
 import { hasCompletedOnboarding } from '../lib/fitnessPlan'
+import { HealthNotificationsProvider } from '../context/HealthNotificationsContext'
 import { GridCoach } from './GridCoach'
 
 const AUTH_PUBLIC = new Set(['/login', '/signup'])
@@ -50,18 +51,20 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     setReady(true)
   }, [pathname, router, isOnboardingEdit])
 
-  if (isPublic) return <>{children}</>
-  if (!ready) {
-    return (
-      <div className="app-shell fitness-loading">
-        <p>Loading…</p>
-      </div>
-    )
-  }
   return (
-    <>
-      {children}
-      <GridCoach />
-    </>
+    <HealthNotificationsProvider>
+      {isPublic ? (
+        children
+      ) : !ready ? (
+        <div className="app-shell fitness-loading">
+          <p>Loading…</p>
+        </div>
+      ) : (
+        <>
+          {children}
+          <GridCoach />
+        </>
+      )}
+    </HealthNotificationsProvider>
   )
 }

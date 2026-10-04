@@ -2,6 +2,7 @@ import { getIstParts, istDateKey } from './ist'
 import { getStoredPlan, type TimetableSlot } from './fitnessPlan'
 
 export const EXERCISE_REMINDERS_ENABLED_KEY = 'movegrid_exercise_notifications'
+export const NOTIFY_EXERCISE_KEY = 'movegrid_notify_exercise'
 
 export function parseScheduleTime(time: string): { hour: number; minute: number } | null {
   const match = time.trim().match(/^(\d{1,2}):(\d{2})$/)
@@ -18,12 +19,20 @@ export function sortedSchedule(slots: TimetableSlot[]): TimetableSlot[] {
 
 export function isExerciseRemindersEnabled(): boolean {
   if (typeof window === 'undefined') return false
-  return localStorage.getItem(EXERCISE_REMINDERS_ENABLED_KEY) === '1'
+  return (
+    localStorage.getItem(NOTIFY_EXERCISE_KEY) === '1' ||
+    localStorage.getItem(EXERCISE_REMINDERS_ENABLED_KEY) === '1'
+  )
 }
 
 export function setExerciseRemindersEnabled(enabled: boolean) {
-  if (enabled) localStorage.setItem(EXERCISE_REMINDERS_ENABLED_KEY, '1')
-  else localStorage.removeItem(EXERCISE_REMINDERS_ENABLED_KEY)
+  if (enabled) {
+    localStorage.setItem(NOTIFY_EXERCISE_KEY, '1')
+    localStorage.setItem(EXERCISE_REMINDERS_ENABLED_KEY, '1')
+  } else {
+    localStorage.removeItem(NOTIFY_EXERCISE_KEY)
+    localStorage.removeItem(EXERCISE_REMINDERS_ENABLED_KEY)
+  }
 }
 
 function notifiedStorageKey(slotId: string, dateKey = istDateKey()): string {
