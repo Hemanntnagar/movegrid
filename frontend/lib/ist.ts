@@ -28,10 +28,27 @@ export function getIstParts(date: Date = new Date()): IstParts {
     if (part.type !== 'literal') map[part.type] = part.value
   }
 
+  const year = Number(map.year)
+  const month = Number(map.month)
+  const day = Number(map.day)
+  // Fallback if Intl parts are missing (rare engine quirks) — still Asia/Kolkata via offset.
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    const istMs = date.getTime() + 5.5 * 60 * 60 * 1000
+    const utc = new Date(istMs)
+    return {
+      year: utc.getUTCFullYear(),
+      month: utc.getUTCMonth() + 1,
+      day: utc.getUTCDate(),
+      hour: utc.getUTCHours(),
+      minute: utc.getUTCMinutes(),
+      second: utc.getUTCSeconds(),
+    }
+  }
+
   return {
-    year: Number(map.year),
-    month: Number(map.month),
-    day: Number(map.day),
+    year,
+    month,
+    day,
     hour: Number(map.hour === '24' ? '0' : map.hour),
     minute: Number(map.minute),
     second: Number(map.second),

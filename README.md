@@ -5,6 +5,8 @@ MOVEGRID is a full-stack movement game for everyone: missions create reasons to 
 ## Repository
 
 - `frontend/` — Next.js 16, React, TypeScript, Tailwind, Lucide, responsive web app.
+- `mobile/` — Expo (React Native) Android-first native client.
+- `packages/api-client/` — Shared TypeScript API client for web and mobile.
 - `backend/` — Python 3.12+, FastAPI, Pydantic, SQLAlchemy 2 async, Alembic, PostgreSQL, JWT.
 
 ## Run locally
@@ -18,6 +20,16 @@ MOVEGRID is a full-stack movement game for everyone: missions create reasons to 
 Create an account from the app’s **Sign up** screen (or register via `POST /api/v1/auth/register`).
 
 The frontend reads `NEXT_PUBLIC_API_URL` (default `http://localhost:8000/api/v1`).
+
+## Mobile (Android)
+
+1. Copy `mobile/.env.example` to `mobile/.env` (emulator default uses `http://10.0.2.2:8000` to reach local uvicorn).
+2. From the repo root: `pnpm install`, then start the backend as above.
+3. Run `pnpm mobile:android` (Android Studio emulator or USB device with Expo Go / dev build).
+
+The app uses `EXPO_PUBLIC_API_URL` and the shared `@movegrid/api-client` package.
+
+**Health Connect (steps):** Requires a **development build** — not Expo Go. After `pnpm install`, run `pnpm mobile:android:dev` (installs Health Connect on the device/emulator, then grant **Steps** read access in-app). Pull-to-refresh on **Today** syncs steps to `POST /daily-fitness/steps`.
 
 ## Daily Personalized Fitness
 

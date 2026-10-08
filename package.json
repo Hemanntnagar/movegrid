@@ -3,7 +3,9 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "workspaces": [
-    "frontend"
+    "frontend",
+    "mobile",
+    "packages/*"
   ],
   "scripts": {
     "dev": "pnpm --dir frontend dev",
@@ -11,6 +13,9 @@
     "start": "pnpm --dir frontend start",
     "frontend:dev": "pnpm --dir frontend dev",
     "frontend:build": "pnpm --dir frontend build",
+    "mobile:dev": "pnpm --dir mobile start",
+    "mobile:android": "pnpm --dir mobile android",
+    "mobile:android:dev": "pnpm --dir mobile android:dev",
     "backend": "cd backend && alembic upgrade head && uvicorn app.main:app --reload"
   },
   "devDependencies": {

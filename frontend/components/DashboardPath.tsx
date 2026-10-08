@@ -487,6 +487,8 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   const [planWorkoutStartIndex, setPlanWorkoutStartIndex] = useState(0)
   const [syncingPlan, setSyncingPlan] = useState(false)
 
+  // Recompute from IST on every tick so midnight unlocks the new calendar day.
+  void tick
   const istToday = getIstParts()
   const todayDay = istToday.day
   const dayCount = daysInIstMonth()
@@ -693,21 +695,38 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   }
 
   function handleSelectDay(day: number) {
+    const liveToday = getIstParts().day
     const level = levels.find((item) => item.day === day)
     if (!level) return
-    if (day === todayDay) {
+
+    // Today’s IST calendar day is always the playable level while its window is open.
+    if (day === liveToday) {
       const workoutIncomplete = usePlanWorkout && !(planAllDone || restDayDone)
       const legacyIncomplete = !usePlanWorkout && today && today.progress.completed < today.progress.total
+      const assignedKey = istDateKeyFromIso(today?.assignments?.[0]?.assigned_at)
+      const staleBatch = Boolean(assignedKey && assignedKey < istDateKey())
+
       if (secondsRemaining <= 0 && (workoutIncomplete || legacyIncomplete)) {
-        setMonthProgress(markDayMissed(todayDay, monthKey))
+        // Yesterday’s 24h batch can still be present right after IST midnight — refresh instead of locking today.
+        if (staleBatch || !today) {
+          void load()
+            .then(() => setSelectedDay(day))
+            .catch(() => setSelectedDay(day))
+          return
+        }
+        setMonthProgress(markDayMissed(liveToday, monthKey))
         setGateDay({ day, reason: 'missed' })
         return
       }
       setSelectedDay(day)
       return
     }
-    if (level.status === 'locked') setGateDay({ day, reason: 'locked' })
-    else if (level.status === 'missed') setGateDay({ day, reason: 'missed' })
+
+    if (day > liveToday) {
+      setGateDay({ day, reason: 'locked' })
+      return
+    }
+    if (level.status === 'missed') setGateDay({ day, reason: 'missed' })
     else if (level.status === 'completed') setGateDay({ day, reason: 'completed' })
     else setGateDay({ day, reason: 'closed' })
   }

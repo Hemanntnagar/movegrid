@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, ChevronUp, Lock } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { daysInIstMonth, getIstParts, monthLabelIst } from '../lib/ist'
 import type { DayLevelStatus } from '../lib/monthProgress'
 
@@ -193,25 +193,65 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
   const [focusDay, setFocusDay] = useState(todayDay)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const skipScrollSync = useRef(false)
+  const initialScrollDone = useRef(false)
 
-  const scrollToDay = (day: number, behavior: ScrollBehavior = 'smooth') => {
+  const scrollToDay = (day: number, behavior: ScrollBehavior = 'smooth'): boolean => {
     const el = scrollerRef.current
     const point = points[Math.max(0, Math.min(day, dayCount) - 1)]
-    if (!el || !point || height <= 0) return
+    if (!el || !point || height <= 0) return false
+    // Canvas aspect-ratio height may not be in scrollHeight on the first paint.
+    if (el.scrollHeight <= el.clientHeight + 8) return false
     const yRatio = point.y / height
     const targetTop = yRatio * el.scrollHeight - el.clientHeight / 2
     skipScrollSync.current = true
     el.scrollTo({ top: Math.max(0, targetTop), behavior })
     window.setTimeout(() => {
       skipScrollSync.current = false
-    }, behavior === 'smooth' ? 450 : 50)
+    }, behavior === 'smooth' ? 450 : 80)
+    return true
   }
 
   useEffect(() => {
+    initialScrollDone.current = false
     setFocusDay(todayDay)
-    scrollToDay(todayDay, 'auto')
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only recenter when today changes
-  }, [todayDay, dayCount])
+    let cancelled = false
+    let frames = 0
+
+    const tryCenterToday = () => {
+      if (cancelled) return
+      const ok = scrollToDay(todayDay, 'auto')
+      if (ok) {
+        setFocusDay(todayDay)
+        initialScrollDone.current = true
+        return
+      }
+      frames += 1
+      if (frames < 45) requestAnimationFrame(tryCenterToday)
+    }
+
+    tryCenterToday()
+
+    const el = scrollerRef.current
+    const canvas = el?.querySelector('.trail-map-canvas')
+    const ro =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            if (cancelled || initialScrollDone.current) return
+            if (scrollToDay(todayDay, 'auto')) {
+              setFocusDay(todayDay)
+              initialScrollDone.current = true
+            }
+          })
+        : null
+    if (el) ro?.observe(el)
+    if (canvas) ro?.observe(canvas)
+
+    return () => {
+      cancelled = true
+      ro?.disconnect()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recenter when IST today / month length changes
+  }, [todayDay, dayCount, height])
 
   useEffect(() => {
     setWaddle(true)
@@ -240,7 +280,9 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
     el.addEventListener('wheel', onWheel, { passive: false })
 
     const onScroll = () => {
-      if (skipScrollSync.current || points.length === 0 || height <= 0) return
+      // Ignore scroll sync until we've landed on today's IST level once.
+      if (!initialScrollDone.current || skipScrollSync.current || points.length === 0 || height <= 0) return
+      if (el.scrollHeight <= el.clientHeight + 8) return
       const centerY = ((el.scrollTop + el.clientHeight / 2) / el.scrollHeight) * height
       let nearest = 1
       let best = Infinity
@@ -344,7 +386,8 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
                 const point = points[index]
                 if (!point) return null
                 const isToday = level.day === todayDay
-                const inWindow = level.day >= windowStart && level.day <= windowEnd
+                const inWindow =
+                  (level.day >= windowStart && level.day <= windowEnd) || isToday
                 return (
                   <g
                     key={level.day}
@@ -390,7 +433,9 @@ export function PenguinPathMap({ levels, todayDay, onSelectDay, compact }: Pengu
               {levels.map((level, index) => {
                 const point = points[index]
                 if (!point) return null
-                const inWindow = level.day >= windowStart && level.day <= windowEnd
+                const isToday = level.day === todayDay
+                const inWindow =
+                  (level.day >= windowStart && level.day <= windowEnd) || isToday
                 return (
                   <button
                     key={`hot-${level.day}`}

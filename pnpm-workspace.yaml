@@ -1,5 +1,7 @@
 packages:
   - frontend
+  - mobile
+  - packages/*
 
 minimumReleaseAgeExclude:
   - '@next/*'

@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Bot, Loader2, MessageCircle, Send, X } from 'lucide-react'
+import { Bot, ChevronDown, Loader2, MessageCircle, Send, Trash2, X } from 'lucide-react'
 import { getStoredToken, movegridApi, type ApiCoachChatContext } from '../lib/api'
 import { getStoredPlan, goalLabel, type FitnessGoal } from '../lib/fitnessPlan'
 
@@ -13,6 +13,7 @@ type ChatMessage = {
 }
 
 const HIDDEN_PATHS = new Set(['/login', '/signup'])
+const LONG_PRESS_MS = 480
 
 function newId() {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
@@ -31,8 +32,12 @@ export function GridCoach() {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [menuMessageId, setMenuMessageId] = useState<string | null>(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const longPressTimer = useRef<number | null>(null)
+  const suppressClick = useRef(false)
 
   const hidden = HIDDEN_PATHS.has(pathname)
 
@@ -59,6 +64,37 @@ export function GridCoach() {
     }
   }, [open])
 
+  useEffect(() => {
+    if (!menuMessageId && !pendingDeleteId) return
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setMenuMessageId(null)
+        setPendingDeleteId(null)
+      }
+    }
+
+    function onPointerDown(e: PointerEvent) {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('.grid-coach-msg-menu') || target?.closest('.grid-coach-delete-sheet')) return
+      setMenuMessageId(null)
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [menuMessageId, pendingDeleteId])
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimer.current != null) {
+      window.clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }, [])
+
   const send = useCallback(async () => {
     const text = input.trim()
     if (!text || sending) return
@@ -67,6 +103,8 @@ export function GridCoach() {
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setSending(true)
+    setMenuMessageId(null)
+    setPendingDeleteId(null)
 
     try {
       const history = messages
@@ -99,6 +137,26 @@ export function GridCoach() {
     void send()
   }
 
+  function openMessageMenu(id: string) {
+    setMenuMessageId(id)
+  }
+
+  function startLongPress(id: string) {
+    clearLongPress()
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTimer.current = null
+      suppressClick.current = true
+      openMessageMenu(id)
+    }, LONG_PRESS_MS)
+  }
+
+  function confirmDelete() {
+    if (!pendingDeleteId) return
+    setMessages((prev) => prev.filter((m) => m.id !== pendingDeleteId))
+    setPendingDeleteId(null)
+    setMenuMessageId(null)
+  }
+
   if (hidden) return null
 
   return (
@@ -115,16 +173,73 @@ export function GridCoach() {
             </button>
           </header>
           <div className="grid-coach-messages" ref={listRef}>
-            {messages.map((msg) => (
-              <div key={msg.id} className={`grid-coach-bubble grid-coach-bubble-${msg.role}`}>
-                {msg.role === 'assistant' && (
-                  <span className="grid-coach-avatar" aria-hidden>
-                    <Bot size={14} />
-                  </span>
-                )}
-                <p>{msg.content}</p>
-              </div>
-            ))}
+            {messages.map((msg) => {
+              const menuOpen = menuMessageId === msg.id
+              return (
+                <div
+                  key={msg.id}
+                  className={`grid-coach-bubble grid-coach-bubble-${msg.role}${menuOpen ? ' grid-coach-bubble-selected' : ''}`}
+                >
+                  {msg.role === 'assistant' && (
+                    <span className="grid-coach-avatar" aria-hidden>
+                      <Bot size={14} />
+                    </span>
+                  )}
+                  <div
+                    className="grid-coach-bubble-body"
+                    onContextMenu={(e) => {
+                      e.preventDefault()
+                      openMessageMenu(msg.id)
+                    }}
+                    onPointerDown={(e) => {
+                      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+                        startLongPress(msg.id)
+                      }
+                    }}
+                    onPointerUp={clearLongPress}
+                    onPointerCancel={clearLongPress}
+                    onPointerLeave={clearLongPress}
+                    onClick={() => {
+                      if (suppressClick.current) {
+                        suppressClick.current = false
+                        return
+                      }
+                      if (menuOpen) setMenuMessageId(null)
+                    }}
+                  >
+                    <p>{msg.content}</p>
+                    <button
+                      type="button"
+                      className="grid-coach-msg-chevron"
+                      aria-label="Message options"
+                      aria-expanded={menuOpen}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setMenuMessageId((cur) => (cur === msg.id ? null : msg.id))
+                      }}
+                    >
+                      <ChevronDown size={14} />
+                    </button>
+                    {menuOpen && (
+                      <div className="grid-coach-msg-menu" role="menu">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setMenuMessageId(null)
+                            setPendingDeleteId(msg.id)
+                          }}
+                        >
+                          <Trash2 size={15} />
+                          Delete message
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
             {sending && (
               <div className="grid-coach-bubble grid-coach-bubble-assistant grid-coach-typing">
                 <Loader2 size={16} className="spin" aria-hidden />
@@ -151,6 +266,28 @@ export function GridCoach() {
               <Send size={16} />
             </button>
           </form>
+
+          {pendingDeleteId && (
+            <div className="grid-coach-delete-overlay" role="presentation">
+              <div
+                className="grid-coach-delete-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="grid-coach-delete-title"
+              >
+                <p id="grid-coach-delete-title">Delete message?</p>
+                <span>This message will be removed from this chat.</span>
+                <div className="grid-coach-delete-actions">
+                  <button type="button" className="grid-coach-delete-cancel" onClick={() => setPendingDeleteId(null)}>
+                    Cancel
+                  </button>
+                  <button type="button" className="grid-coach-delete-confirm" onClick={confirmDelete}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
