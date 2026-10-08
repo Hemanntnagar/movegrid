@@ -101,14 +101,20 @@ def _run_migrations() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    migrations_ok = False
     try:
         _run_migrations()
+        migrations_ok = True
     except Exception:
         logger.exception("Alembic upgrade failed; falling back to create_all only")
-    async with database.engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
-    async with database.SessionLocal() as session:
-        await seed_bootstrap_data(session)
+    try:
+        if not migrations_ok:
+            async with database.engine.begin() as connection:
+                await connection.run_sync(Base.metadata.create_all)
+        async with database.SessionLocal() as session:
+            await seed_bootstrap_data(session)
+    except Exception:
+        logger.exception("Database bootstrap (create_all/seed) failed")
     yield
     await database.engine.dispose()
 
