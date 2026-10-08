@@ -3,18 +3,21 @@
 # Dashboard: New → Blueprint → connect this repo (uses this file at repo root).
 # Or on an existing web service: Root Directory = backend, then match build/start below.
 #
+# Existing service "movegrid" (movegrid-r3po) may use repo root; set PYTHONPATH=backend
+# and keep root requirements.txt so `uvicorn app.main:app` resolves.
+#
 # After deploy, set CORS_ORIGINS to your Vercel production URL, e.g.:
 # ["https://movegrid-one.vercel.app","http://localhost:3000"]
 
 databases:
-  - name: movegrid-db
+  - name: movegrid_db
     plan: free
-    databaseName: movegrid
-    user: movegrid
+    databaseName: movegrid_db_ykdu
+    user: movegrid_db_ykdu_user
 
 services:
   - type: web
-    name: movegrid-api
+    name: movegrid
     runtime: python
     plan: free
     rootDir: backend
@@ -27,7 +30,7 @@ services:
         value: "3.12.11"
       - key: DATABASE_URL
         fromDatabase:
-          name: movegrid-db
+          name: movegrid_db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
