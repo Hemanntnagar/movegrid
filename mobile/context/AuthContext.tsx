@@ -65,17 +65,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { access_token } = await movegridApi.login(email.trim(), password)
-    await storeToken(access_token)
-    const me = await movegridApi.me(access_token)
-    setToken(access_token)
-    setUser(me)
+    const session = await movegridApi.login(email.trim(), password)
+    await storeToken(session.access_token)
+    setToken(session.access_token)
+    setUser(session.user ?? (await movegridApi.me(session.access_token)))
   }, [])
 
   const signUp = useCallback(async (name: string, email: string, password: string) => {
-    await movegridApi.register(name.trim(), email.trim(), password)
-    await signIn(email, password)
-  }, [signIn])
+    const session = await movegridApi.register(name.trim(), email.trim(), password)
+    await storeToken(session.access_token)
+    setToken(session.access_token)
+    setUser(session.user ?? (await movegridApi.me(session.access_token)))
+  }, [])
 
   const signOut = useCallback(async () => {
     await clearToken()

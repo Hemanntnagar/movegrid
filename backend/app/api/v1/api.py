@@ -4,7 +4,13 @@ from sqlalchemy import not_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.demo_accounts import LEGACY_DEMO_EMAIL_SUFFIX
 from app.core.database import get_db
-from app.core.security import create_access_token, decode_subject, hash_password, verify_password
+from app.core.security import (
+    create_access_token,
+    decode_subject,
+    hash_password_async,
+    password_needs_rehash,
+    verify_password_async,
+)
 from app.models.entities import Activity, Challenge, Squad, SquadMember, User, Zone
 from app.schemas.common import (
     ActivityRead,
@@ -74,25 +80,33 @@ async def optional_user(token: str | None = Depends(oauth2_optional), db: AsyncS
         return None
     return await db.get(User, int(subject))
 
-@api_router.post("/auth/register", response_model=UserRead, status_code=201)
+@api_router.post("/auth/register", response_model=Token, status_code=201)
 async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
     if (await db.execute(select(User).where(User.email == payload.email))).scalar_one_or_none():
         raise HTTPException(409, "Email already registered")
     user = User(
         email=payload.email,
         name=payload.name or payload.full_name or "MOVEGRID Mover",
-        password_hash=hash_password(payload.password),
+        password_hash=await hash_password_async(payload.password),
         fitness_level=payload.fitness_level or "Beginner",
         role="member",
     )
-    db.add(user); await db.commit(); await db.refresh(user); return user
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return Token(access_token=create_access_token(str(user.id)), user=UserRead.model_validate(user))
 
 @api_router.post("/auth/login", response_model=Token)
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     user = (await db.execute(select(User).where(User.email == payload.email))).scalar_one_or_none()
-    if not user or not verify_password(payload.password, user.password_hash):
+    if not user or not await verify_password_async(payload.password, user.password_hash):
         raise HTTPException(401, "Invalid email or password")
-    return Token(access_token=create_access_token(str(user.id)))
+    # Upgrade legacy cost-12 (or other) hashes so the next login stays fast.
+    if password_needs_rehash(user.password_hash):
+        user.password_hash = await hash_password_async(payload.password)
+        await db.commit()
+        await db.refresh(user)
+    return Token(access_token=create_access_token(str(user.id)), user=UserRead.model_validate(user))
 
 @api_router.get("/auth/me", response_model=UserRead)
 async def me(user: User = Depends(current_user)): return user

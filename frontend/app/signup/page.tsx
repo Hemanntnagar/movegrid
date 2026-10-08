@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn, UserPlus, Sparkles, Trophy } from 'lucide-react'
-import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
+import { getStoredToken, movegridApi, storeToken } from '../../lib/api'
 import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter } from 'next/navigation'
 
@@ -30,12 +30,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const token = getStoredToken()
-    if (!token) return
-    movegridApi
-      .me(token)
-      .then(() => router.replace(hasCompletedOnboarding() ? '/' : '/onboarding'))
-      .catch(() => clearToken())
+    if (!getStoredToken()) return
+    router.replace(hasCompletedOnboarding() ? '/' : '/onboarding')
   }, [router])
 
   async function onSubmit(event: FormEvent) {
@@ -43,13 +39,8 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
     try {
-      const tokenRes = await movegridApi.register(name, email, password, fitnessLevel)
-      let tokenStr = typeof tokenRes === 'object' && 'access_token' in tokenRes ? (tokenRes as any).access_token : null
-      if (!tokenStr) {
-        const loginRes = await movegridApi.login(email, password)
-        tokenStr = loginRes.access_token
-      }
-      storeToken(tokenStr)
+      const session = await movegridApi.register(name, email, password, fitnessLevel)
+      storeToken(session.access_token)
       router.push(hasCompletedOnboarding() ? '/' : '/onboarding')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed')

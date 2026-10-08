@@ -89,6 +89,7 @@ class ParticipateResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user: UserRead | None = None
 
 class MissionRead(BaseModel):
     id: int

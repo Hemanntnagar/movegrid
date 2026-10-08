@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { FormEvent, Suspense, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn, UserPlus, Sparkles, Trophy } from 'lucide-react'
-import { clearToken, getStoredToken, movegridApi, storeToken } from '../../lib/api'
+import { getStoredToken, movegridApi, storeToken } from '../../lib/api'
 import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -34,12 +34,9 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const token = getStoredToken()
-    if (!token) return
-    movegridApi
-      .me(token)
-      .then(() => router.replace(hasCompletedOnboarding() ? '/' : '/onboarding'))
-      .catch(() => clearToken())
+    // Local token check only — skip /auth/me round-trip before redirect.
+    if (!getStoredToken()) return
+    router.replace(hasCompletedOnboarding() ? '/' : '/onboarding')
   }, [router])
 
   async function onSubmit(event: FormEvent) {
@@ -47,18 +44,11 @@ function LoginContent() {
     setLoading(true)
     setError('')
     try {
-      if (mode === 'signup') {
-        const tokenRes = await movegridApi.register(name, email, password, fitnessLevel)
-        let tokenStr = typeof tokenRes === 'object' && 'access_token' in tokenRes ? (tokenRes as any).access_token : null
-        if (!tokenStr) {
-          const loginRes = await movegridApi.login(email, password)
-          tokenStr = loginRes.access_token
-        }
-        storeToken(tokenStr)
-      } else {
-        const token = await movegridApi.login(email, password)
-        storeToken(token.access_token)
-      }
+      const session =
+        mode === 'signup'
+          ? await movegridApi.register(name, email, password, fitnessLevel)
+          : await movegridApi.login(email, password)
+      storeToken(session.access_token)
       router.push(hasCompletedOnboarding() ? '/' : '/onboarding')
     } catch (err) {
       setError(err instanceof Error ? err.message : `${mode === 'login' ? 'Sign in' : 'Sign up'} failed`)

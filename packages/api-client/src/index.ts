@@ -94,7 +94,7 @@ export type ApiParticipateResult = {
   status: string
   competition: ApiCompetition
 }
-export type ApiToken = { access_token: string; token_type: string }
+export type ApiToken = { access_token: string; token_type: string; user?: ApiUser | null }
 
 export type ApiExercise = {
   id: number
@@ -384,7 +384,7 @@ export function createMovegridApi(baseUrl?: string) {
   return {
     apiUrl: API_URL,
     register: (name: string, email: string, password: string, fitness_level?: string) =>
-      request<ApiUser>('/auth/register', {
+      request<ApiToken>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ name, full_name: name, email, password, fitness_level }),
       }),
