@@ -107,7 +107,10 @@ async def test_reward_detail_and_history_routes(client):
 
     history = await http.get("/api/v1/rewards/history", headers=headers)
     assert history.status_code == 200
-    assert history.json() == []
+    body = history.json()
+    assert body["items"] == []
+    assert body["total"] == 0
+    assert body["has_more"] is False
 
 
 @pytest.mark.asyncio
@@ -134,9 +137,11 @@ async def test_redeem_deducts_move_and_stock_atomically(client):
 
     history = await http.get("/api/v1/rewards/history", headers=headers)
     assert history.status_code == 200
-    assert len(history.json()) == 1
-    assert history.json()[0]["reward"]["title"] == "Canteen Voucher"
-    assert history.json()[0]["status"] == "COMPLETED"
+    body = history.json()
+    assert len(body["items"]) == 1
+    assert body["total"] == 1
+    assert body["items"][0]["reward"]["title"] == "Canteen Voucher"
+    assert body["items"][0]["status"] == "COMPLETED"
 
     async with session_factory() as session:
         row = await session.get(Reward, reward["id"])

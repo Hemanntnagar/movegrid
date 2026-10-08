@@ -11,8 +11,9 @@ from random import Random
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.paging import clamp_limit, clamp_offset, paging_meta
 from app.models.entities import DailyAssignment, Exercise, User
 from app.services.progress_service import record_activity_progress
 
@@ -314,10 +315,26 @@ async def complete_assignment(
     }
 
 
-async def get_assignment_history(db: AsyncSession, user: User, *, limit: int = 50) -> dict:
+async def get_assignment_history(
+    db: AsyncSession,
+    user: User,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    limit = clamp_limit(limit, default=50)
+    offset = clamp_offset(offset)
     now = _utcnow()
     await expire_due_assignments(db, user_id=user.id, now=now)
     await db.commit()
+
+    total = (
+        await db.execute(
+            select(func.count())
+            .select_from(DailyAssignment)
+            .where(DailyAssignment.user_id == user.id)
+        )
+    ).scalar_one()
 
     rows = (
         await db.execute(
@@ -325,17 +342,20 @@ async def get_assignment_history(db: AsyncSession, user: User, *, limit: int = 5
             .join(Exercise, DailyAssignment.exercise_id == Exercise.id)
             .where(DailyAssignment.user_id == user.id)
             .order_by(DailyAssignment.assigned_at.desc(), DailyAssignment.id.desc())
+            .offset(offset)
             .limit(limit)
         )
     ).all()
 
     items = [_serialize_assignment(assignment, exercise, now) for assignment, exercise in rows]
+    meta = paging_meta(total=total, limit=limit, offset=offset)
     return {
         "total_points": user.total_points,
         "items": items,
         "completed": [item for item in items if item["status"] == STATUS_COMPLETED],
         "expired": [item for item in items if item["status"] == STATUS_EXPIRED],
         "assigned": [item for item in items if item["status"] == STATUS_ASSIGNED],
+        **meta,
     }
 
 

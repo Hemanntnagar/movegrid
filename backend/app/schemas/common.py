@@ -47,6 +47,11 @@ class LeaderboardResponse(BaseModel):
     title: str
     metric_label: str
     limit: int
+    offset: int = 0
+    page: int = 1
+    page_size: int = 20
+    total: int = 0
+    has_more: bool = False
     total_participants: int
     entries: list[LeaderboardEntry]
     me: LeaderboardEntry | None = None
@@ -225,7 +230,26 @@ class CompleteAssignmentResponse(BaseModel):
     reps_completed: int | None = None
     form_score: int | None = None
 
-class FitnessHistoryResponse(BaseModel):
+class PageMeta(BaseModel):
+    """Shared paging fields for list/history responses."""
+
+    page: int = 1
+    page_size: int = 20
+    offset: int = 0
+    limit: int = 20
+    total: int = 0
+    has_more: bool = False
+
+
+class ActivityHistoryResponse(PageMeta):
+    items: list[ActivityRead]
+
+
+class RewardHistoryResponse(PageMeta):
+    items: list[RewardRedemptionRead]
+
+
+class FitnessHistoryResponse(PageMeta):
     total_points: int
     items: list[DailyAssignmentRead]
     completed: list[DailyAssignmentRead]

@@ -35,7 +35,7 @@ The app uses `EXPO_PUBLIC_API_URL` and the shared `@movegrid/api-client` package
 
 - `GET /api/v1/daily-fitness/today` — assign or return today's exercises (auto-expires overdue rows)
 - `POST /api/v1/daily-fitness/{assignment_id}/complete` — complete a task and award MOVE from the backend
-- `GET /api/v1/daily-fitness/history` — assignment history including completed and expired
+- `GET /api/v1/daily-fitness/history?limit=50&offset=0` — paged assignment history (completed / expired / assigned)
 
 Every assignment lasts exactly 24 hours (`expires_at = assigned_at + 24h`) and never stays active indefinitely.
 
@@ -43,9 +43,9 @@ Every assignment lasts exactly 24 hours (`expires_at = assigned_at + 24h`) and n
 
 Rankings are computed on the backend with SQL ordering. Completing a mission or daily fitness task updates MOVE, monthly streak score, team competition points, and rank deltas.
 
-- `GET /api/v1/leaderboard/move?limit=20` — members by total MOVE
-- `GET /api/v1/leaderboard/streak?limit=20` — members by monthly streak score
-- `GET /api/v1/leaderboard/competition?limit=20` — teams by competition points
+- `GET /api/v1/leaderboard/move?limit=20&offset=0` — members by total MOVE (SQL-paged)
+- `GET /api/v1/leaderboard/streak?limit=20&offset=0` — members by monthly streak score (SQL-paged)
+- `GET /api/v1/leaderboard/competition?limit=20&offset=0` — teams by competition points (paged)
 
 Authenticated requests include a `me` entry so the current user (or their team) stays highlighted even outside the top N. UI: `/leaderboard`.
 
@@ -54,7 +54,7 @@ Authenticated requests include a `me` entry so the current user (or their team) 
 - `GET /api/v1/rewards` — active rewards catalog
 - `GET /api/v1/rewards/{id}` — reward detail
 - `POST /api/v1/rewards/{id}/redeem` — spend MOVE (authenticated; cost/stock verified server-side)
-- `GET /api/v1/rewards/history` — redemption history for the current user
+- `GET /api/v1/rewards/history?limit=20&offset=0` — paged redemption history for the current user
 
 Redemption deducts MOVE and stock in one transaction. The client never supplies the cost. MOVE is an in-app reward currency — no payment processing.
 
@@ -62,4 +62,4 @@ UI: `/rewards`
 
 ## API surface
 
-`/health`, `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`, `/api/v1/missions`, `/api/v1/missions/{id}/complete`, `/api/v1/daily-fitness/*`, `/api/v1/leaderboard/move`, `/api/v1/leaderboard/streak`, `/api/v1/leaderboard/competition`, `/api/v1/rewards`, `/api/v1/rewards/{id}/redeem`, `/api/v1/rewards/history`.
+`/health`, `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/me`, `/api/v1/missions`, `/api/v1/missions/history`, `/api/v1/missions/{id}/complete`, `/api/v1/daily-fitness/*`, `/api/v1/leaderboard/move`, `/api/v1/leaderboard/streak`, `/api/v1/leaderboard/competition`, `/api/v1/rewards`, `/api/v1/rewards/{id}/redeem`, `/api/v1/rewards/history`. List/history routes accept `limit` + `offset` for DB paging.

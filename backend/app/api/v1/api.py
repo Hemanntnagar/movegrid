@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import not_, select
+from sqlalchemy import func, not_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.demo_accounts import LEGACY_DEMO_EMAIL_SUFFIX
 from app.core.database import get_db
+from app.core.paging import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, clamp_limit, clamp_offset, paging_meta
 from app.core.security import (
     create_access_token,
     decode_subject,
@@ -13,7 +14,7 @@ from app.core.security import (
 )
 from app.models.entities import Activity, Challenge, Squad, SquadMember, User, Zone
 from app.schemas.common import (
-    ActivityRead,
+    ActivityHistoryResponse,
     BuddyConnectResponse,
     BuddyInviteCreate,
     BuddyInviteRead,
@@ -35,8 +36,8 @@ from app.schemas.common import (
     PresenceRead,
     PresenceUpdate,
     RedeemResponse,
+    RewardHistoryResponse,
     RewardRead,
-    RewardRedemptionRead,
     SquadCreate,
     StartMissionPayload,
     StepSyncRequest,
@@ -172,9 +173,30 @@ async def verify_mission(challenge_id: int, user: User = Depends(current_user), 
 async def complete(challenge_id: int, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     return await verify_and_complete(db, user, challenge_id)
 
-@api_router.get("/missions/history", response_model=list[ActivityRead])
-async def history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    return (await db.execute(select(Activity).where(Activity.user_id == user.id).order_by(Activity.started_at.desc()))).scalars().all()
+@api_router.get("/missions/history", response_model=ActivityHistoryResponse)
+async def history(
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    limit = clamp_limit(limit)
+    offset = clamp_offset(offset)
+    total = (
+        await db.execute(
+            select(func.count()).select_from(Activity).where(Activity.user_id == user.id)
+        )
+    ).scalar_one()
+    items = (
+        await db.execute(
+            select(Activity)
+            .where(Activity.user_id == user.id)
+            .order_by(Activity.started_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+    ).scalars().all()
+    return {"items": items, **paging_meta(total=total, limit=limit, offset=offset)}
 
 @api_router.get("/daily-fitness/today", response_model=TodayFitnessResponse)
 async def daily_fitness_today(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
@@ -197,8 +219,13 @@ async def daily_fitness_complete(
     )
 
 @api_router.get("/daily-fitness/history", response_model=FitnessHistoryResponse)
-async def daily_fitness_history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    return await get_assignment_history(db, user)
+async def daily_fitness_history(
+    limit: int = Query(50, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_assignment_history(db, user, limit=limit, offset=offset)
 
 
 @api_router.post("/fitness-plan/generate", response_model=FitnessPlanGenerateResponse)
@@ -323,27 +350,30 @@ async def join_competition(
 @api_router.get("/leaderboard", response_model=LeaderboardResponse)
 @api_router.get("/leaderboard/move", response_model=LeaderboardResponse)
 async def move_leaderboard(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     user: User | None = Depends(optional_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await get_move_leaderboard(db, current_user=user, limit=limit)
+    return await get_move_leaderboard(db, current_user=user, limit=limit, offset=offset)
 
 @api_router.get("/leaderboard/streak", response_model=LeaderboardResponse)
 async def streak_leaderboard(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     user: User | None = Depends(optional_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await get_streak_leaderboard(db, current_user=user, limit=limit)
+    return await get_streak_leaderboard(db, current_user=user, limit=limit, offset=offset)
 
 @api_router.get("/leaderboard/competition", response_model=LeaderboardResponse)
 async def competition_leaderboard(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     user: User | None = Depends(optional_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await get_competition_leaderboard(db, current_user=user, limit=limit)
+    return await get_competition_leaderboard(db, current_user=user, limit=limit, offset=offset)
 
 @api_router.get("/leaderboard/class")
 async def class_leaderboard(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
@@ -384,9 +414,14 @@ async def leave_squad(squad_id: int, user: User = Depends(current_user), db: Asy
 async def rewards(db: AsyncSession = Depends(get_db)):
     return await list_rewards(db, active_only=True)
 
-@api_router.get("/rewards/history", response_model=list[RewardRedemptionRead])
-async def reward_history(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    return await list_redemption_history(db, user)
+@api_router.get("/rewards/history", response_model=RewardHistoryResponse)
+async def reward_history(
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_redemption_history(db, user, limit=limit, offset=offset)
 
 @api_router.get("/rewards/{reward_id}", response_model=RewardRead)
 async def reward_detail(reward_id: int, db: AsyncSession = Depends(get_db)):

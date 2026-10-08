@@ -7,9 +7,10 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.paging import clamp_limit, clamp_offset, paging_meta
 from app.models.entities import Reward, RewardRedemption, User
 
 STATUS_COMPLETED = "COMPLETED"
@@ -99,18 +100,37 @@ async def redeem_reward(db: AsyncSession, user: User, reward_id: int) -> dict:
     }
 
 
-async def list_redemption_history(db: AsyncSession, user: User) -> list[dict]:
+async def list_redemption_history(
+    db: AsyncSession,
+    user: User,
+    *,
+    limit: int = 20,
+    offset: int = 0,
+) -> dict:
+    limit = clamp_limit(limit)
+    offset = clamp_offset(offset)
+
+    total = (
+        await db.execute(
+            select(func.count())
+            .select_from(RewardRedemption)
+            .where(RewardRedemption.user_id == user.id)
+        )
+    ).scalar_one()
+
     rows = (
         await db.execute(
             select(RewardRedemption, Reward)
             .join(Reward, Reward.id == RewardRedemption.reward_id)
             .where(RewardRedemption.user_id == user.id)
             .order_by(RewardRedemption.redeemed_at.desc(), RewardRedemption.id.desc())
+            .offset(offset)
+            .limit(limit)
         )
     ).all()
-    history: list[dict] = []
+    items: list[dict] = []
     for redemption, reward in rows:
-        history.append(
+        items.append(
             {
                 "id": redemption.id,
                 "user_id": redemption.user_id,
@@ -121,4 +141,4 @@ async def list_redemption_history(db: AsyncSession, user: User) -> list[dict]:
                 "reward": _serialize_reward(reward),
             }
         )
-    return history
+    return {"items": items, **paging_meta(total=total, limit=limit, offset=offset)}

@@ -50,11 +50,25 @@ export type ApiLeaderboardEntry = {
   meta?: Record<string, unknown>
 }
 
+export type ApiPageMeta = {
+  page: number
+  page_size: number
+  offset: number
+  limit: number
+  total: number
+  has_more: boolean
+}
+
 export type ApiLeaderboard = {
   board: 'move' | 'streak' | 'competition' | string
   title: string
   metric_label: string
   limit: number
+  offset?: number
+  page?: number
+  page_size?: number
+  total?: number
+  has_more?: boolean
   total_participants: number
   entries: ApiLeaderboardEntry[]
   me: ApiLeaderboardEntry | null
@@ -168,12 +182,25 @@ export type ApiCompleteFitnessPayload = {
   form_score?: number
 }
 
-export type ApiFitnessHistory = {
+export type ApiFitnessHistory = ApiPageMeta & {
   total_points: number
   items: ApiDailyAssignment[]
   completed: ApiDailyAssignment[]
   expired: ApiDailyAssignment[]
   assigned: ApiDailyAssignment[]
+}
+
+export type ApiMissionHistory = ApiPageMeta & {
+  items: Array<{
+    id: number
+    challenge_id: number
+    status: string
+    started_at: string
+    completed_at: string | null
+    points_earned: number
+    steps_count: number
+    verification_status: string
+  }>
 }
 
 export type ApiReward = {
@@ -195,6 +222,10 @@ export type ApiRewardRedemption = {
   redeemed_at: string
   status: string
   reward?: ApiReward | null
+}
+
+export type ApiRewardHistory = ApiPageMeta & {
+  items: ApiRewardRedemption[]
 }
 
 export type ApiRedeemResult = {
@@ -392,20 +423,20 @@ export function createMovegridApi(baseUrl?: string) {
       request<ApiToken>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     me: (token: string) => request<ApiUser>('/auth/me', { headers: authHeaders(token) }),
     missions: () => request<ApiMission[]>('/missions'),
-    leaderboard: (token?: string | null, limit = 20) =>
-      request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
+    leaderboard: (token?: string | null, limit = 20, offset = 0) =>
+      request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}&offset=${offset}`, {
         headers: token ? authHeaders(token) : undefined,
       }),
-    leaderboardMove: (token?: string | null, limit = 20) =>
-      request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}`, {
+    leaderboardMove: (token?: string | null, limit = 20, offset = 0) =>
+      request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}&offset=${offset}`, {
         headers: token ? authHeaders(token) : undefined,
       }),
-    leaderboardStreak: (token?: string | null, limit = 20) =>
-      request<ApiLeaderboard>(`/leaderboard/streak?limit=${limit}`, {
+    leaderboardStreak: (token?: string | null, limit = 20, offset = 0) =>
+      request<ApiLeaderboard>(`/leaderboard/streak?limit=${limit}&offset=${offset}`, {
         headers: token ? authHeaders(token) : undefined,
       }),
-    leaderboardCompetition: (token?: string | null, limit = 20) =>
-      request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}`, {
+    leaderboardCompetition: (token?: string | null, limit = 20, offset = 0) =>
+      request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}&offset=${offset}`, {
         headers: token ? authHeaders(token) : undefined,
       }),
     competitions: (token?: string | null) =>
@@ -454,8 +485,14 @@ export function createMovegridApi(baseUrl?: string) {
         headers: authHeaders(token),
         body: payload ? JSON.stringify(payload) : undefined,
       }),
-    fitnessHistory: (token: string) =>
-      request<ApiFitnessHistory>('/daily-fitness/history', { headers: authHeaders(token) }),
+    fitnessHistory: (token: string, limit = 50, offset = 0) =>
+      request<ApiFitnessHistory>(`/daily-fitness/history?limit=${limit}&offset=${offset}`, {
+        headers: authHeaders(token),
+      }),
+    missionHistory: (token: string, limit = 20, offset = 0) =>
+      request<ApiMissionHistory>(`/missions/history?limit=${limit}&offset=${offset}`, {
+        headers: authHeaders(token),
+      }),
     rewards: () => request<ApiReward[]>('/rewards'),
     reward: (id: number) => request<ApiReward>(`/rewards/${id}`),
     redeemReward: (token: string, id: number) =>
@@ -463,8 +500,10 @@ export function createMovegridApi(baseUrl?: string) {
         method: 'POST',
         headers: authHeaders(token),
       }),
-    rewardHistory: (token: string) =>
-      request<ApiRewardRedemption[]>('/rewards/history', { headers: authHeaders(token) }),
+    rewardHistory: (token: string, limit = 20, offset = 0) =>
+      request<ApiRewardHistory>(`/rewards/history?limit=${limit}&offset=${offset}`, {
+        headers: authHeaders(token),
+      }),
     updatePresence: (token: string, latitude: number, longitude: number, isSharing = true) =>
       request<ApiPresence>('/presence', {
         method: 'POST',

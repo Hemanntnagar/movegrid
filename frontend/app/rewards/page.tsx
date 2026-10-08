@@ -169,7 +169,7 @@ export default function RewardsPage() {
     ])
     setUser(me)
     setRewards(catalog)
-    setHistory(redemptions)
+    setHistory(redemptions.items)
   }, [])
 
   useEffect(() => {

@@ -113,6 +113,30 @@ async def test_move_leaderboard_orders_by_total_points(lb_client):
     assert body["me"]["is_current_user"] is True
     assert body["me"]["rank"] == 3
     assert body["entries"][2]["is_current_user"] is True
+    assert body["total"] == 3
+    assert body["has_more"] is False
+
+
+@pytest.mark.asyncio
+async def test_move_leaderboard_pages_with_offset(lb_client):
+    http, _ = lb_client
+    token = await _login(http)
+    response = await http.get(
+        "/api/v1/leaderboard/move?limit=1&offset=1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["entries"]) == 1
+    assert body["entries"][0]["name"] == "Sam Rivera"
+    assert body["entries"][0]["rank"] == 2
+    assert body["page"] == 2
+    assert body["page_size"] == 1
+    assert body["offset"] == 1
+    assert body["total"] == 3
+    assert body["has_more"] is True
+    assert body["me"]["name"] == "Alex Morgan"
+    assert body["me"]["rank"] == 3
 
 
 @pytest.mark.asyncio
