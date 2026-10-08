@@ -92,29 +92,65 @@ def _stamp_legacy_database(cfg: Config) -> None:
         engine.dispose()
 
 
+def _schema_matches_models(conn) -> bool:
+    """Outdated 0001 migrations use kind/move_reward; models use type/reward_points."""
+    inspector = inspect(conn)
+    tables = set(inspector.get_table_names())
+    if "challenges" not in tables or "users" not in tables:
+        return False
+    challenge_cols = {col["name"] for col in inspector.get_columns("challenges")}
+    user_cols = {col["name"] for col in inspector.get_columns("users")}
+    return "type" in challenge_cols and "name" in user_cols
+
+
+def _reset_schema_from_models(cfg: Config) -> None:
+    """Fresh/mismatched DBs: build from models (source of truth), then stamp Alembic head."""
+    engine = create_engine(_sync_database_url(settings.database_url))
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE"))
+            conn.execute(text("CREATE SCHEMA public"))
+        Base.metadata.create_all(bind=engine)
+        command.stamp(cfg, "head")
+        logger.warning("Reset public schema from models and stamped Alembic to head")
+    finally:
+        engine.dispose()
+
+
 def _run_migrations() -> None:
-    """Stamp legacy DBs if needed, then apply pending Alembic revisions."""
+    """Prefer model schema on fresh/mismatched DBs; otherwise stamp + upgrade."""
     cfg = _alembic_config()
+    engine = create_engine(_sync_database_url(settings.database_url))
+    try:
+        with engine.connect() as conn:
+            matches = _schema_matches_models(conn)
+    finally:
+        engine.dispose()
+
+    if not matches:
+        _reset_schema_from_models(cfg)
+        return
+
     _stamp_legacy_database(cfg)
     command.upgrade(cfg, "head")
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    migrations_ok = False
     try:
         _run_migrations()
-        migrations_ok = True
     except Exception:
         logger.exception("Alembic upgrade failed; falling back to create_all only")
-    try:
-        if not migrations_ok:
+        try:
             async with database.engine.begin() as connection:
                 await connection.run_sync(Base.metadata.create_all)
+        except Exception:
+            logger.exception("create_all fallback failed")
+    try:
         async with database.SessionLocal() as session:
             await seed_bootstrap_data(session)
     except Exception:
-        logger.exception("Database bootstrap (create_all/seed) failed")
+        logger.exception("Database seed failed")
     yield
     await database.engine.dispose()
 
