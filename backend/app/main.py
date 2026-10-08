@@ -19,9 +19,14 @@ logger = logging.getLogger("movegrid.api")
 
 def _sync_database_url(url: str) -> str:
     if url.startswith("postgresql+asyncpg"):
-        return url.replace("postgresql+asyncpg", "postgresql+psycopg2", 1)
-    if url.startswith("sqlite+aiosqlite"):
-        return url.replace("sqlite+aiosqlite", "sqlite", 1)
+        url = url.replace("postgresql+asyncpg", "postgresql+psycopg2", 1)
+    elif url.startswith("sqlite+aiosqlite"):
+        url = url.replace("sqlite+aiosqlite", "sqlite", 1)
+    # asyncpg uses ssl=; psycopg2 expects sslmode=
+    if "ssl=" in url and "sslmode=" not in url:
+        url = url.replace("ssl=require", "sslmode=require").replace("ssl=true", "sslmode=require")
+    elif "render.com" in url and "sslmode=" not in url:
+        url = f"{url}{'&' if '?' in url else '?'}sslmode=require"
     return url
 
 
