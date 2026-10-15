@@ -381,7 +381,7 @@ export default function ChallengesPage() {
       const awarded = result.move_awarded ?? selected.move
       setLastMove(awarded)
       notifyUserUpdated({ total_points: result.move_points })
-      const fresh = await movegridApi.me(token)
+      const fresh = await movegridApi.me(token, { force: true })
       setUser(fresh)
       setSelected(null)
       setComplete(true)

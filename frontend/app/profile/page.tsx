@@ -21,26 +21,37 @@ import {
   UserPlus,
   Zap,
 } from 'lucide-react'
-import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi } from '../../lib/api'
+import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi, peekMeCache } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { getStoredPlan, goalLabel } from '../../lib/fitnessPlan'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<ApiUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<ApiUser | null>(() => {
+    const token = typeof window !== 'undefined' ? getStoredToken() : null
+    return token ? peekMeCache(token) : null
+  })
+  const [loading, setLoading] = useState(() => {
+    const token = typeof window !== 'undefined' ? getStoredToken() : null
+    return !(token && peekMeCache(token))
+  })
   const [copiedEmail, setCopiedEmail] = useState(false)
   const plan = getStoredPlan()
 
-  function refreshUser() {
+  function refreshUser(force = false) {
     const token = getStoredToken()
     if (!token) {
       setUser(null)
       setLoading(false)
       return
     }
+    const cached = peekMeCache(token)
+    if (cached) {
+      setUser(cached)
+      setLoading(false)
+    }
     movegridApi
-      .me(token)
+      .me(token, { force })
       .then(setUser)
       .catch(() => {
         clearToken()
@@ -54,7 +65,7 @@ export default function ProfilePage() {
   }, [])
 
   useEffect(() => {
-    const onUserUpdated = () => refreshUser()
+    const onUserUpdated = () => refreshUser(true)
     const onVisible = () => {
       if (document.visibilityState === 'visible') refreshUser()
     }

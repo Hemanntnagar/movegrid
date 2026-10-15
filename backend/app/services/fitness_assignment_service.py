@@ -325,9 +325,8 @@ async def get_assignment_history(
     limit = clamp_limit(limit, default=50)
     offset = clamp_offset(offset)
     now = _utcnow()
-    await expire_due_assignments(db, user_id=user.id, now=now)
-    await db.commit()
-
+    # Skip expire+commit here: /daily-fitness/today already expires due rows on the
+    # interactive path. History is deferred post-login and can read current statuses.
     total = (
         await db.execute(
             select(func.count())

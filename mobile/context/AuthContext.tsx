@@ -7,8 +7,14 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { movegridApi, type ApiUser } from '@movegrid/api-client'
-import { clearToken, getStoredToken, storeToken } from '@/lib/tokenStorage'
+import { clearMeCache, movegridApi, seedMeCache, type ApiUser } from '@movegrid/api-client'
+import {
+  clearToken,
+  getStoredToken,
+  getStoredUser,
+  storeToken,
+  storeUser,
+} from '@/lib/tokenStorage'
 
 type AuthState = {
   user: ApiUser | null
@@ -33,21 +39,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       return
     }
-    const me = await movegridApi.me(active)
+    const me = await movegridApi.me(active, { force: true })
     setUser(me)
     setToken(active)
+    await storeUser(me, active)
   }, [token])
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       try {
-        const stored = await getStoredToken()
+        const [stored, cachedUser] = await Promise.all([getStoredToken(), getStoredUser()])
         if (!stored) return
+
+        // Unblock UI immediately from secure snapshot; revalidate in background.
+        if (cachedUser && !cancelled) {
+          seedMeCache(stored, cachedUser)
+          setToken(stored)
+          setUser(cachedUser)
+          setBootstrapping(false)
+        }
+
         const me = await movegridApi.me(stored)
         if (!cancelled) {
           setToken(stored)
           setUser(me)
+          await storeUser(me, stored)
         }
       } catch {
         await clearToken()
@@ -66,20 +83,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const session = await movegridApi.login(email.trim(), password)
-    await storeToken(session.access_token)
-    setToken(session.access_token)
-    setUser(session.user ?? (await movegridApi.me(session.access_token)))
+    const access = session.access_token
+    const nextUser = session.user ?? (await movegridApi.me(access))
+    seedMeCache(access, nextUser)
+    setToken(access)
+    setUser(nextUser)
+    // Persist in parallel after UI state updates (login payload already has user).
+    await Promise.all([storeToken(access), storeUser(nextUser, access)])
   }, [])
 
   const signUp = useCallback(async (name: string, email: string, password: string) => {
     const session = await movegridApi.register(name.trim(), email.trim(), password)
-    await storeToken(session.access_token)
-    setToken(session.access_token)
-    setUser(session.user ?? (await movegridApi.me(session.access_token)))
+    const access = session.access_token
+    const nextUser = session.user ?? (await movegridApi.me(access))
+    seedMeCache(access, nextUser)
+    setToken(access)
+    setUser(nextUser)
+    await Promise.all([storeToken(access), storeUser(nextUser, access)])
   }, [])
 
   const signOut = useCallback(async () => {
     await clearToken()
+    clearMeCache()
     setToken(null)
     setUser(null)
   }, [])

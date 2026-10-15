@@ -1,0 +1,26 @@
+{
+  "measured_at": "2026-10-16",
+  "method": "ASGI in-process + simulated 80ms/request latency + 150ms client navigation",
+  "bottleneck_verified": {
+    "rank": [
+      { "step": "POST /auth/login (bcrypt verify)", "avg_ms_local": 61.5, "share": "~90% of local critical path" },
+      { "step": "Post-login fetch wave after navigation", "avg_ms_remote_sim": 100 },
+      { "step": "Duplicate GET /auth/me (page + AppChrome)", "avg_ms_local": 4.6, "waste": "1 redundant RTT + DB user load" },
+      { "step": "GET /daily-fitness/history blocking trail", "avg_ms_local": 4.4, "note": "was on Promise.all with today before trail paint" }
+    ]
+  },
+  "before": {
+    "flow": "login → navigate → mount → parallel(me×2, board, missions, today, history); trail waits for today+history",
+    "avg_total_to_trail_ms": 449.4,
+    "auth_me_requests": 2
+  },
+  "after": {
+    "flow": "login (seed user) → prefetch(today, board, missions) overlapping navigate → trail waits for today only; history deferred; /auth/me cached",
+    "avg_total_to_trail_ms": 323.9,
+    "auth_me_requests_on_signin": 0
+  },
+  "improvement": {
+    "saved_ms": 125.5,
+    "pct": 27.9
+  }
+}

@@ -30,6 +30,7 @@ import {
   movegridApi,
   notifyUserUpdated,
 } from '../lib/api'
+import { invalidateTodayFitness, loadTodayFitness } from '../lib/dashboardBootstrap'
 import { repTargetForScheduledExercise } from '../lib/exerciseTracking'
 import { PenguinPathMap, PathLevel } from './PenguinPathMap'
 import {
@@ -495,58 +496,71 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   const monthLabel = monthLabelIst()
   const monthKey = istMonthKey()
 
+  const applyHistory = useCallback(
+    (fitness: ApiTodayFitness, historyItems: ApiDailyAssignment[]) => {
+      const completedDays = new Set<number>()
+      const missedDays = new Set<number>()
+      const byDay = new Map<string, ApiDailyAssignment[]>()
+
+      for (const item of historyItems) {
+        const key = istDateKeyFromIso(item.assigned_at)
+        if (!key || !key.startsWith(monthKey)) continue
+        if (!byDay.has(key)) byDay.set(key, [])
+        byDay.get(key)!.push(item)
+      }
+
+      for (const [key, items] of byDay) {
+        const dayNum = Number(key.slice(-2))
+        if (dayNum === todayDay) continue
+        const allComplete = items.length > 0 && items.every((i) => i.status === 'COMPLETED')
+        const anyExpired = items.some((i) => i.status === 'EXPIRED')
+        if (allComplete) completedDays.add(dayNum)
+        else if (anyExpired || key < istDateKey()) missedDays.add(dayNum)
+      }
+
+      for (let d = 1; d < todayDay; d += 1) {
+        if (!completedDays.has(d)) missedDays.add(d)
+      }
+
+      if (fitness.progress.total > 0 && fitness.progress.completed >= fitness.progress.total) {
+        completedDays.add(todayDay)
+        markDayCompleted(todayDay, monthKey)
+      }
+
+      setMonthProgress(
+        mergeHistoryIntoProgress([...completedDays], [...missedDays].filter((d) => !completedDays.has(d)), monthKey),
+      )
+    },
+    [monthKey, todayDay],
+  )
+
   const load = useCallback(async () => {
     const token = getStoredToken()
     if (!token) {
       setLoading(false)
       return
     }
-    const [fitness, history] = await Promise.all([
-      movegridApi.todayFitness(token),
-      movegridApi.fitnessHistory(token),
-    ])
+    // Critical path: today's assignments only (unblocks trail UI).
+    // History (month markers) is nonessential and loads after first paint.
+    const fitness = await loadTodayFitness(token)
     setToday(fitness)
     onFitnessChange?.(fitness)
     onPointsChange?.(fitness.total_points)
+    setLoading(false)
 
-    const completedDays = new Set<number>()
-    const missedDays = new Set<number>()
-    const byDay = new Map<string, ApiDailyAssignment[]>()
-
-    for (const item of history.items) {
-      const key = istDateKeyFromIso(item.assigned_at)
-      if (!key || !key.startsWith(monthKey)) continue
-      if (!byDay.has(key)) byDay.set(key, [])
-      byDay.get(key)!.push(item)
-    }
-
-    for (const [key, items] of byDay) {
-      const dayNum = Number(key.slice(-2))
-      if (dayNum === todayDay) continue
-      const allComplete = items.length > 0 && items.every((i) => i.status === 'COMPLETED')
-      const anyExpired = items.some((i) => i.status === 'EXPIRED')
-      if (allComplete) completedDays.add(dayNum)
-      else if (anyExpired || key < istDateKey()) missedDays.add(dayNum)
-    }
-
-    for (let d = 1; d < todayDay; d += 1) {
-      if (!completedDays.has(d)) missedDays.add(d)
-    }
-
-    if (fitness.progress.total > 0 && fitness.progress.completed >= fitness.progress.total) {
-      completedDays.add(todayDay)
-      markDayCompleted(todayDay, monthKey)
-    }
-
-    setMonthProgress(
-      mergeHistoryIntoProgress([...completedDays], [...missedDays].filter((d) => !completedDays.has(d)), monthKey),
-    )
-  }, [monthKey, todayDay, onFitnessChange, onPointsChange])
+    void movegridApi
+      .fitnessHistory(token)
+      .then((history) => applyHistory(fitness, history.items))
+      .catch(() => {
+        /* keep local month progress if history fails */
+      })
+  }, [applyHistory, onFitnessChange, onPointsChange])
 
   useEffect(() => {
-    load()
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load path'))
-      .finally(() => setLoading(false))
+    load().catch((err) => {
+      setError(err instanceof Error ? err.message : 'Could not load path')
+      setLoading(false)
+    })
   }, [load])
 
   useEffect(() => {
@@ -627,6 +641,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
         notifyUserUpdated({ total_points: result.total_points })
       }
       setMonthProgress(markDayCompleted(todayDay, monthKey))
+      invalidateTodayFitness()
       await load()
       if (totalAwarded > 0) {
         setToast(`Workout complete · +${totalAwarded} MOVE`)
@@ -682,6 +697,7 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
       notifyUserUpdated({ total_points: result.total_points })
       setJustCompletedId(assignmentId)
       setToast(`+${result.points_awarded} MOVE · ${result.exercise_name ?? 'Exercise'} done`)
+      invalidateTodayFitness()
       await load()
       window.setTimeout(() => {
         setToast('')

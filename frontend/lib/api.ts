@@ -1,5 +1,8 @@
 export * from '@movegrid/api-client'
 
+import { clearMeCache } from '@movegrid/api-client'
+import { clearDashboardBootstrap } from './dashboardBootstrap'
+
 export const MOVEGRID_USER_UPDATED = 'movegrid:user-updated'
 
 export function notifyUserUpdated(detail?: { total_points?: number }) {
@@ -21,4 +24,6 @@ export function storeToken(token: string) {
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
+  clearMeCache()
+  clearDashboardBootstrap()
 }

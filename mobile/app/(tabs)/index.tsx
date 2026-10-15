@@ -61,8 +61,8 @@ export default function TodayScreen() {
   async function onRefresh() {
     setRefreshing(true)
     try {
-      await load()
-      await steps.refreshSupport()
+      // Plan load + Health Connect probe are independent.
+      await Promise.all([load(), steps.refreshSupport()])
       if (token) await steps.syncToServer()
       await refreshUser()
     } catch (e) {
@@ -78,8 +78,8 @@ export default function TodayScreen() {
     setError(null)
     try {
       await movegridApi.completeFitness(token, assignmentId)
-      await load()
-      await refreshUser()
+      // Refresh plan + profile in parallel (complete payload already applied server-side).
+      await Promise.all([load(), refreshUser()])
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not complete exercise')
     } finally {

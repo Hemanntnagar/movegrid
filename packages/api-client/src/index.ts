@@ -371,6 +371,26 @@ function connectionHint(apiUrl: string): string {
   return 'Make sure your local backend is running (uvicorn app.main:app --reload on port 8000).'
 }
 
+/** Short-lived /auth/me cache + in-flight coalescing (safe: profile fields only, not credentials). */
+const ME_TTL_MS = 20_000
+let meCache: { token: string; user: ApiUser; at: number } | null = null
+let meInflight: { token: string; promise: Promise<ApiUser> } | null = null
+
+export function seedMeCache(token: string, user: ApiUser) {
+  meCache = { token, user, at: Date.now() }
+}
+
+export function clearMeCache() {
+  meCache = null
+  meInflight = null
+}
+
+export function peekMeCache(token: string): ApiUser | null {
+  if (!meCache || meCache.token !== token) return null
+  if (Date.now() - meCache.at > ME_TTL_MS) return null
+  return meCache.user
+}
+
 export function createMovegridApi(baseUrl?: string) {
   const API_URL = resolveApiUrl(baseUrl)
 
@@ -412,6 +432,25 @@ export function createMovegridApi(baseUrl?: string) {
     return { Authorization: `Bearer ${token}` }
   }
 
+  async function fetchMe(token: string, force = false): Promise<ApiUser> {
+    if (!force) {
+      const cached = peekMeCache(token)
+      if (cached) return cached
+      if (meInflight?.token === token) return meInflight.promise
+    }
+
+    const promise = request<ApiUser>('/auth/me', { headers: authHeaders(token) }).then((user) => {
+      seedMeCache(token, user)
+      return user
+    })
+    meInflight = { token, promise }
+    try {
+      return await promise
+    } finally {
+      if (meInflight?.promise === promise) meInflight = null
+    }
+  }
+
   return {
     apiUrl: API_URL,
     register: (name: string, email: string, password: string, fitness_level?: string) =>
@@ -421,7 +460,8 @@ export function createMovegridApi(baseUrl?: string) {
       }),
     login: (email: string, password: string) =>
       request<ApiToken>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-    me: (token: string) => request<ApiUser>('/auth/me', { headers: authHeaders(token) }),
+    /** Cached + coalesced /auth/me. Pass `{ force: true }` after mutations that change profile fields. */
+    me: (token: string, opts?: { force?: boolean }) => fetchMe(token, Boolean(opts?.force)),
     missions: () => request<ApiMission[]>('/missions'),
     leaderboard: (token?: string | null, limit = 20, offset = 0) =>
       request<ApiLeaderboard>(`/leaderboard/move?limit=${limit}&offset=${offset}`, {

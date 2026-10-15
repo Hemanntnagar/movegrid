@@ -15,7 +15,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi } from '../lib/api'
+import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi, peekMeCache } from '../lib/api'
 import { ExerciseReminderBell } from './ExerciseReminderBell'
 
 export type MenuAction =
@@ -56,13 +56,15 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
   const token = getStoredToken()
 
   useEffect(() => {
-    function loadUser() {
+    function loadUser(force = false) {
       if (!token) {
         setUser(null)
         return
       }
+      const cached = peekMeCache(token)
+      if (cached) setUser(cached)
       movegridApi
-        .me(token)
+        .me(token, { force })
         .then(setUser)
         .catch(() => {
           clearToken()
@@ -70,7 +72,7 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
         })
     }
     loadUser()
-    const onUserUpdated = () => loadUser()
+    const onUserUpdated = () => loadUser(true)
     window.addEventListener(MOVEGRID_USER_UPDATED, onUserUpdated)
     return () => window.removeEventListener(MOVEGRID_USER_UPDATED, onUserUpdated)
   }, [token])

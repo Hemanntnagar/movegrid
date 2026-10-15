@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { FormEvent, useEffect, useState } from 'react'
 import { Bolt, LoaderCircle, LogIn, UserPlus, Sparkles, Trophy } from 'lucide-react'
-import { getStoredToken, movegridApi, storeToken } from '../../lib/api'
+import { getStoredToken, movegridApi, seedMeCache, storeToken } from '../../lib/api'
+import { prefetchDashboard } from '../../lib/dashboardBootstrap'
 import { hasCompletedOnboarding } from '../../lib/fitnessPlan'
 import { useRouter } from 'next/navigation'
 
@@ -41,6 +42,8 @@ export default function SignupPage() {
     try {
       const session = await movegridApi.register(name, email, password, fitnessLevel)
       storeToken(session.access_token)
+      if (session.user) seedMeCache(session.access_token, session.user)
+      if (hasCompletedOnboarding()) prefetchDashboard(session.access_token)
       router.push(hasCompletedOnboarding() ? '/' : '/onboarding')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed')

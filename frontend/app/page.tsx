@@ -14,7 +14,9 @@ import {
   getStoredToken,
   movegridApi,
   notifyUserUpdated,
+  peekMeCache,
 } from '../lib/api'
+import { loadLeaderboardMove, loadMissions } from '../lib/dashboardBootstrap'
 import { AppChrome } from '../components/AppChrome'
 import { MobileBottomNav } from '../components/MobileBottomNav'
 import { DashboardPath } from '../components/DashboardPath'
@@ -169,10 +171,16 @@ export default function Page() {
   const dailyMissionId = dailyMission?.id
 
   const load = useCallback(async (authToken: string) => {
+    // Use login-seeded / coalesced /auth/me + prefetched board/missions when available.
+    const cached = peekMeCache(authToken)
+    if (cached) {
+      setUser(cached)
+      setMove(cached.total_points ?? 0)
+    }
     const [me, board, missions] = await Promise.all([
       movegridApi.me(authToken),
-      movegridApi.leaderboardMove(authToken, 20).catch(() => null),
-      movegridApi.missions().catch(() => [] as ApiMission[]),
+      loadLeaderboardMove(authToken),
+      loadMissions(),
     ])
     setUser(me)
     setMove(me.total_points ?? 0)
