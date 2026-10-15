@@ -469,8 +469,28 @@
     box-shadow: none;
   }
 
-  .rewards-balance-badge {
-    margin-bottom: 10px;
+  .rewards-page .rewards-balance-badge {
+    display: flex;
+    width: 100%;
+    margin: 0 0 4px;
+    border-width: 2px;
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: none;
+  }
+
+  .rewards-page .rewards-balance-badge strong {
+    font-size: 20px;
+  }
+
+  .rewards-catalog-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .rewards-filter-row {
+    max-width: 100%;
   }
 
   /* Toast above tab bar */

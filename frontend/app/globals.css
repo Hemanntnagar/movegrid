@@ -415,6 +415,7 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   border-radius: 22px;
   padding: 14px 18px;
   box-shadow: var(--shadow);
+  flex-shrink: 0;
 }
 .rewards-balance-badge strong,
 .rewards-balance-badge span {
@@ -430,6 +431,51 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   color: #d8f0f6;
   margin-top: 2px;
   font-weight: 700;
+}
+.pill.neutral {
+  background: #fffdf0;
+  color: #183d59;
+}
+.rewards-filter-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: min(100%, 420px);
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.rewards-filter-row .pill {
+  cursor: pointer;
+  border: 3px solid var(--border);
+  padding: 0.3rem 0.75rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.reward-mascot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fffdf0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 16px;
+  border: 3px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.reward-mascot-label {
+  font-size: 0.72rem;
+  color: #0284c7;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.reward-mascot-quote {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #0f172a;
+  font-style: italic;
+  font-weight: 600;
 }
 .rewards-grid {
   display: grid;

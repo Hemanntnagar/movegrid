@@ -5,8 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
-  Bolt,
-  Check,
   Gift,
   LoaderCircle,
   Package,
@@ -27,26 +25,16 @@ import {
   clearToken,
   getStoredToken,
   movegridApi,
+  notifyUserUpdated,
+  peekMeCache,
+  seedMeCache,
 } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { MobileBottomNav } from '../../components/MobileBottomNav'
 
-function Brand() {
+function PenguinMascot({ message = 'Treat yourself! You earned these MOVE rewards!' }: { message?: string }) {
   return (
-    <div className="brand">
-      <div className="brand-mark">
-        <Bolt size={18} fill="currentColor" />
-      </div>
-      <span>
-        MOVE<span>GRID</span>
-      </span>
-    </div>
-  )
-}
-
-function PenguinMascot({ message = "Treat yourself! You earned these MOVE rewards!" }: { message?: string }) {
-  return (
-    <div className="penguin-mascot-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '0.6rem 0.9rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' }}>
+    <div className="penguin-mascot-container reward-mascot">
       <svg className="penguin-svg" width="38" height="42" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
         <ellipse cx="50" cy="65" rx="35" ry="40" fill="#0f172a" />
         <ellipse cx="50" cy="68" rx="24" ry="32" fill="#ffffff" />
@@ -66,10 +54,8 @@ function PenguinMascot({ message = "Treat yourself! You earned these MOVE reward
         <ellipse cx="62" cy="102" rx="10" ry="5" fill="#f97316" />
       </svg>
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
-          <span>🐧 Pebble the Mascot</span>
-        </div>
-        <p style={{ margin: 0, fontSize: '0.82rem', color: '#e2e8f0', fontStyle: 'italic' }}>&quot;{message}&quot;</p>
+        <div className="reward-mascot-label">Pebble the Mascot</div>
+        <p className="reward-mascot-quote">&quot;{message}&quot;</p>
       </div>
     </div>
   )
@@ -103,6 +89,11 @@ function formatWhen(value: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function isAuthFailure(err: unknown) {
+  const message = err instanceof Error ? err.message : String(err)
+  return /unauthor|invalid authentication|not authenticated|token/i.test(message)
 }
 
 function RewardCard({
@@ -161,9 +152,9 @@ export default function RewardsPage() {
   const [redeeming, setRedeeming] = useState(false)
   const [success, setSuccess] = useState<ApiRedeemResult | null>(null)
 
-  const load = useCallback(async (authToken: string) => {
+  const load = useCallback(async (authToken: string, opts?: { forceMe?: boolean }) => {
     const [me, catalog, redemptions] = await Promise.all([
-      movegridApi.me(authToken),
+      movegridApi.me(authToken, { force: Boolean(opts?.forceMe) }),
       movegridApi.rewards(),
       movegridApi.rewardHistory(authToken),
     ])
@@ -179,11 +170,17 @@ export default function RewardsPage() {
       return
     }
     setToken(stored)
+    const cached = peekMeCache(stored)
+    if (cached) setUser(cached)
+
     load(stored)
       .catch((err) => {
-        clearToken()
-        setError(err instanceof Error ? err.message : 'Could not load rewards')
-        router.replace('/login')
+        const message = err instanceof Error ? err.message : 'Could not load rewards'
+        setError(message)
+        if (isAuthFailure(err)) {
+          clearToken()
+          router.replace('/login')
+        }
       })
       .finally(() => setLoading(false))
   }, [load, router])
@@ -194,17 +191,30 @@ export default function RewardsPage() {
   }, [rewards, categoryFilter])
 
   async function confirmRedeem() {
-    if (!token || !confirmReward) return
+    if (!token || !confirmReward || !user) return
     setRedeeming(true)
     setError('')
     try {
       const result = await movegridApi.redeemReward(token, confirmReward.id)
+      const nextUser = { ...user, total_points: result.total_points }
+      seedMeCache(token, nextUser)
+      setUser(nextUser)
+      notifyUserUpdated({ total_points: result.total_points })
       setConfirmReward(null)
       setSuccess(result)
-      await load(token)
+      setRewards((prev) =>
+        prev.map((item) =>
+          item.id === result.reward_id ? { ...item, stock: result.stock_remaining } : item,
+        ),
+      )
+      await load(token, { forceMe: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not redeem reward')
       setConfirmReward(null)
+      if (isAuthFailure(err)) {
+        clearToken()
+        router.replace('/login')
+      }
     } finally {
       setRedeeming(false)
     }
@@ -252,23 +262,31 @@ export default function RewardsPage() {
             </h1>
             <p className="subhead">Trade your movement and fitness points for healthy drinks, gear, and passes.</p>
           </div>
+          <div className="rewards-balance-badge" aria-live="polite">
+            <Zap size={22} fill="currentColor" />
+            <div>
+              <strong>{user.total_points.toLocaleString()}</strong>
+              <span>MOVE balance</span>
+            </div>
+          </div>
           <PenguinMascot message="Spend your hard-earned MOVE on awesome rewards!" />
         </div>
 
         {error && <p className="form-error">{error}</p>}
 
-        <section className="section-heading compact">
+        <section className="section-heading compact rewards-catalog-heading">
           <div>
             <p className="eyebrow">REWARD CATALOG</p>
             <h2>Pick your perk</h2>
           </div>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <div className="rewards-filter-row" role="tablist" aria-label="Reward categories">
             {['All', 'Food', 'Events', 'Sports', 'Merch'].map((cat) => (
               <button
                 key={cat}
                 type="button"
+                role="tab"
+                aria-selected={categoryFilter === cat}
                 className={`pill ${categoryFilter === cat ? 'lime' : 'neutral'}`}
-                style={{ cursor: 'pointer', border: 'none', padding: '0.3rem 0.75rem' }}
                 onClick={() => setCategoryFilter(cat)}
               >
                 {cat}
@@ -316,7 +334,9 @@ export default function RewardsPage() {
               </div>
               <div>
                 <strong>{item.reward?.title ?? `Reward #${item.reward_id}`}</strong>
-                <span>{formatWhen(item.redeemed_at)} · {item.status}</span>
+                <span>
+                  {formatWhen(item.redeemed_at)} · {item.status}
+                </span>
               </div>
               <b>−{item.points_spent.toLocaleString()} MOVE</b>
             </div>

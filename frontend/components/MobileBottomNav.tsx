@@ -4,12 +4,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Gift, LayoutDashboard, Target, Trophy } from 'lucide-react'
 
-const NAV_ITEMS = [
+const NAV_ITEMS: {
+  label: string
+  href: string
+  Icon: typeof Gift
+  mobileHidden?: boolean
+  shortLabel?: string
+}[] = [
   { label: 'Home', href: '/', Icon: LayoutDashboard, mobileHidden: true },
   { label: 'Challenges', href: '/challenges', Icon: Target, shortLabel: 'Quests' },
   { label: 'Competitions', href: '/competitions', Icon: Trophy, shortLabel: 'Cups' },
   { label: 'Rewards', href: '/rewards', Icon: Gift, shortLabel: 'Store' },
-] as const
+]
 
 export function MobileBottomNav() {
   const pathname = usePathname()

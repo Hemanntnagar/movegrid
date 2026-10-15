@@ -57,6 +57,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="rewards"
+        options={{
+          title: 'Store',
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{ ios: 'gift', android: 'card_giftcard', web: 'card_giftcard' }}
+              tintColor={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
