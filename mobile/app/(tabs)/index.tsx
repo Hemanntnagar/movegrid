@@ -7,10 +7,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native'
 import { useAuth } from '@/context/AuthContext'
-import { colors } from '@/constants/theme'
+import { colors, layout, radius, space, touch, type } from '@/constants/theme'
 import { nativeStepSupportMessage, useNativeSteps } from '@/hooks/useNativeSteps'
 
 function formatCountdown(seconds: number) {
@@ -22,6 +23,8 @@ function formatCountdown(seconds: number) {
 
 export default function TodayScreen() {
   const { token, user, refreshUser } = useAuth()
+  const { width } = useWindowDimensions()
+  const narrow = width < 360
   const [plan, setPlan] = useState<ApiTodayFitness | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -95,25 +98,37 @@ export default function TodayScreen() {
   }
 
   const assigned = plan?.assigned ?? []
+  const firstName = user?.name?.split(' ')[0] ?? 'mover'
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }>
       <View style={styles.hero}>
-        <Text style={styles.greeting}>Hey {user?.name?.split(' ')[0] ?? 'mover'}</Text>
+        <Text style={styles.greeting} numberOfLines={1} ellipsizeMode="tail">
+          Hey {firstName}
+        </Text>
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{user?.total_points ?? plan?.total_points ?? 0}</Text>
+            <Text style={[styles.statValue, narrow && styles.statValueNarrow]} numberOfLines={1}>
+              {user?.total_points ?? plan?.total_points ?? 0}
+            </Text>
             <Text style={styles.statLabel}>MOVE</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{user?.streak ?? 0}</Text>
+            <Text style={[styles.statValue, narrow && styles.statValueNarrow]} numberOfLines={1}>
+              {user?.streak ?? 0}
+            </Text>
             <Text style={styles.statLabel}>Streak</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{plan?.progress.percent ?? 0}%</Text>
+            <Text style={[styles.statValue, narrow && styles.statValueNarrow]} numberOfLines={1}>
+              {plan?.progress.percent ?? 0}%
+            </Text>
             <Text style={styles.statLabel}>Today</Text>
           </View>
         </View>
@@ -122,36 +137,42 @@ export default function TodayScreen() {
         ) : null}
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : null}
 
-      <View style={styles.stepsCard}>
-        <Text style={styles.stepsTitle}>Steps today</Text>
-        <Text style={styles.stepsCount}>
-          {steps.deviceSteps != null ? steps.deviceSteps.toLocaleString() : '—'}{' '}
-          <Text style={styles.stepsGoal}>today · server {steps.serverSteps.toLocaleString()}</Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Steps today</Text>
+        <Text style={styles.stepsCount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          {steps.deviceSteps != null ? steps.deviceSteps.toLocaleString() : '—'}
+        </Text>
+        <Text style={styles.stepsMeta}>
+          Device today · Server {steps.serverSteps.toLocaleString()}
         </Text>
         {steps.support && steps.support.kind !== 'ready' && steps.support.kind !== 'checking' ? (
-          <Text style={styles.stepsHint}>{nativeStepSupportMessage(steps.support)}</Text>
+          <Text style={styles.hint}>{nativeStepSupportMessage(steps.support)}</Text>
         ) : null}
         {steps.error ? <Text style={styles.error}>{steps.error}</Text> : null}
-        <View style={styles.stepsActions}>
+        <View style={styles.actions}>
           {steps.needsConnect ? (
             <Pressable
-              style={[styles.stepsBtn, steps.checking && styles.stepsBtnBusy]}
+              style={[styles.btnPrimary, styles.actionBtn, steps.checking && styles.btnBusy]}
               disabled={steps.checking}
               onPress={() => steps.connect()}>
-              <Text style={styles.stepsBtnText}>Enable step tracking</Text>
+              <Text style={styles.btnPrimaryText}>Enable step tracking</Text>
             </Pressable>
           ) : null}
           {steps.canSync ? (
             <Pressable
-              style={[styles.stepsBtnOutline, steps.syncing && styles.stepsBtnBusy]}
+              style={[styles.btnOutline, styles.actionBtn, steps.syncing && styles.btnBusy]}
               disabled={steps.syncing}
               onPress={() => steps.syncToServer()}>
               {steps.syncing ? (
                 <ActivityIndicator color={colors.primary} />
               ) : (
-                <Text style={styles.stepsBtnOutlineText}>Sync to MOVEGRID</Text>
+                <Text style={styles.btnOutlineText}>Sync to MOVEGRID</Text>
               )}
             </Pressable>
           ) : null}
@@ -160,25 +181,29 @@ export default function TodayScreen() {
 
       <Text style={styles.sectionTitle}>Today&apos;s exercises</Text>
       {assigned.length === 0 ? (
-        <Text style={styles.empty}>All done for today — nice work.</Text>
+        <View style={styles.emptyCard}>
+          <Text style={styles.empty}>All done for today — nice work.</Text>
+        </View>
       ) : (
         assigned.map((item) => (
           <View key={item.id} style={styles.card}>
-            <Text style={styles.cardTitle}>{item.exercise.name}</Text>
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {item.exercise.name}
+            </Text>
             <Text style={styles.cardMeta}>
               {item.exercise.duration_minutes} min · +{item.points} MOVE
             </Text>
-            <Text style={styles.cardBody} numberOfLines={3}>
+            <Text style={styles.cardBody} numberOfLines={4}>
               {item.exercise.instructions}
             </Text>
             <Pressable
-              style={[styles.completeBtn, completingId === item.id && styles.completeBtnBusy]}
+              style={[styles.btnPrimary, completingId === item.id && styles.btnBusy]}
               disabled={completingId === item.id}
               onPress={() => completeAssignment(item.id)}>
               {completingId === item.id ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.white} />
               ) : (
-                <Text style={styles.completeBtnText}>Mark complete</Text>
+                <Text style={styles.btnPrimaryText}>Mark complete</Text>
               )}
             </Pressable>
           </View>
@@ -190,79 +215,154 @@ export default function TodayScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 16, paddingBottom: 32, gap: 12 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
+  content: {
+    padding: layout.screenPadding,
+    paddingBottom: space.xxxl,
+    gap: layout.contentGap,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+  },
   hero: {
     backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: radius.lg,
+    padding: layout.cardPadding,
     borderWidth: 1,
     borderColor: colors.border,
+    gap: space.md,
   },
-  greeting: { fontSize: 22, fontWeight: '700', color: colors.text },
-  statsRow: { flexDirection: 'row', marginTop: 16, gap: 8 },
+  greeting: {
+    ...type.title,
+    color: colors.text,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: space.sm,
+  },
   stat: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: colors.bg,
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: radius.md,
+    paddingVertical: space.md,
+    paddingHorizontal: space.sm,
     alignItems: 'center',
   },
-  statValue: { fontSize: 20, fontWeight: '800', color: colors.primaryDark },
-  statLabel: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  countdown: { marginTop: 12, color: colors.muted, fontSize: 13 },
-  stepsCard: {
-    backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 8,
+  statValue: {
+    ...type.stat,
+    color: colors.primaryDark,
   },
-  stepsTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-  stepsCount: { fontSize: 28, fontWeight: '800', color: colors.primaryDark },
-  stepsGoal: { fontSize: 14, fontWeight: '500', color: colors.muted },
-  stepsHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
-  stepsActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  stepsBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+  statValueNarrow: {
+    fontSize: 16,
   },
-  stepsBtnOutline: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    minWidth: 160,
-    alignItems: 'center',
+  statLabel: {
+    ...type.caption,
+    color: colors.muted,
+    marginTop: space.xs,
   },
-  stepsBtnBusy: { opacity: 0.7 },
-  stepsBtnText: { color: '#fff', fontWeight: '700' },
-  stepsBtnOutlineText: { color: colors.primaryDark, fontWeight: '700' },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginTop: 8 },
-  empty: { color: colors.muted },
+  countdown: {
+    color: colors.muted,
+    ...type.label,
+  },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: radius.lg,
+    padding: layout.cardPadding,
     borderWidth: 1,
     borderColor: colors.border,
-    gap: 6,
+    gap: space.sm,
   },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  cardMeta: { color: colors.muted, fontSize: 13 },
-  cardBody: { color: colors.text, lineHeight: 20 },
-  completeBtn: {
-    marginTop: 8,
+  cardTitle: {
+    ...type.section,
+    fontSize: 16,
+    color: colors.text,
+  },
+  cardMeta: {
+    color: colors.muted,
+    ...type.label,
+  },
+  cardBody: {
+    color: colors.text,
+    ...type.body,
+    lineHeight: 22,
+  },
+  stepsCount: {
+    ...type.display,
+    color: colors.primaryDark,
+  },
+  stepsMeta: {
+    color: colors.muted,
+    ...type.label,
+  },
+  hint: {
+    color: colors.muted,
+    ...type.label,
+    lineHeight: 18,
+  },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space.sm,
+    marginTop: space.xs,
+  },
+  actionBtn: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    minWidth: 140,
+  },
+  btnPrimary: {
     backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 10,
+    borderRadius: radius.sm,
+    minHeight: touch.minHeight,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  completeBtnBusy: { opacity: 0.8 },
-  completeBtnText: { color: '#fff', fontWeight: '700' },
-  error: { color: colors.danger },
+  btnOutline: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.sm,
+    minHeight: touch.minHeight,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
+  },
+  btnBusy: { opacity: 0.7 },
+  btnPrimaryText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  btnOutlineText: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
+  sectionTitle: {
+    ...type.section,
+    color: colors.text,
+    marginTop: space.xs,
+  },
+  emptyCard: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: layout.cardPadding,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  empty: {
+    color: colors.muted,
+    ...type.body,
+    lineHeight: 22,
+  },
+  errorBanner: {
+    backgroundColor: colors.dangerSoft,
+    borderRadius: radius.md,
+    padding: space.md,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  error: {
+    color: colors.danger,
+    ...type.label,
+    lineHeight: 18,
+  },
 })

@@ -1,6 +1,7 @@
 import { useFonts } from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
+import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import 'react-native-reanimated'
@@ -56,7 +57,8 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <AuthGate>
-        <Stack screenOptions={{ headerShown: false }}>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
           <Stack.Screen name="login" />
           <Stack.Screen name="(tabs)" />
         </Stack>
