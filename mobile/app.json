@@ -8,12 +8,18 @@
     "scheme": "movegrid",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMotionUsageDescription": "MOVEGRID counts your daily steps with the motion pedometer."
+      }
     },
     "android": {
       "package": "com.movegrid.app",
       "usesCleartextTraffic": true,
-      "permissions": ["android.permission.health.READ_STEPS"],
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.health.READ_STEPS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -30,6 +36,12 @@
     "plugins": [
       "expo-router",
       "react-native-health-connect",
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "MOVEGRID counts your daily steps with the motion pedometer."
+        }
+      ],
       [
         "expo-build-properties",
         {

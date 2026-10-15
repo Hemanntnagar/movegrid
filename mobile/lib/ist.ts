@@ -24,3 +24,9 @@ export function istDayTimeRange(now = new Date()): { startTime: string; endTime:
     endTime: now.toISOString(),
   }
 }
+
+/** JS Date for IST midnight of the current (or given) IST calendar day. */
+export function istDayStartDate(now = new Date()): Date {
+  const key = istDateKey(now)
+  return new Date(`${key}T00:00:00.000${IST_OFFSET}`)
+}

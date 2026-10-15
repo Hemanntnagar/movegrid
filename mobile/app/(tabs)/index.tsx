@@ -11,8 +11,7 @@ import {
 } from 'react-native'
 import { useAuth } from '@/context/AuthContext'
 import { colors } from '@/constants/theme'
-import { useHealthConnectSteps } from '@/hooks/useHealthConnectSteps'
-import { healthConnectSupportMessage } from '@/lib/healthConnectSteps'
+import { nativeStepSupportMessage, useNativeSteps } from '@/hooks/useNativeSteps'
 
 function formatCountdown(seconds: number) {
   const h = Math.floor(seconds / 3600)
@@ -29,7 +28,7 @@ export default function TodayScreen() {
   const [error, setError] = useState<string | null>(null)
   const [completingId, setCompletingId] = useState<number | null>(null)
 
-  const steps = useHealthConnectSteps({
+  const steps = useNativeSteps({
     token,
     serverSteps: user?.steps ?? 0,
     onSynced: refreshUser,
@@ -61,7 +60,7 @@ export default function TodayScreen() {
   async function onRefresh() {
     setRefreshing(true)
     try {
-      // Plan load + Health Connect probe are independent.
+      // Plan load + native pedometer reconcile are independent.
       await Promise.all([load(), steps.refreshSupport()])
       if (token) await steps.syncToServer()
       await refreshUser()
@@ -126,13 +125,13 @@ export default function TodayScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <View style={styles.stepsCard}>
-        <Text style={styles.stepsTitle}>Steps (Health Connect)</Text>
+        <Text style={styles.stepsTitle}>Steps today</Text>
         <Text style={styles.stepsCount}>
           {steps.deviceSteps != null ? steps.deviceSteps.toLocaleString() : '—'}{' '}
           <Text style={styles.stepsGoal}>today · server {steps.serverSteps.toLocaleString()}</Text>
         </Text>
-        {steps.support && steps.support.kind !== 'ready' ? (
-          <Text style={styles.stepsHint}>{healthConnectSupportMessage(steps.support)}</Text>
+        {steps.support && steps.support.kind !== 'ready' && steps.support.kind !== 'checking' ? (
+          <Text style={styles.stepsHint}>{nativeStepSupportMessage(steps.support)}</Text>
         ) : null}
         {steps.error ? <Text style={styles.error}>{steps.error}</Text> : null}
         <View style={styles.stepsActions}>
@@ -141,7 +140,7 @@ export default function TodayScreen() {
               style={[styles.stepsBtn, steps.checking && styles.stepsBtnBusy]}
               disabled={steps.checking}
               onPress={() => steps.connect()}>
-              <Text style={styles.stepsBtnText}>Connect Health Connect</Text>
+              <Text style={styles.stepsBtnText}>Enable step tracking</Text>
             </Pressable>
           ) : null}
           {steps.canSync ? (
