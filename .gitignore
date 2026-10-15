@@ -20,3 +20,6 @@ __pycache__/
 .venv/
 *.pyc
 *.tsbuildinfo
+
+# Local Android APK build toolkit (JDK, Gradle cache, APK artifacts)
+.tools/

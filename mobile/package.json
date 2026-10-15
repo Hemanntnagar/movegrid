@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo/metro-runtime": "~57.0.17",
     "@movegrid/api-client": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.26",
@@ -33,9 +34,9 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
+    "android": "expo run:android",
     "android:dev": "expo run:android",
-    "ios": "expo start --ios",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "test:steps": "node lib/nativeSteps/stepMath.test.mjs",
     "typecheck": "tsc --noEmit"
