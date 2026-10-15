@@ -135,17 +135,33 @@ def _run_migrations() -> None:
     command.upgrade(cfg, "head")
 
 
+def _rebind_async_engine() -> None:
+    """Recreate the async engine/session factory after sync Alembic releases SQLite locks."""
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    database.engine = database.create_app_engine()
+    database.SessionLocal = async_sessionmaker(database.engine, expire_on_commit=False)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # SQLite: dispose the import-time async engine, then run sync Alembic off the
+    # event loop so we don't deadlock the startup lifespan.
+    import asyncio
+
     try:
-        _run_migrations()
+        await database.engine.dispose()
+        await asyncio.to_thread(_run_migrations)
     except Exception:
         logger.exception("Alembic upgrade failed; falling back to create_all only")
+        _rebind_async_engine()
         try:
             async with database.engine.begin() as connection:
                 await connection.run_sync(Base.metadata.create_all)
         except Exception:
             logger.exception("create_all fallback failed")
+    else:
+        _rebind_async_engine()
     try:
         async with database.SessionLocal() as session:
             await seed_bootstrap_data(session)
