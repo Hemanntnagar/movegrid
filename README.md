@@ -23,6 +23,8 @@ The frontend reads `NEXT_PUBLIC_API_URL` (default `http://localhost:8000/api/v1`
 
 ## Mobile (Android)
 
+**Install APK:** [MOVEGRID Android APK release](https://github.com/Hemanntnagar/movegrid/releases/tag/v1.0.0-android) — direct download: [movegrid-release.apk](https://github.com/Hemanntnagar/movegrid/releases/download/v1.0.0-android/movegrid-release.apk). Sideload on device; rebuild if you need a different API base URL.
+
 1. Copy `mobile/.env.example` to `mobile/.env` (emulator default uses `http://10.0.2.2:8000` to reach local uvicorn).
 2. From the repo root: `pnpm install`, then start the backend as above.
 3. Run `pnpm mobile:android` (Android Studio emulator or USB device with Expo Go / dev build).
