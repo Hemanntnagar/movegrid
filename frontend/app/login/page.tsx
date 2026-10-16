@@ -21,10 +21,16 @@ function Brand() {
   )
 }
 
+function safeNextPath(raw: string | null): string | null {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return null
+  return raw
+}
+
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
+  const nextPath = safeNextPath(searchParams.get('next'))
   
   const [mode, setMode] = useState<'login' | 'signup'>(initialTab)
   const [name, setName] = useState('')
@@ -34,11 +40,16 @@ function LoginContent() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function postAuthPath() {
+    if (!hasCompletedOnboarding()) return '/onboarding'
+    return nextPath || '/'
+  }
+
   useEffect(() => {
     // Local token check only — skip /auth/me round-trip before redirect.
     if (!getStoredToken()) return
-    router.replace(hasCompletedOnboarding() ? '/' : '/onboarding')
-  }, [router])
+    router.replace(postAuthPath())
+  }, [router, nextPath])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -53,8 +64,9 @@ function LoginContent() {
       // Seed profile from login/register payload — skip an immediate /auth/me round-trip.
       if (session.user) seedMeCache(session.access_token, session.user)
       // Prefetch home essentials while Next.js navigates (overlaps RTT with route transition).
-      if (hasCompletedOnboarding()) prefetchDashboard(session.access_token)
-      router.push(hasCompletedOnboarding() ? '/' : '/onboarding')
+      const destination = postAuthPath()
+      if (destination === '/') prefetchDashboard(session.access_token)
+      router.push(destination)
     } catch (err) {
       setError(err instanceof Error ? err.message : `${mode === 'login' ? 'Sign in' : 'Sign up'} failed`)
     } finally {

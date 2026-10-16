@@ -166,6 +166,7 @@ export default function RewardsPage() {
   useEffect(() => {
     const stored = getStoredToken()
     if (!stored) {
+      setLoading(false)
       router.replace('/login')
       return
     }
@@ -173,16 +174,24 @@ export default function RewardsPage() {
     const cached = peekMeCache(stored)
     if (cached) setUser(cached)
 
+    let cancelled = false
     load(stored)
       .catch((err) => {
+        if (cancelled) return
         const message = err instanceof Error ? err.message : 'Could not load rewards'
         setError(message)
         if (isAuthFailure(err)) {
           clearToken()
+          setUser(null)
           router.replace('/login')
         }
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [load, router])
 
   const filteredRewards = useMemo(() => {
@@ -213,6 +222,7 @@ export default function RewardsPage() {
       setConfirmReward(null)
       if (isAuthFailure(err)) {
         clearToken()
+        setUser(null)
         router.replace('/login')
       }
     } finally {
@@ -225,11 +235,49 @@ export default function RewardsPage() {
     router.push('/login')
   }
 
-  if (loading || !user) {
+  function retryLoad() {
+    const stored = getStoredToken()
+    if (!stored) {
+      router.replace('/login')
+      return
+    }
+    setError('')
+    setLoading(true)
+    load(stored, { forceMe: true })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : 'Could not load rewards'
+        setError(message)
+        if (isAuthFailure(err)) {
+          clearToken()
+          setUser(null)
+          router.replace('/login')
+        }
+      })
+      .finally(() => setLoading(false))
+  }
+
+  if (loading && !user) {
     return (
       <div className="app-shell fitness-loading">
         <LoaderCircle className="spin" size={28} />
         <p>Loading MOVE store…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="app-shell fitness-loading">
+        <Gift size={28} />
+        <p>{error || 'This page couldn’t load the reward store.'}</p>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button type="button" className="primary-button" onClick={retryLoad}>
+            Try again
+          </button>
+          <button type="button" className="outline-button" onClick={() => router.push('/login')}>
+            Sign in
+          </button>
+        </div>
       </div>
     )
   }

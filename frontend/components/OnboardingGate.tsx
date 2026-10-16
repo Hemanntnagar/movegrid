@@ -29,7 +29,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     const token = getStoredToken()
     if (!token) {
       setReady(false)
-      router.replace('/login')
+      router.replace(`/login?next=${encodeURIComponent(pathname || '/')}`)
       return
     }
 
@@ -58,6 +58,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       ) : !ready ? (
         <div className="app-shell fitness-loading">
           <p>Loading…</p>
+          <p style={{ fontSize: 12, opacity: 0.7, margin: 0 }}>Checking your session…</p>
         </div>
       ) : (
         <>
