@@ -1,19 +1,96 @@
-/** IST day boundaries — aligned with the web app streak windows. */
+/** India Standard Time helpers — aligned with frontend/lib/ist.ts */
 
+export const IST_TIMEZONE = 'Asia/Kolkata'
 export const IST_OFFSET = '+05:30'
 
-export function istDateKey(date: Date = new Date()): string {
+export type IstParts = {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  second: number
+}
+
+export function getIstParts(date: Date = new Date()): IstParts {
   const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Kolkata',
+    timeZone: IST_TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
   }).formatToParts(date)
+
   const map: Record<string, string> = {}
   for (const part of parts) {
     if (part.type !== 'literal') map[part.type] = part.value
   }
-  return `${map.year}-${map.month}-${map.day}`
+
+  const year = Number(map.year)
+  const month = Number(map.month)
+  const day = Number(map.day)
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    const istMs = date.getTime() + 5.5 * 60 * 60 * 1000
+    const utc = new Date(istMs)
+    return {
+      year: utc.getUTCFullYear(),
+      month: utc.getUTCMonth() + 1,
+      day: utc.getUTCDate(),
+      hour: utc.getUTCHours(),
+      minute: utc.getUTCMinutes(),
+      second: utc.getUTCSeconds(),
+    }
+  }
+
+  return {
+    year,
+    month,
+    day,
+    hour: Number(map.hour === '24' ? '0' : map.hour),
+    minute: Number(map.minute),
+    second: Number(map.second),
+  }
+}
+
+export function istDateKey(date: Date = new Date()): string {
+  const { year, month, day } = getIstParts(date)
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+export function istMonthKey(date: Date = new Date()): string {
+  const { year, month } = getIstParts(date)
+  return `${year}-${String(month).padStart(2, '0')}`
+}
+
+export function daysInIstMonth(date: Date = new Date()): number {
+  const { year, month } = getIstParts(date)
+  return new Date(Date.UTC(year, month, 0)).getUTCDate()
+}
+
+export function monthLabelIst(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-IN', {
+    timeZone: IST_TIMEZONE,
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
+export function istDateKeyFromIso(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const parsed = new Date(iso.endsWith('Z') || iso.includes('+') ? iso : `${iso}Z`)
+  if (Number.isNaN(parsed.getTime())) return null
+  return istDateKey(parsed)
+}
+
+export function formatCountdown(totalSeconds: number) {
+  const safe = Math.max(0, totalSeconds)
+  const hours = Math.floor(safe / 3600)
+  const minutes = Math.floor((safe % 3600) / 60)
+  const seconds = safe % 60
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':')
 }
 
 /** Start of the current IST calendar day through now (for Health Connect queries). */
@@ -25,7 +102,6 @@ export function istDayTimeRange(now = new Date()): { startTime: string; endTime:
   }
 }
 
-/** JS Date for IST midnight of the current (or given) IST calendar day. */
 export function istDayStartDate(now = new Date()): Date {
   const key = istDateKey(now)
   return new Date(`${key}T00:00:00.000${IST_OFFSET}`)

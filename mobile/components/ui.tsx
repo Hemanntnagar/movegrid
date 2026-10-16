@@ -27,12 +27,10 @@ import {
 type ScreenScrollProps = {
   children: ReactNode
   contentStyle?: StyleProp<ViewStyle>
-  /** When false, skip bottom tab clearance (e.g. login) */
   tabScreen?: boolean
   refreshControl?: ReactElement<RefreshControlProps>
 }
 
-/** Consistent scrollable screen shell with safe-area + tab clearance. */
 export function ScreenScroll({
   children,
   contentStyle,
@@ -74,12 +72,12 @@ type CardProps = {
 
 const TONE_BG: Record<NonNullable<CardProps['tone']>, string> = {
   default: colors.card,
-  soft: colors.bgSoft,
-  accent: colors.accentSoft,
-  orange: colors.orangeSoft,
-  blue: colors.blueSoft,
-  purple: colors.purpleSoft,
-  yellow: colors.yellowSoft,
+  soft: colors.bgMid,
+  accent: colors.accent,
+  orange: colors.orange,
+  blue: colors.blue,
+  purple: colors.purple,
+  yellow: colors.yellow,
 }
 
 export function Card({ children, style, tone = 'default' }: CardProps) {
@@ -125,7 +123,7 @@ export function Button({
       {...rest}>
       {busy ? (
         <ActivityIndicator
-          color={variant === 'secondary' || variant === 'ghost' ? colors.primary : colors.white}
+          color={variant === 'secondary' || variant === 'ghost' ? colors.ink : colors.cream}
         />
       ) : children ? (
         children
@@ -177,7 +175,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: layout.screenPadding,
-    paddingTop: layout.screenPadding,
+    paddingTop: 10,
     gap: layout.contentGap,
     width: '100%',
     maxWidth: layout.maxContentWidth,
@@ -206,20 +204,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    borderWidth: 3,
+    borderColor: colors.ink,
   },
   btnPrimary: {
     backgroundColor: colors.primary,
   },
   btnSecondary: {
     backgroundColor: colors.card,
-    ...hairline,
   },
   btnGhost: {
     backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   btnDanger: {
     backgroundColor: colors.dangerSoft,
-    borderWidth: 1,
     borderColor: colors.danger,
   },
   btnPressed: {
@@ -229,15 +228,15 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   btnText: {
-    color: colors.white,
+    color: colors.cream,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '900',
   },
   btnTextSecondary: {
-    color: colors.primaryDark,
+    color: colors.ink,
   },
   btnTextGhost: {
-    color: colors.primaryDark,
+    color: colors.primary,
   },
   btnTextDanger: {
     color: colors.danger,
@@ -246,8 +245,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dangerSoft,
     borderRadius: radius.md,
     padding: space.md,
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    borderWidth: 3,
+    borderColor: colors.ink,
   },
   errorText: {
     ...type.label,
@@ -255,7 +254,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...type.section,
-    color: colors.text,
+    color: colors.ink,
     marginTop: space.xs,
   },
   emptyText: {

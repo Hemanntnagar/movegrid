@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router'
-import { Platform, StyleSheet } from 'react-native'
+import { Platform } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SymbolView } from 'expo-symbols'
 
@@ -7,36 +7,36 @@ import { colors, space, type } from '@/constants/theme'
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets()
-  const tabBarHeight = 56 + Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0)
+  const tabBarHeight = 58 + Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0)
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primaryDark,
+        tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
+          backgroundColor: colors.cream,
+          borderTopColor: colors.ink,
+          borderTopWidth: 3.5,
           height: tabBarHeight,
           paddingTop: space.xs,
           paddingBottom: Math.max(insets.bottom, space.sm),
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: 10,
+          fontWeight: '800',
           marginBottom: 2,
         },
-        tabBarItemStyle: {
-          paddingVertical: 2,
-        },
         headerStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: colors.cream,
+          borderBottomWidth: 3.5,
+          borderBottomColor: colors.ink,
         },
         headerTitleStyle: {
           ...type.bodyStrong,
           fontSize: 17,
-          color: colors.text,
+          fontWeight: '900',
+          color: colors.ink,
         },
         headerShadowVisible: false,
         headerTitleAlign: 'center',
