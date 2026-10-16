@@ -6,7 +6,6 @@ import {
 } from '@movegrid/api-client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ActivityIndicator,
   Alert,
   Modal,
   Pressable,
@@ -16,8 +15,17 @@ import {
   Text,
   View,
 } from 'react-native'
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorBanner,
+  LoadingState,
+  ScreenScroll,
+  SectionTitle,
+} from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
-import { colors, layout, radius, space, touch, type } from '@/constants/theme'
+import { colors, layout, radius, space, type } from '@/constants/theme'
 
 const FILTERS = ['All', 'Food', 'Events', 'Sports', 'Merch'] as const
 
@@ -116,33 +124,26 @@ export default function RewardsScreen() {
     setConfirm(reward)
   }
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    )
-  }
+  if (loading) return <LoadingState />
 
   return (
     <>
-      <ScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }>
-        <View style={styles.balanceCard}>
+        <Card tone="yellow" style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>MOVE balance</Text>
-          <Text style={styles.balanceValue}>{balance.toLocaleString()}</Text>
-        </View>
+          <Text
+            style={styles.balanceValue}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}>
+            {balance.toLocaleString()}
+          </Text>
+        </Card>
 
-        {error ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.error}>{error}</Text>
-          </View>
-        ) : null}
+        {error ? <ErrorBanner message={error} /> : null}
 
         <ScrollView
           horizontal
@@ -155,26 +156,32 @@ export default function RewardsScreen() {
                 key={cat}
                 onPress={() => setFilter(cat)}
                 style={[styles.filterChip, active && styles.filterChipActive]}>
-                <Text style={[styles.filterText, active && styles.filterTextActive]}>{cat}</Text>
+                <Text style={[styles.filterText, active && styles.filterTextActive]} numberOfLines={1}>
+                  {cat}
+                </Text>
               </Pressable>
             )
           })}
         </ScrollView>
 
         {filtered.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.empty}>No rewards in this category yet.</Text>
-          </View>
+          <EmptyState message="No rewards in this category yet." />
         ) : (
           filtered.map((reward) => {
             const available = reward.stock > 0
             const canAfford = balance >= reward.points_required
             const disabled = !available || !canAfford || redeeming
             return (
-              <View key={reward.id} style={[styles.card, !available && styles.cardDim]}>
+              <Card key={reward.id} style={!available ? styles.cardDim : undefined}>
                 <View style={styles.cardTop}>
-                  <Text style={styles.category}>{reward.category}</Text>
-                  <Text style={styles.cost}>{reward.points_required.toLocaleString()} MOVE</Text>
+                  <View style={styles.category}>
+                    <Text style={styles.categoryText} numberOfLines={1}>
+                      {reward.category}
+                    </Text>
+                  </View>
+                  <Text style={styles.cost} numberOfLines={1}>
+                    {reward.points_required.toLocaleString()} MOVE
+                  </Text>
                 </View>
                 <Text style={styles.title} numberOfLines={2}>
                   {reward.title}
@@ -182,27 +189,22 @@ export default function RewardsScreen() {
                 <Text style={styles.description} numberOfLines={3}>
                   {reward.description}
                 </Text>
-                <Text style={styles.stock}>
+                <Text style={styles.stock} numberOfLines={1}>
                   {available ? `${reward.stock} in stock` : 'Out of stock'}
                 </Text>
-                <Pressable
-                  style={[styles.redeemBtn, disabled && styles.redeemBtnDisabled]}
+                <Button
+                  label={!available ? 'Unavailable' : !canAfford ? 'Not enough MOVE' : 'Redeem'}
                   disabled={disabled}
-                  onPress={() => onRedeemPress(reward)}>
-                  <Text style={styles.redeemText}>
-                    {!available ? 'Unavailable' : !canAfford ? 'Not enough MOVE' : 'Redeem'}
-                  </Text>
-                </Pressable>
-              </View>
+                  onPress={() => onRedeemPress(reward)}
+                />
+              </Card>
             )
           })
         )}
 
-        <Text style={styles.sectionTitle}>Your redemptions</Text>
+        <SectionTitle>Your redemptions</SectionTitle>
         {history.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.empty}>No redemptions yet — your first swap shows up here.</Text>
-          </View>
+          <EmptyState message="No redemptions yet — your first swap shows up here." />
         ) : (
           history.map((item) => (
             <View key={item.id} style={styles.historyRow}>
@@ -214,49 +216,67 @@ export default function RewardsScreen() {
                   {new Date(item.redeemed_at).toLocaleString()} · {item.status}
                 </Text>
               </View>
-              <Text style={styles.historySpend}>−{item.points_spent.toLocaleString()}</Text>
+              <Text style={styles.historySpend} numberOfLines={1}>
+                −{item.points_spent.toLocaleString()}
+              </Text>
             </View>
           ))
         )}
-      </ScrollView>
+      </ScreenScroll>
 
-      <Modal visible={Boolean(confirm)} transparent animationType="fade" onRequestClose={() => setConfirm(null)}>
+      <Modal
+        visible={Boolean(confirm)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirm(null)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.modalEyebrow}>Confirm redemption</Text>
-            <Text style={styles.modalTitle}>{confirm?.title}</Text>
+            <Text style={styles.modalTitle} numberOfLines={3}>
+              {confirm?.title}
+            </Text>
             <Text style={styles.modalBody}>
-              Spend {confirm?.points_required.toLocaleString()} MOVE from your {balance.toLocaleString()}{' '}
-              balance.
+              Spend {confirm?.points_required.toLocaleString()} MOVE from your{' '}
+              {balance.toLocaleString()} balance.
             </Text>
             <Text style={styles.modalPreview}>
               New balance:{' '}
               {confirm ? (balance - confirm.points_required).toLocaleString() : '—'} MOVE
             </Text>
-            <Pressable
-              style={[styles.redeemBtn, redeeming && styles.redeemBtnDisabled]}
+            <Button
+              label={redeeming ? 'Redeeming…' : 'Confirm redeem'}
+              busy={redeeming}
+              onPress={confirmRedeem}
+            />
+            <Button
+              label="Cancel"
+              variant="ghost"
               disabled={redeeming}
-              onPress={confirmRedeem}>
-              <Text style={styles.redeemText}>{redeeming ? 'Redeeming…' : 'Confirm redeem'}</Text>
-            </Pressable>
-            <Pressable style={styles.cancelBtn} disabled={redeeming} onPress={() => setConfirm(null)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
+              onPress={() => setConfirm(null)}
+            />
           </View>
         </View>
       </Modal>
 
-      <Modal visible={Boolean(voucher)} transparent animationType="fade" onRequestClose={() => setVoucher(null)}>
+      <Modal
+        visible={Boolean(voucher)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setVoucher(null)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.modalEyebrow}>Voucher unlocked</Text>
-            <Text style={styles.modalTitle}>{voucher?.title}</Text>
+            <Text style={styles.modalTitle} numberOfLines={3}>
+              {voucher?.title}
+            </Text>
             <Text style={styles.modalBody}>Show this code at the partner store or venue.</Text>
-            <Text style={styles.voucherCode}>VOUCHER #{voucher?.id}-MOVEGRID</Text>
+            <View style={styles.voucherCode}>
+              <Text style={styles.voucherCodeText} numberOfLines={2}>
+                VOUCHER #{voucher?.id}-MOVEGRID
+              </Text>
+            </View>
             <Text style={styles.modalPreview}>Redeemed for {voucher?.spent} MOVE</Text>
-            <Pressable style={styles.redeemBtn} onPress={() => setVoucher(null)}>
-              <Text style={styles.redeemText}>Done</Text>
-            </Pressable>
+            <Button label="Done" onPress={() => setVoucher(null)} />
           </View>
         </View>
       </Modal>
@@ -265,48 +285,27 @@ export default function RewardsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  content: {
-    padding: layout.screenPadding,
-    paddingBottom: space.xxxl,
-    gap: space.sm,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bg,
-  },
   balanceCard: {
-    backgroundColor: colors.primaryDark,
-    borderRadius: radius.lg,
-    padding: layout.cardPadding,
-    marginBottom: space.xs,
+    gap: space.xs,
   },
   balanceLabel: {
     ...type.caption,
-    color: '#99f6e4',
+    color: colors.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
   balanceValue: {
     ...type.display,
-    color: colors.white,
-    marginTop: space.xs,
+    color: colors.text,
   },
-  errorBanner: {
-    backgroundColor: colors.dangerSoft,
-    borderRadius: radius.md,
-    padding: space.md,
-    borderWidth: 1,
-    borderColor: '#fecaca',
+  filters: {
+    gap: space.sm,
+    paddingVertical: space.xs,
   },
-  error: { ...type.label, color: colors.danger },
-  filters: { gap: space.sm, paddingVertical: space.xs },
   filterChip: {
     minHeight: 36,
     paddingHorizontal: space.md,
-    borderRadius: 999,
+    borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,
@@ -317,17 +316,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     borderColor: colors.primary,
   },
-  filterText: { ...type.label, color: colors.muted },
-  filterTextActive: { color: colors.primaryDark, fontWeight: '700' },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: space.sm,
+  filterText: {
+    ...type.label,
+    color: colors.muted,
   },
-  cardDim: { opacity: 0.65 },
+  filterTextActive: {
+    color: colors.primaryDark,
+    fontWeight: '700',
+  },
+  cardDim: {
+    opacity: 0.65,
+  },
   cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -335,43 +334,33 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   category: {
-    ...type.caption,
-    color: colors.primaryDark,
     backgroundColor: colors.primarySoft,
     paddingHorizontal: space.sm,
-    paddingVertical: 2,
-    borderRadius: 999,
-    overflow: 'hidden',
-    fontWeight: '700',
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    maxWidth: '55%',
   },
-  cost: { ...type.bodyStrong, color: colors.text },
-  title: { ...type.section, color: colors.text },
-  description: { ...type.label, color: colors.muted, lineHeight: 18 },
-  stock: { ...type.caption, color: colors.muted },
-  redeemBtn: {
-    minHeight: touch.minHeight,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: space.xs,
+  categoryText: {
+    ...type.caption,
+    color: colors.primaryDark,
   },
-  redeemBtnDisabled: { opacity: 0.5 },
-  redeemText: { ...type.bodyStrong, color: colors.white },
-  sectionTitle: {
+  cost: {
+    ...type.bodyStrong,
+    color: colors.text,
+    flexShrink: 0,
+  },
+  title: {
     ...type.section,
     color: colors.text,
-    marginTop: space.md,
-    marginBottom: space.xs,
   },
-  emptyCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.border,
+  description: {
+    ...type.label,
+    color: colors.muted,
   },
-  empty: { ...type.label, color: colors.muted },
+  stock: {
+    ...type.caption,
+    color: colors.muted,
+  },
   historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -382,13 +371,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  historyBody: { flex: 1, minWidth: 0 },
-  historyTitle: { ...type.bodyStrong, color: colors.text },
-  historyMeta: { ...type.caption, color: colors.muted, marginTop: 2 },
-  historySpend: { ...type.bodyStrong, color: colors.danger },
+  historyBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  historyTitle: {
+    ...type.bodyStrong,
+    color: colors.text,
+  },
+  historyMeta: {
+    ...type.caption,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  historySpend: {
+    ...type.bodyStrong,
+    color: colors.danger,
+    flexShrink: 0,
+  },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.45)',
+    backgroundColor: colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     padding: layout.screenPadding,
@@ -400,29 +403,37 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     padding: layout.cardPadding,
     gap: space.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modalEyebrow: {
     ...type.caption,
     color: colors.primaryDark,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    fontWeight: '700',
   },
-  modalTitle: { ...type.title, color: colors.text },
-  modalBody: { ...type.body, color: colors.muted },
-  modalPreview: { ...type.bodyStrong, color: colors.text, marginBottom: space.xs },
-  voucherCode: {
+  modalTitle: {
+    ...type.title,
+    color: colors.text,
+  },
+  modalBody: {
+    ...type.body,
+    color: colors.muted,
+  },
+  modalPreview: {
     ...type.bodyStrong,
-    textAlign: 'center',
+    color: colors.text,
+    marginBottom: space.xs,
+  },
+  voucherCode: {
     paddingVertical: space.md,
+    paddingHorizontal: space.md,
     backgroundColor: colors.primarySoft,
     borderRadius: radius.md,
+  },
+  voucherCodeText: {
+    ...type.bodyStrong,
+    textAlign: 'center',
     color: colors.primaryDark,
   },
-  cancelBtn: {
-    minHeight: touch.minHeight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelText: { ...type.bodyStrong, color: colors.muted },
 })

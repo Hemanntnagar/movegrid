@@ -1,17 +1,24 @@
 import { resolveApiUrl } from '@movegrid/api-client'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { Button, Card, ScreenScroll, SectionTitle } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
-import { colors, layout, radius, space, touch, type } from '@/constants/theme'
+import { colors, radius, space, type } from '@/constants/theme'
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth()
+  const { width } = useWindowDimensions()
+  const narrow = width < 360
+
+  const cells = [
+    { label: 'MOVE', value: String(user?.total_points ?? 0), tone: styles.toneLime },
+    { label: 'Streak', value: String(user?.streak ?? 0), tone: styles.toneOrange },
+    { label: 'Active min', value: String(user?.active_minutes ?? 0), tone: styles.toneBlue },
+    { label: 'Level', value: String(user?.fitness_level ?? '—'), tone: styles.tonePurple },
+  ] as const
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.card}>
+    <ScreenScroll contentStyle={styles.content}>
+      <Card style={styles.profileCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {(user?.name?.trim()?.[0] ?? 'M').toUpperCase()}
@@ -23,67 +30,44 @@ export default function ProfileScreen() {
         <Text style={styles.email} numberOfLines={1} ellipsizeMode="middle">
           {user?.email ?? '—'}
         </Text>
+      </Card>
+
+      <SectionTitle>Stats</SectionTitle>
+      <View style={styles.statsGrid}>
+        {cells.map((cell) => (
+          <View key={cell.label} style={[styles.statCell, cell.tone, narrow && styles.statCellNarrow]}>
+            <Text
+              style={styles.statValue}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}>
+              {cell.value}
+            </Text>
+            <Text style={styles.statLabel} numberOfLines={1}>
+              {cell.label}
+            </Text>
+          </View>
+        ))}
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionLabel}>Stats</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statCell}>
-            <Text style={styles.statValue} numberOfLines={1}>
-              {user?.total_points ?? 0}
-            </Text>
-            <Text style={styles.statLabel}>MOVE</Text>
-          </View>
-          <View style={styles.statCell}>
-            <Text style={styles.statValue} numberOfLines={1}>
-              {user?.streak ?? 0}
-            </Text>
-            <Text style={styles.statLabel}>Streak</Text>
-          </View>
-          <View style={styles.statCell}>
-            <Text style={styles.statValue} numberOfLines={1}>
-              {user?.active_minutes ?? 0}
-            </Text>
-            <Text style={styles.statLabel}>Active min</Text>
-          </View>
-          <View style={styles.statCell}>
-            <Text style={styles.statValue} numberOfLines={1}>
-              {user?.fitness_level ?? '—'}
-            </Text>
-            <Text style={styles.statLabel}>Level</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionLabel}>API</Text>
-        <Text style={styles.apiUrl} selectable>
+      <Card>
+        <Text style={styles.sectionLabel}>API endpoint</Text>
+        <Text style={styles.apiUrl} selectable numberOfLines={3}>
           {resolveApiUrl()}
         </Text>
-      </View>
+      </Card>
 
-      <Pressable style={styles.signOut} onPress={() => signOut()}>
-        <Text style={styles.signOutText}>Sign out</Text>
-      </Pressable>
-    </ScrollView>
+      <Button label="Sign out" variant="danger" onPress={() => signOut()} />
+    </ScreenScroll>
   )
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
   content: {
     flexGrow: 1,
-    padding: layout.screenPadding,
-    paddingBottom: space.xxxl,
-    gap: layout.contentGap,
   },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: space.sm,
+  profileCard: {
+    alignItems: 'flex-start',
   },
   avatar: {
     width: 56,
@@ -95,7 +79,7 @@ const styles = StyleSheet.create({
     marginBottom: space.xs,
   },
   avatarText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.primaryDark,
   },
@@ -104,8 +88,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   email: {
-    color: colors.muted,
     ...type.body,
+    color: colors.muted,
+    width: '100%',
   },
   sectionLabel: {
     ...type.caption,
@@ -117,46 +102,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: space.sm,
-    marginTop: space.xs,
   },
   statCell: {
+    flexBasis: '47%',
     flexGrow: 1,
-    flexBasis: 140,
-    maxWidth: '100%',
-    backgroundColor: colors.bg,
+    minWidth: 148,
     borderRadius: radius.md,
     paddingVertical: space.md,
     paddingHorizontal: space.md,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
+  statCellNarrow: {
+    flexBasis: '100%',
+    minWidth: 0,
+  },
+  toneLime: { backgroundColor: colors.accentSoft },
+  toneOrange: { backgroundColor: colors.orangeSoft },
+  toneBlue: { backgroundColor: colors.blueSoft },
+  tonePurple: { backgroundColor: colors.purpleSoft },
   statValue: {
     ...type.stat,
-    color: colors.primaryDark,
+    color: colors.text,
+    width: '100%',
+    textAlign: 'center',
   },
   statLabel: {
     ...type.caption,
     color: colors.muted,
     marginTop: space.xs,
+    textTransform: 'uppercase',
   },
   apiUrl: {
     ...type.label,
     color: colors.text,
-    lineHeight: 18,
-  },
-  signOut: {
-    marginTop: 'auto',
-    backgroundColor: colors.dangerSoft,
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: radius.md,
-    minHeight: touch.minHeight,
-    paddingVertical: space.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  signOutText: {
-    color: colors.danger,
-    fontWeight: '700',
-    fontSize: 16,
   },
 })

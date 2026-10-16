@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -12,6 +9,7 @@ import {
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Button, Card, ErrorBanner } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { colors, layout, radius, space, touch, type } from '@/constants/theme'
 
@@ -46,102 +44,121 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerStyle={[
+      <View
+        style={[
           styles.container,
           {
             paddingTop: Math.max(insets.top, space.xxl),
             paddingBottom: Math.max(insets.bottom, space.xxl),
           },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        <View style={[styles.form, { width: formWidth }]}>
-          <View style={styles.header}>
+        ]}>
+        <View style={[styles.formWrap, { width: formWidth }]}>
+          <View style={styles.brandBlock}>
+            <View style={styles.mark}>
+              <Text style={styles.markText}>M</Text>
+            </View>
             <Text style={styles.brand}>MOVEGRID</Text>
-            <Text style={styles.subtitle}>Move more. Earn MOVE. Stay on streak.</Text>
+            <Text style={styles.subtitle}>
+              {mode === 'signup'
+                ? 'Create an account to earn MOVE and build your streak.'
+                : 'Sign in to track steps, finish exercises, and climb standings.'}
+            </Text>
           </View>
 
-          {mode === 'signup' ? (
+          <Card style={styles.card}>
+            {mode === 'signup' ? (
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor={colors.muted}
+                autoCapitalize="words"
+                autoCorrect={false}
+                value={name}
+                onChangeText={setName}
+              />
+            ) : null}
+
             <TextInput
               style={styles.input}
-              placeholder="Name"
+              placeholder="Email"
               placeholderTextColor={colors.muted}
-              autoCapitalize="words"
+              autoCapitalize="none"
               autoCorrect={false}
-              value={name}
-              onChangeText={setName}
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={setEmail}
             />
-          ) : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Password (8+ characters)"
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              textContentType="password"
+              value={password}
+              onChangeText={setPassword}
+            />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={colors.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password (8+ characters)"
-            placeholderTextColor={colors.muted}
-            secureTextEntry
-            textContentType="password"
-            value={password}
-            onChangeText={setPassword}
-          />
+            {error ? <ErrorBanner message={error} /> : null}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+            <Button
+              label={mode === 'login' ? 'Sign in' : 'Create account'}
+              busy={busy}
+              onPress={submit}
+            />
 
-          <Pressable
-            style={[styles.button, busy && styles.buttonDisabled]}
-            onPress={submit}
-            disabled={busy}>
-            {busy ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.buttonText}>{mode === 'login' ? 'Sign in' : 'Create account'}</Text>
-            )}
-          </Pressable>
-
-          <Pressable
-            style={styles.switchHit}
-            hitSlop={8}
-            onPress={() => {
-              setError(null)
-              setMode(mode === 'login' ? 'signup' : 'login')
-            }}>
-            <Text style={styles.switch}>
-              {mode === 'login' ? 'New here? Create an account' : 'Already have an account? Sign in'}
-            </Text>
-          </Pressable>
+            <Button
+              variant="ghost"
+              label={
+                mode === 'login' ? 'New here? Create an account' : 'Already have an account? Sign in'
+              }
+              onPress={() => {
+                setError(null)
+                setMode(mode === 'login' ? 'signup' : 'login')
+              }}
+            />
+          </Card>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.bg },
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: layout.screenPadding,
   },
-  form: {
-    gap: space.md,
+  formWrap: {
+    gap: space.xl,
     alignSelf: 'center',
   },
-  header: {
+  brandBlock: {
+    alignItems: 'center',
     gap: space.sm,
-    marginBottom: space.sm,
+  },
+  mark: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primaryDark,
   },
   brand: {
     ...type.hero,
@@ -150,10 +167,14 @@ const styles = StyleSheet.create({
   subtitle: {
     ...type.body,
     color: colors.muted,
-    lineHeight: 22,
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  card: {
+    gap: space.md,
   },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.bgSoft,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
@@ -162,33 +183,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     minHeight: touch.minHeight,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    minHeight: touch.minHeight,
-    paddingVertical: space.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: space.xs,
-  },
-  buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: colors.white, fontWeight: '700', fontSize: 16 },
-  error: {
-    color: colors.danger,
-    ...type.label,
-    lineHeight: 18,
-  },
-  switchHit: {
-    minHeight: touch.minHeight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space.sm,
-  },
-  switch: {
-    color: colors.primaryDark,
-    textAlign: 'center',
-    ...type.bodyStrong,
-    lineHeight: 22,
   },
 })

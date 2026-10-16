@@ -58,7 +58,7 @@ export default function RootLayout() {
     <AuthProvider>
       <AuthGate>
         <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'fade' }}>
           <Stack.Screen name="login" />
           <Stack.Screen name="(tabs)" />
         </Stack>

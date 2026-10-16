@@ -1,15 +1,15 @@
 import { movegridApi, type ApiLeaderboard } from '@movegrid/api-client'
 import { useCallback, useEffect, useState } from 'react'
+import { RefreshControl, StyleSheet, Text, View } from 'react-native'
 import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+  Card,
+  EmptyState,
+  ErrorBanner,
+  LoadingState,
+  ScreenScroll,
+} from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
-import { colors, layout, radius, space, type } from '@/constants/theme'
+import { colors, radius, space, type } from '@/constants/theme'
 
 export default function StandingsScreen() {
   const { token } = useAuth()
@@ -50,45 +50,33 @@ export default function StandingsScreen() {
     }
   }
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    )
-  }
+  if (loading) return <LoadingState />
 
   const entries = board?.entries ?? []
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
+    <ScreenScroll
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }>
-      <Text style={styles.title} numberOfLines={2}>
-        {board?.title ?? 'MOVE leaderboard'}
-      </Text>
+      <Card>
+        <Text style={styles.eyebrow}>LEADERBOARD</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {board?.title ?? 'MOVE standings'}
+        </Text>
+      </Card>
 
-      {error ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.error}>{error}</Text>
-        </View>
-      ) : null}
+      {error ? <ErrorBanner message={error} /> : null}
 
       {entries.length === 0 && !error ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.empty}>No standings yet. Complete exercises to climb the board.</Text>
-        </View>
+        <EmptyState message="No standings yet. Complete exercises to climb the board." />
       ) : (
         entries.map((entry) => (
-          <View key={entry.id} style={[styles.row, entry.is_current_user && styles.rowHighlight]}>
-            <View style={[styles.rankBadge, entry.is_current_user && styles.rankBadgeHighlight]}>
-              <Text
-                style={[styles.rank, entry.is_current_user && styles.rankHighlight]}
-                numberOfLines={1}>
+          <View
+            key={entry.id}
+            style={[styles.row, entry.is_current_user && styles.rowHighlight]}>
+            <View style={[styles.rankBadge, entry.is_current_user && styles.rankBadgeYou]}>
+              <Text style={[styles.rank, entry.is_current_user && styles.rankYou]} numberOfLines={1}>
                 {entry.rank}
               </Text>
             </View>
@@ -104,28 +92,20 @@ export default function StandingsScreen() {
           </View>
         ))
       )}
-    </ScrollView>
+    </ScreenScroll>
   )
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  content: {
-    padding: layout.screenPadding,
-    paddingBottom: space.xxxl,
-    gap: space.sm,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bg,
+  eyebrow: {
+    ...type.caption,
+    color: colors.muted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   title: {
     ...type.title,
-    fontSize: 20,
     color: colors.text,
-    marginBottom: space.xs,
   },
   row: {
     flexDirection: 'row',
@@ -147,12 +127,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.sm,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.bgSoft,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  rankBadgeHighlight: {
+  rankBadgeYou: {
     backgroundColor: colors.card,
   },
   rank: {
@@ -160,7 +140,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
   },
-  rankHighlight: {
+  rankYou: {
     color: colors.primaryDark,
   },
   rowBody: {
@@ -173,31 +153,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   points: {
-    color: colors.muted,
     ...type.label,
-  },
-  emptyCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: layout.cardPadding,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  empty: {
     color: colors.muted,
-    ...type.body,
-    lineHeight: 22,
-  },
-  errorBanner: {
-    backgroundColor: colors.dangerSoft,
-    borderRadius: radius.md,
-    padding: space.md,
-    borderWidth: 1,
-    borderColor: '#fecaca',
-  },
-  error: {
-    color: colors.danger,
-    ...type.label,
-    lineHeight: 18,
   },
 })

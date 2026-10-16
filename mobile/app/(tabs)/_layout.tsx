@@ -1,24 +1,34 @@
 import { Tabs } from 'expo-router'
-import { StyleSheet } from 'react-native'
+import { Platform, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SymbolView } from 'expo-symbols'
 
-import { colors, type } from '@/constants/theme'
+import { colors, space, type } from '@/constants/theme'
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets()
+  const tabBarHeight = 56 + Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0)
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.primaryDark,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          paddingTop: 4,
+          height: tabBarHeight,
+          paddingTop: space.xs,
+          paddingBottom: Math.max(insets.bottom, space.sm),
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
+          marginBottom: 2,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
         },
         headerStyle: {
           backgroundColor: colors.card,
@@ -29,6 +39,8 @@ export default function TabLayout() {
           color: colors.text,
         },
         headerShadowVisible: false,
+        headerTitleAlign: 'center',
+        sceneStyle: { backgroundColor: colors.bg },
       }}>
       <Tabs.Screen
         name="index"
@@ -38,7 +50,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'figure.run', android: 'directions_run', web: 'directions_run' }}
               tintColor={color}
-              size={24}
+              size={22}
             />
           ),
         }}
@@ -51,7 +63,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'trophy', android: 'emoji_events', web: 'emoji_events' }}
               tintColor={color}
-              size={24}
+              size={22}
             />
           ),
         }}
@@ -64,7 +76,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'gift', android: 'card_giftcard', web: 'card_giftcard' }}
               tintColor={color}
-              size={24}
+              size={22}
             />
           ),
         }}
@@ -77,7 +89,7 @@ export default function TabLayout() {
             <SymbolView
               name={{ ios: 'person.circle', android: 'person', web: 'person' }}
               tintColor={color}
-              size={24}
+              size={22}
             />
           ),
         }}

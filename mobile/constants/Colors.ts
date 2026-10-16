@@ -1,21 +1,18 @@
 import { colors } from './theme'
 
-const tintColorLight = colors.primary
-const tintColorDark = '#fff'
-
 export default {
   light: {
     text: colors.text,
     background: colors.bg,
-    tint: tintColorLight,
+    tint: colors.primary,
     tabIconDefault: colors.muted,
-    tabIconSelected: tintColorLight,
+    tabIconSelected: colors.primary,
   },
   dark: {
     text: '#fff',
     background: '#0f172a',
-    tint: tintColorDark,
+    tint: '#fff',
     tabIconDefault: colors.muted,
-    tabIconSelected: tintColorDark,
+    tabIconSelected: '#fff',
   },
 }
