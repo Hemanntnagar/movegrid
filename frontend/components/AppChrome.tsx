@@ -66,9 +66,13 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
       movegridApi
         .me(token, { force })
         .then(setUser)
-        .catch(() => {
-          clearToken()
-          setUser(null)
+        .catch((err) => {
+          const message = err instanceof Error ? err.message : String(err)
+          // Only drop the session on real auth failures — network blips must not log users out.
+          if (/unauthor|invalid authentication|not authenticated|credentials/i.test(message)) {
+            clearToken()
+            setUser(null)
+          }
         })
     }
     loadUser()

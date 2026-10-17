@@ -540,10 +540,28 @@ export function createMovegridApi(baseUrl?: string) {
         method: 'POST',
         headers: authHeaders(token),
       }),
-    rewardHistory: (token: string, limit = 20, offset = 0) =>
-      request<ApiRewardHistory>(`/rewards/history?limit=${limit}&offset=${offset}`, {
-        headers: authHeaders(token),
-      }),
+    rewardHistory: async (token: string, limit = 20, offset = 0) => {
+      const data = await request<ApiRewardHistory | ApiRewardRedemption[]>(
+        `/rewards/history?limit=${limit}&offset=${offset}`,
+        { headers: authHeaders(token) },
+      )
+      // Normalize legacy array responses and missing `items` so callers never crash on `.map`.
+      if (Array.isArray(data)) {
+        return {
+          items: data,
+          page: 1,
+          page_size: limit,
+          offset,
+          limit,
+          total: data.length,
+          has_more: false,
+        } satisfies ApiRewardHistory
+      }
+      return {
+        ...data,
+        items: Array.isArray(data?.items) ? data.items : [],
+      }
+    },
     updatePresence: (token: string, latitude: number, longitude: number, isSharing = true) =>
       request<ApiPresence>('/presence', {
         method: 'POST',

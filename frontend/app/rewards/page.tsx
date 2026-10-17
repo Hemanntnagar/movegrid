@@ -20,6 +20,7 @@ import {
 import {
   ApiRedeemResult,
   ApiReward,
+  ApiRewardHistory,
   ApiRewardRedemption,
   ApiUser,
   clearToken,
@@ -93,7 +94,13 @@ function formatWhen(value: string) {
 
 function isAuthFailure(err: unknown) {
   const message = err instanceof Error ? err.message : String(err)
-  return /unauthor|invalid authentication|not authenticated|token/i.test(message)
+  return /unauthor|invalid authentication|not authenticated|credentials/i.test(message)
+}
+
+function historyItems(redemptions: ApiRewardHistory | ApiRewardRedemption[] | null | undefined): ApiRewardRedemption[] {
+  if (Array.isArray(redemptions)) return redemptions
+  if (redemptions && Array.isArray(redemptions.items)) return redemptions.items
+  return []
 }
 
 function RewardCard({
@@ -159,15 +166,15 @@ export default function RewardsPage() {
       movegridApi.rewardHistory(authToken),
     ])
     setUser(me)
-    setRewards(catalog)
-    setHistory(redemptions.items)
+    setRewards(Array.isArray(catalog) ? catalog : [])
+    setHistory(historyItems(redemptions))
   }, [])
 
   useEffect(() => {
     const stored = getStoredToken()
     if (!stored) {
       setLoading(false)
-      router.replace('/login')
+      router.replace('/login?next=%2Frewards')
       return
     }
     setToken(stored)
@@ -183,7 +190,7 @@ export default function RewardsPage() {
         if (isAuthFailure(err)) {
           clearToken()
           setUser(null)
-          router.replace('/login')
+          router.replace('/login?next=%2Frewards')
         }
       })
       .finally(() => {
@@ -223,7 +230,7 @@ export default function RewardsPage() {
       if (isAuthFailure(err)) {
         clearToken()
         setUser(null)
-        router.replace('/login')
+        router.replace('/login?next=%2Frewards')
       }
     } finally {
       setRedeeming(false)
@@ -238,7 +245,7 @@ export default function RewardsPage() {
   function retryLoad() {
     const stored = getStoredToken()
     if (!stored) {
-      router.replace('/login')
+      router.replace('/login?next=%2Frewards')
       return
     }
     setError('')
@@ -250,7 +257,7 @@ export default function RewardsPage() {
         if (isAuthFailure(err)) {
           clearToken()
           setUser(null)
-          router.replace('/login')
+          router.replace('/login?next=%2Frewards')
         }
       })
       .finally(() => setLoading(false))
@@ -369,12 +376,12 @@ export default function RewardsPage() {
           </div>
         </section>
         <div className="rewards-history">
-          {history.length === 0 && (
+          {history.length === 0 ? (
             <div className="rewards-history-empty">
               <ShoppingBag size={18} />
               <span>No redemptions yet — your first swap will show up here.</span>
             </div>
-          )}
+          ) : null}
           {history.map((item) => (
             <div className="rewards-history-row" key={item.id}>
               <div className="rewards-history-icon">
