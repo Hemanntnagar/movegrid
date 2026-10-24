@@ -16,7 +16,8 @@
     "mobile:dev": "pnpm --dir mobile start",
     "mobile:android": "pnpm --dir mobile android",
     "mobile:android:dev": "pnpm --dir mobile android:dev",
-    "backend": "cd backend && alembic upgrade head && uvicorn app.main:app --reload"
+    "backend": "cd backend && alembic upgrade head && uvicorn app.main:app --reload",
+    "test": "pnpm --dir frontend test"
   },
   "devDependencies": {
     "typescript": "5.7.3"

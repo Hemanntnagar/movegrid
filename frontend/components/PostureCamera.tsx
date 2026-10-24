@@ -6,21 +6,21 @@ import {
   Camera,
   CheckCircle2,
   Check,
-  Flame,
   Info,
-  RefreshCw,
+  Pause,
   Play,
+  RefreshCw,
   RotateCcw,
+  Square,
   Trophy,
   Maximize2,
   Minimize2,
   VideoOff,
-  Zap,
 } from 'lucide-react'
 import type { PoseLandmarker } from '@mediapipe/tasks-vision'
 import type { ApiExercise } from '../lib/api'
 import type { KeyPoint } from '../lib/poseLandmarker'
-import { getPoseLandmarker, landmarksToKeypoints } from '../lib/poseLandmarker'
+import { getPoseLandmarker, landmarksToKeypoints, toPoseFrame } from '../lib/poseLandmarker'
 import {
   type ExerciseTrackingMode,
   liveCameraStartHint,
@@ -28,59 +28,36 @@ import {
   resolveTrackingMode,
   usesPoseRepCounter,
 } from '../lib/exerciseTracking'
+import { createExerciseAnalyzer } from '../lib/pose/factory'
+import { RepCounter } from '../lib/pose/repCounter'
+import type { AnalysisTick, CyclePhase, TrackingStatus } from '../lib/pose/types'
 
 export type { KeyPoint } from '../lib/poseLandmarker'
 
-// Keypoint indices:
-// 0: Nose, 1: L Eye, 2: R Eye, 3: L Ear, 4: R Ear
-// 5: L Shoulder, 6: R Shoulder, 7: L Elbow, 8: R Elbow, 9: L Wrist, 10: R Wrist
-// 11: L Hip, 12: R Hip, 13: L Knee, 14: R Knee, 15: L Ankle, 16: R Ankle
 const SKELETON_CONNECTIONS = [
-  [0, 1], [0, 2], [1, 3], [2, 4],
-  [5, 7], [7, 9], [6, 8], [8, 10],
-  [5, 6], [5, 11], [6, 12], [11, 12],
-  [11, 13], [13, 15], [12, 14], [14, 16],
+  [11, 12],
+  [11, 13],
+  [13, 15],
+  [12, 14],
+  [14, 16],
+  [11, 23],
+  [12, 24],
+  [23, 24],
+  [23, 25],
+  [25, 27],
+  [24, 26],
+  [26, 28],
+  [27, 31],
+  [28, 32],
+  [0, 11],
+  [0, 12],
 ]
 
-const VISIBILITY_MIN = 0.4
-const EMA_ALPHA = 0.32
-const MIN_PHASE_FRAMES = 5
-const MIN_REP_MS = 900
-const POSE_FRAME_SKIP = 2
-const PUSH_DOWN_DEG = 100
-const PUSH_UP_DEG = 145
-const SQUAT_DOWN_DEG = 105
-const SQUAT_UP_DEG = 150
-
-function landmarkVisible(kp: KeyPoint | undefined): kp is KeyPoint {
-  return !!kp && (kp.score ?? 0) >= VISIBILITY_MIN
-}
-
-function calculateAngle(p1: KeyPoint, p2: KeyPoint, p3: KeyPoint) {
-  const rad =
-    Math.atan2(p3.y - p2.y, p3.x - p2.x) - Math.atan2(p1.y - p2.y, p1.x - p2.x)
-  let angle = Math.abs((rad * 180.0) / Math.PI)
-  if (angle > 180.0) angle = 360.0 - angle
-  return angle
-}
-
-function jointAngle(keypoints: KeyPoint[], a: number, b: number, c: number): number | null {
-  const p1 = keypoints[a]
-  const p2 = keypoints[b]
-  const p3 = keypoints[c]
-  if (!landmarkVisible(p1) || !landmarkVisible(p2) || !landmarkVisible(p3)) return null
-  return calculateAngle(p1, p2, p3)
-}
-
-function averageVisibleAngle(left: number | null, right: number | null): number | null {
-  if (left !== null && right !== null) return (left + right) / 2
-  return left ?? right ?? null
-}
+const DRAW_VISIBILITY_MIN = 0.35
+const UI_THROTTLE_MS = 100
 
 type PostureCameraProps = {
-  /** When false, no getUserMedia call is made (camera stays off). */
   enabled?: boolean
-  /** Scheduled exercise from daily assignment (drives rep counter mode). */
   scheduledExercise: ApiExercise
   assignmentId?: number
   targetReps?: number
@@ -117,11 +94,15 @@ export function PostureCamera({
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraLoading, setCameraLoading] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [analysisPaused, setAnalysisPaused] = useState(false)
+  const [sessionStopped, setSessionStopped] = useState(false)
 
   const [recSeconds, setRecSeconds] = useState(0)
-  const [formScore, setFormScore] = useState(95)
   const [isPostureCorrect, setIsPostureCorrect] = useState(true)
   const [feedbackMsg, setFeedbackMsg] = useState('Get into position to start counting reps')
+  const [movementPhase, setMovementPhase] = useState<CyclePhase>('idle')
+  const [trackingStatus, setTrackingStatus] = useState<TrackingStatus>('searching')
+  const [formFeedback, setFormFeedback] = useState<string | null>(null)
   const [repsDone, setRepsDone] = useState(0)
   const [isGoalReached, setIsGoalReached] = useState(false)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
@@ -129,22 +110,29 @@ export function PostureCamera({
   const [poseModelLoading, setPoseModelLoading] = useState(false)
   const [poseModelReady, setPoseModelReady] = useState(false)
   const [poseModelError, setPoseModelError] = useState<string | null>(null)
+  const [inferenceMs, setInferenceMs] = useState<number | null>(null)
 
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null)
   const lastKeypointsRef = useRef<KeyPoint[] | null>(null)
-  const poseFrameCounterRef = useRef(0)
-  const poseSkipRef = useRef(POSE_FRAME_SKIP)
-  const lastVideoTimestampRef = useRef(-1)
+  const lastMediaTimeRef = useRef(-1)
+  const lastMpTimestampRef = useRef(-1)
+  const inferBusyRef = useRef(false)
+  const lastUiUpdateRef = useRef(0)
+  const inferenceMsRef = useRef<number | null>(null)
   const repsDoneRef = useRef(0)
-  const smoothedAngleRef = useRef<number | null>(null)
-  const downConfirmRef = useRef(0)
-  const upConfirmRef = useRef(0)
+  const goodFormRepsRef = useRef(0)
   const isGoalReachedRef = useRef(false)
+  const analysisPausedRef = useRef(false)
+  const formOkRef = useRef(true)
+  const counterRef = useRef<RepCounter | null>(null)
 
-  // Movement state machine: 'UP' vs 'DOWN' for reps
-  const movementPhaseRef = useRef<'UP' | 'DOWN'>('UP')
-  const lastRepTimeRef = useRef<number>(0)
-  const autoGoalTriggeredRef = useRef<boolean>(false)
+  const exerciseNameRef = useRef(exerciseName)
+  const trackingModeRef = useRef<ExerciseTrackingMode>(trackingMode)
+  const targetRepsRef = useRef(targetReps)
+  const autoRepCountRef = useRef(autoRepCountEnabled)
+  const onRepsChangeRef = useRef(onRepsChange)
+  const onPostureUpdateRef = useRef(onPostureUpdate)
+  const autoGoalTriggeredRef = useRef(false)
 
   useEffect(() => {
     repsDoneRef.current = repsDone
@@ -154,16 +142,49 @@ export function PostureCamera({
     isGoalReachedRef.current = isGoalReached
   }, [isGoalReached])
 
+  useEffect(() => {
+    analysisPausedRef.current = analysisPaused
+  }, [analysisPaused])
+
+  const rebuildCounter = useCallback(() => {
+    const analyzer = autoRepCountEnabled
+      ? createExerciseAnalyzer(trackingMode, { exerciseName, smoothingHalfLifeMs: 70 })
+      : null
+    counterRef.current = analyzer ? new RepCounter(analyzer) : null
+  }, [autoRepCountEnabled, trackingMode, exerciseName])
+
+  useEffect(() => {
+    rebuildCounter()
+  }, [rebuildCounter])
+
   const resetRepTracking = useCallback(() => {
-    movementPhaseRef.current = 'UP'
-    lastRepTimeRef.current = 0
-    smoothedAngleRef.current = null
-    downConfirmRef.current = 0
-    upConfirmRef.current = 0
+    counterRef.current?.resetCycle()
     lastKeypointsRef.current = null
-    lastVideoTimestampRef.current = -1
-    jackPhaseRef.current = 'NARROW'
+    lastMediaTimeRef.current = -1
+    lastMpTimestampRef.current = -1
+    setMovementPhase('idle')
+    setTrackingStatus('searching')
+    setFormFeedback(null)
+    setFeedbackMsg('Return to the starting position.')
   }, [])
+
+  const resetSessionCount = useCallback(() => {
+    counterRef.current?.reset()
+    rebuildCounter()
+    repsDoneRef.current = 0
+    goodFormRepsRef.current = 0
+    lastKeypointsRef.current = null
+    lastMediaTimeRef.current = -1
+    lastMpTimestampRef.current = -1
+    setRepsDone(0)
+    setIsGoalReached(false)
+    autoGoalTriggeredRef.current = false
+    setMovementPhase('idle')
+    setTrackingStatus('searching')
+    setFormFeedback(null)
+    setFeedbackMsg('Return to the starting position.')
+    onRepsChangeRef.current?.(0)
+  }, [rebuildCounter])
 
   useEffect(() => {
     if (!enabled || !cameraStarted) {
@@ -212,41 +233,40 @@ export function PostureCamera({
     }
   }, [isEnlarged])
 
-  // Recording timer
   useEffect(() => {
-    if (!cameraActive || isGoalReached) return
+    if (!cameraActive || isGoalReached || analysisPaused) return
     const timer = setInterval(() => {
       setRecSeconds((prev) => prev + 1)
     }, 1000)
     return () => clearInterval(timer)
-  }, [cameraActive, isGoalReached])
+  }, [cameraActive, isGoalReached, analysisPaused])
 
-  // Check goal completion
   useEffect(() => {
     if (repsDone >= targetReps && targetReps > 0 && !autoGoalTriggeredRef.current) {
       autoGoalTriggeredRef.current = true
       setIsGoalReached(true)
-      setFeedbackMsg(`🎉 GOAL COMPLETED! ${repsDone}/${targetReps} Reps Done!`)
+      setFeedbackMsg(`Goal completed: ${repsDone}/${targetReps} validated reps.`)
       onGoalComplete?.()
     }
   }, [repsDone, targetReps, onGoalComplete])
 
-  // Start WebRTC Camera
   const startCamera = useCallback(async () => {
     setCameraLoading(true)
     setCameraError(null)
+    setSessionStopped(false)
 
     try {
-      if (videoRef.current && videoRef.current.srcObject) {
+      if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream
         stream.getTracks().forEach((track) => track.stop())
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: facingMode,
+          facingMode: { ideal: facingMode },
           width: { ideal: 640 },
           height: { ideal: 480 },
+          frameRate: { ideal: 30, max: 30 },
         },
         audio: false,
       })
@@ -269,13 +289,17 @@ export function PostureCamera({
     }
   }, [facingMode])
 
-  // Stop WebRTC Camera
   const stopCamera = useCallback(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current)
+      animationFrameId.current = null
+    }
+    if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach((track) => track.stop())
       videoRef.current.srcObject = null
     }
+    inferBusyRef.current = false
     setCameraActive(false)
   }, [])
 
@@ -283,7 +307,7 @@ export function PostureCamera({
     if (!enabled || !cameraStarted) {
       stopCamera()
       setCameraLoading(false)
-      setCameraError(null)
+      if (!cameraStarted) setCameraError(null)
       return
     }
     startCamera()
@@ -293,6 +317,7 @@ export function PostureCamera({
   useEffect(() => {
     if (!enabled) {
       setCameraStarted(false)
+      setAnalysisPaused(false)
     }
   }, [enabled])
 
@@ -300,230 +325,65 @@ export function PostureCamera({
     setCameraStarted(false)
     stopCamera()
     setRecSeconds(0)
-    setRepsDone(0)
-    setIsGoalReached(false)
-    autoGoalTriggeredRef.current = false
-    resetRepTracking()
-  }, [scheduledExercise.id, assignmentId, resetRepTracking, stopCamera])
-
-  const exerciseNameRef = useRef(exerciseName)
-  const trackingModeRef = useRef<ExerciseTrackingMode>(trackingMode)
-  const assignmentIdRef = useRef(assignmentId)
-  const scheduledExerciseRef = useRef(scheduledExercise)
-  const targetRepsRef = useRef(targetReps)
-  const autoRepCountRef = useRef(autoRepCountEnabled)
-  const jackPhaseRef = useRef<'NARROW' | 'WIDE'>('NARROW')
-  const onRepsChangeRef = useRef(onRepsChange)
-  const onPostureUpdateRef = useRef(onPostureUpdate)
+    setSessionStopped(false)
+    setAnalysisPaused(false)
+    resetSessionCount()
+  }, [scheduledExercise.id, assignmentId, resetSessionCount, stopCamera])
 
   useEffect(() => {
     exerciseNameRef.current = exerciseName
     trackingModeRef.current = trackingMode
-    assignmentIdRef.current = assignmentId
-    scheduledExerciseRef.current = scheduledExercise
     targetRepsRef.current = targetReps
     autoRepCountRef.current = autoRepCountEnabled
-    jackPhaseRef.current = 'NARROW'
-  }, [exerciseName, trackingMode, assignmentId, scheduledExercise, targetReps, autoRepCountEnabled])
+  }, [exerciseName, trackingMode, targetReps, autoRepCountEnabled])
 
   useEffect(() => {
     onRepsChangeRef.current = onRepsChange
     onPostureUpdateRef.current = onPostureUpdate
   }, [onRepsChange, onPostureUpdate])
 
-  useEffect(() => {
-    resetRepTracking()
-  }, [assignmentId, scheduledExercise.id, resetRepTracking])
+  const publishUi = useCallback((tick: AnalysisTick | null, fallback?: string) => {
+    const now = performance.now()
+    if (tick && !tick.repCompleted && now - lastUiUpdateRef.current < UI_THROTTLE_MS) return
+    lastUiUpdateRef.current = now
 
-  const applyRepPhase = useCallback(
-    (
-      angle: number,
-      downDeg: number,
-      upDeg: number,
-      repsLabel: string,
-      downFeedback: string,
-      upFeedback: string,
-    ) => {
-      const now = Date.now()
-      const reps = repsDoneRef.current
-      const target = targetRepsRef.current
-      let feedback = `Tracking ${reps}/${target} reps — keep full body in frame`
-
-      if (angle < downDeg) {
-        downConfirmRef.current += 1
-        upConfirmRef.current = 0
-        if (
-          movementPhaseRef.current === 'UP' &&
-          downConfirmRef.current >= MIN_PHASE_FRAMES &&
-          now - lastRepTimeRef.current > MIN_REP_MS
-        ) {
-          movementPhaseRef.current = 'DOWN'
-        }
-        feedback = `${downFeedback} (${reps}/${target})`
-      } else if (angle > upDeg) {
-        upConfirmRef.current += 1
-        downConfirmRef.current = 0
-        if (movementPhaseRef.current === 'DOWN' && upConfirmRef.current >= MIN_PHASE_FRAMES) {
-          movementPhaseRef.current = 'UP'
-          lastRepTimeRef.current = now
-          const nextReps = reps + 1
-          repsDoneRef.current = nextReps
-          setRepsDone(nextReps)
-          onRepsChangeRef.current?.(nextReps)
-          feedback = `${repsLabel} ${nextReps}/${target} Done! 🔥`
-        } else if (movementPhaseRef.current === 'UP') {
-          feedback = `${upFeedback} (${reps}/${target})`
-        }
-      } else {
-        downConfirmRef.current = 0
-        upConfirmRef.current = 0
-      }
-
-      return feedback
-    },
-    [],
-  )
-
-  const analyzePostureAndCountReps = useCallback((keypoints: KeyPoint[], width: number, height: number) => {
-    if (!keypoints || keypoints.length < 17 || isGoalReachedRef.current) return
-
-    const lShoulder = keypoints[5]
-    const rShoulder = keypoints[6]
-    const lHip = keypoints[11]
-    const rHip = keypoints[12]
-    const lKnee = keypoints[13]
-    const rKnee = keypoints[14]
-    const lAnkle = keypoints[15]
-    const rAnkle = keypoints[16]
-
-    let isCorrect = true
-    let score = 96
-    let feedback = 'Align your body in frame — side view works best on mobile'
-
-    const mode = trackingModeRef.current
-    const reps = repsDoneRef.current
-    const target = targetRepsRef.current
-    const label = repCounterLabel(mode, exerciseNameRef.current)
-
-    const leftElbow = jointAngle(keypoints, 5, 7, 9)
-    const rightElbow = jointAngle(keypoints, 6, 8, 10)
-    const elbowAngle = averageVisibleAngle(leftElbow, rightElbow)
-
-    const leftKnee = jointAngle(keypoints, 11, 13, 15)
-    const rightKnee = jointAngle(keypoints, 12, 14, 16)
-    const kneeAngle = averageVisibleAngle(leftKnee, rightKnee)
-
-    if (!autoRepCountRef.current) {
-      if (mode === 'timed') {
-        feedback = `Timed session: finish ${scheduledExerciseRef.current.duration_minutes} min, then tap Complete`
-      } else if (mode === 'plank_hold') {
-        feedback = `Hold ${exerciseNameRef.current} — use +1 or Complete when done`
-      } else if (mode === 'manual') {
-        if (elbowAngle !== null || kneeAngle !== null) {
-          feedback = `${exerciseNameRef.current}: pose locked — tap +1 per rep (${reps}/${target})`
-          score = 94
-        } else {
-          feedback = `${exerciseNameRef.current}: step back — full body in frame for pose model`
-          score = 85
-        }
-      } else {
-        feedback = `Tracking ${exerciseNameRef.current} — use +1 for reps (${reps}/${target})`
-      }
-    } else if (mode === 'pushup' || mode === 'burpee') {
-      if (elbowAngle === null) {
-        feedback = 'Show your arms and torso — step back or use rear camera'
-        score = 82
-      } else {
-        const smoothed =
-          smoothedAngleRef.current === null
-            ? elbowAngle
-            : EMA_ALPHA * elbowAngle + (1 - EMA_ALPHA) * smoothedAngleRef.current
-        smoothedAngleRef.current = smoothed
-        feedback = applyRepPhase(
-          smoothed,
-          PUSH_DOWN_DEG,
-          PUSH_UP_DEG,
-          label,
-          'Chest DOWN! Keep core tight 💪',
-          'Top position — lower with control',
-        )
-
-        const spineLeft = jointAngle(keypoints, 5, 11, 15)
-        const spineRight = jointAngle(keypoints, 6, 12, 16)
-        const spine = averageVisibleAngle(spineLeft, spineRight)
-        if (spine !== null && spine < 145) {
-          isCorrect = false
-          score = 70
-          feedback = 'Keep hips in line with shoulders! Avoid sagging ⚠️'
-        }
-      }
-    } else if (mode === 'squat' || mode === 'lunge' || mode === 'mountain_climber') {
-      if (kneeAngle === null) {
-        feedback = 'Frame your legs from hip to ankle — rear camera, side view'
-        score = 82
-      } else {
-        const downDeg = mode === 'mountain_climber' ? 115 : SQUAT_DOWN_DEG
-        const upDeg = mode === 'mountain_climber' ? 155 : SQUAT_UP_DEG
-        const smoothed =
-          smoothedAngleRef.current === null
-            ? kneeAngle
-            : EMA_ALPHA * kneeAngle + (1 - EMA_ALPHA) * smoothedAngleRef.current
-        smoothedAngleRef.current = smoothed
-        feedback = applyRepPhase(
-          smoothed,
-          downDeg,
-          upDeg,
-          label,
-          mode === 'mountain_climber' ? 'Drive knee in 💪' : 'Squat DOWN — hold depth 💪',
-          mode === 'mountain_climber' ? 'Extend back to plank' : 'Standing tall — lower into squat',
-        )
-
-        if (mode !== 'mountain_climber') {
-          const backLeft = jointAngle(keypoints, 5, 11, 13)
-          const backRight = jointAngle(keypoints, 6, 12, 14)
-          const back = averageVisibleAngle(backLeft, backRight)
-          if (back !== null && back < 80) {
-            isCorrect = false
-            score = 73
-            feedback = 'Keep chest lifted! Avoid rounding spine ⚠️'
-          }
-        }
-      }
-    } else if (mode === 'jumping_jack' && lShoulder && rShoulder && lAnkle && rAnkle) {
-      const shoulderWidth = Math.abs(rShoulder.x - lShoulder.x) || width * 0.2
-      const ankleSpread = Math.abs(rAnkle.x - lAnkle.x)
-      const wide = ankleSpread > shoulderWidth * 1.35
-      const narrow = ankleSpread < shoulderWidth * 1.05
-      if (wide && jackPhaseRef.current === 'NARROW') {
-        jackPhaseRef.current = 'WIDE'
-      } else if (narrow && jackPhaseRef.current === 'WIDE') {
-        jackPhaseRef.current = 'NARROW'
-        const nextReps = reps + 1
-        repsDoneRef.current = nextReps
-        setRepsDone(nextReps)
-        onRepsChangeRef.current?.(nextReps)
-        feedback = `${label} ${nextReps}/${target} Done! 🔥`
-      } else {
-        feedback = wide ? 'Jump feet in to finish rep' : 'Jump feet out and arms up'
-      }
-    } else if (lShoulder && rShoulder) {
-      const shoulderDiff = Math.abs(lShoulder.y - rShoulder.y)
-      if (shoulderDiff > height * 0.08) {
-        isCorrect = false
-        score = 78
-        feedback = 'Keep shoulders balanced and level ⚠️'
-      } else {
-        feedback = `Pose tracked: ${reps}/${target} — use +1 if auto-count misses a rep`
-      }
+    if (!tick) {
+      setTrackingStatus('searching')
+      setMovementPhase('idle')
+      setFeedbackMsg(fallback ?? 'Pose not detected — counting paused.')
+      setIsPostureCorrect(true)
+      setFormFeedback(null)
+      return
     }
 
-    setFormScore(score)
-    setIsPostureCorrect(isCorrect)
-    setFeedbackMsg(feedback)
-    onPostureUpdateRef.current?.(score, isCorrect)
-  }, [applyRepPhase])
+    setMovementPhase(tick.phase)
+    setTrackingStatus(tick.tracking)
+    setFeedbackMsg(tick.formFeedback ?? tick.guidance)
+    setFormFeedback(tick.formFeedback)
+    const formOk = !tick.formFeedback && tick.tracking !== 'unreliable' && tick.tracking !== 'framing'
+    formOkRef.current = formOk
+    setIsPostureCorrect(formOk)
 
-  // Real-time pose overlay (MediaPipe Lite)
+    if (tick.completedReps > 0) {
+      const score = Math.round((goodFormRepsRef.current / tick.completedReps) * 100)
+      onPostureUpdateRef.current?.(score, !tick.formFeedback)
+    }
+  }, [])
+
+  const applyTick = useCallback(
+    (tick: AnalysisTick) => {
+      if (tick.repCompleted) {
+        const next = tick.completedReps
+        repsDoneRef.current = next
+        if (!tick.formFeedback) goodFormRepsRef.current += 1
+        setRepsDone(next)
+        onRepsChangeRef.current?.(next)
+      }
+      publishUi(tick)
+    },
+    [publishUi],
+  )
+
   useEffect(() => {
     if (!cameraActive || !poseModelReady || !videoRef.current || !canvasRef.current) return
 
@@ -531,11 +391,6 @@ export function PostureCamera({
 
     const processFrame = () => {
       if (!running) return
-
-      if (document.visibilityState === 'hidden') {
-        animationFrameId.current = requestAnimationFrame(processFrame)
-        return
-      }
 
       const video = videoRef.current
       const canvas = canvasRef.current
@@ -556,19 +411,29 @@ export function PostureCamera({
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-          poseFrameCounterRef.current += 1
-          const shouldRunPose = poseFrameCounterRef.current % poseSkipRef.current === 0
+          const hidden = document.visibilityState === 'hidden'
+          const paused = analysisPausedRef.current || hidden || isGoalReachedRef.current
+          const newVideoFrame = video.currentTime !== lastMediaTimeRef.current
 
-          if (shouldRunPose) {
-            const inferenceStart = performance.now()
+          if (!paused && newVideoFrame && !inferBusyRef.current) {
+            lastMediaTimeRef.current = video.currentTime
+            inferBusyRef.current = true
+
             let timestamp = performance.now()
-            if (timestamp <= lastVideoTimestampRef.current) {
-              timestamp = lastVideoTimestampRef.current + 1
+            if (timestamp <= lastMpTimestampRef.current) {
+              timestamp = lastMpTimestampRef.current + 1
             }
-            lastVideoTimestampRef.current = timestamp
+            lastMpTimestampRef.current = timestamp
 
             try {
+              const started = performance.now()
               const result = landmarker.detectForVideo(video, timestamp)
+              const elapsed = performance.now() - started
+              if (elapsed > 0 && Math.abs(elapsed - (inferenceMsRef.current ?? 0)) > 12) {
+                inferenceMsRef.current = Math.round(elapsed)
+                setInferenceMs(inferenceMsRef.current)
+              }
+
               const landmarks = result.landmarks[0]
               if (landmarks?.length) {
                 lastKeypointsRef.current = landmarksToKeypoints(
@@ -576,66 +441,49 @@ export function PostureCamera({
                   canvas.width,
                   canvas.height,
                 )
+                const counter = counterRef.current
+                if (counter && autoRepCountRef.current && !isGoalReachedRef.current) {
+                  applyTick(counter.ingest(toPoseFrame(landmarks, timestamp)))
+                } else {
+                  publishUi(null, autoRepCountRef.current
+                    ? 'Pose tracked — waiting for the starting position.'
+                    : `${exerciseNameRef.current}: pose locked — tap +1 per rep`)
+                }
+              } else {
+                lastKeypointsRef.current = null
+                if (counterRef.current && autoRepCountRef.current) {
+                  applyTick(
+                    counterRef.current.ingestUnreliable(
+                      timestamp,
+                      'Pose not detected — counting paused.',
+                    ),
+                  )
+                } else {
+                  publishUi(null, 'Pose not detected — counting paused.')
+                }
               }
             } catch (err) {
               console.warn('Pose inference skipped:', err)
+            } finally {
+              inferBusyRef.current = false
             }
-
-            const inferenceMs = performance.now() - inferenceStart
-            poseSkipRef.current = inferenceMs > 85 ? 3 : POSE_FRAME_SKIP
+          } else if (paused && newVideoFrame && autoRepCountRef.current && counterRef.current) {
+            lastMediaTimeRef.current = video.currentTime
+            if (!isGoalReachedRef.current) {
+              applyTick(
+                counterRef.current.ingestUnreliable(
+                  performance.now(),
+                  analysisPausedRef.current
+                    ? 'Counting paused. Resume when you are ready.'
+                    : 'Pose not detected — counting paused.',
+                ),
+              )
+            }
           }
 
           const keypoints = lastKeypointsRef.current
-
           if (keypoints?.length) {
-            analyzePostureAndCountReps(keypoints, canvas.width, canvas.height)
-
-          // Draw Skeleton Lines
-          ctx.lineWidth = 4
-          ctx.strokeStyle = isGoalReached
-            ? '#ffd447'
-            : isPostureCorrect
-            ? '#b7e88f'
-            : '#ff5964'
-          ctx.shadowColor = isGoalReached
-            ? '#ffb703'
-            : isPostureCorrect
-            ? '#27ae60'
-            : '#d90429'
-          ctx.shadowBlur = 12
-
-          for (const [i1, i2] of SKELETON_CONNECTIONS) {
-            const kp1 = keypoints[i1]
-            const kp2 = keypoints[i2]
-            if (kp1 && kp2) {
-              ctx.beginPath()
-              ctx.moveTo(kp1.x, kp1.y)
-              ctx.lineTo(kp2.x, kp2.y)
-              ctx.stroke()
-            }
-          }
-
-          // Draw Keypoint Joint Dots
-          for (let i = 0; i < keypoints.length; i++) {
-            const kp = keypoints[i]
-            if (kp) {
-              ctx.beginPath()
-              ctx.arc(kp.x, kp.y, 6, 0, 2 * Math.PI)
-              ctx.fillStyle = isGoalReached
-                ? '#ffffff'
-                : isPostureCorrect
-                ? '#ffd447'
-                : '#ff2a2a'
-              ctx.shadowColor = '#ffffff'
-              ctx.shadowBlur = 8
-              ctx.fill()
-              ctx.lineWidth = 2
-              ctx.strokeStyle = '#183d59'
-              ctx.stroke()
-            }
-          }
-          } else {
-            setFeedbackMsg('No body detected — step back so your full body is visible')
+            drawSkeleton(ctx, keypoints, isGoalReachedRef.current, formOkRef.current)
           }
         }
       }
@@ -647,11 +495,13 @@ export function PostureCamera({
 
     return () => {
       running = false
+      inferBusyRef.current = false
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current)
+        animationFrameId.current = null
       }
     }
-  }, [cameraActive, poseModelReady, isPostureCorrect, isGoalReached, analyzePostureAndCountReps])
+  }, [cameraActive, poseModelReady, applyTick, publishUi])
 
   const formatRecTime = (sec: number) => {
     const m = Math.floor(sec / 60)
@@ -662,35 +512,42 @@ export function PostureCamera({
   const percentProgress = Math.min(100, Math.round((repsDone / (targetReps || 1)) * 100))
   const cameraStartHint = liveCameraStartHint(trackingMode)
   const showStartScreen = enabled && !cameraStarted && !cameraError
+  const mirrored = facingMode === 'user'
+  const statusChip = statusChipCopy({
+    isGoalReached,
+    analysisPaused,
+    trackingStatus,
+    movementPhase,
+    autoRepCountEnabled,
+    trackingMode,
+  })
 
   return (
     <div
       className={`posture-camera-wrapper${isEnlarged ? ' is-enlarged' : ''}${isManualCatalogExercise ? ' tracking-manual' : ''}`}
     >
-      {/* Header Bar */}
       <div className="posture-status-header">
         <div className={`rec-live-badge${cameraActive ? '' : ' idle'}`}>
-          {cameraActive ? <span className="rec-dot-pulse" /> : null}
+          {cameraActive && !analysisPaused ? <span className="rec-dot-pulse" /> : null}
           <span className="rec-text">
-            {cameraActive ? `REC ${formatRecTime(recSeconds)}` : 'Camera off'}
+            {cameraActive
+              ? `${analysisPaused ? 'PAUSED' : 'REC'} ${formatRecTime(recSeconds)}`
+              : 'Camera off'}
           </span>
         </div>
 
-        <div className={`posture-accuracy-chip ${isGoalReached ? 'goal' : isPostureCorrect ? 'good' : 'warning'}`}>
-          {isGoalReached ? (
+        <div className={`posture-accuracy-chip ${statusChip.tone}`}>
+          {statusChip.tone === 'goal' ? (
             <Trophy size={15} />
-          ) : isPostureCorrect ? (
+          ) : statusChip.tone === 'good' ? (
             <CheckCircle2 size={15} />
           ) : (
             <AlertCircle size={15} />
           )}
-          <span>
-            {isGoalReached ? 'GOAL COMPLETED!' : isPostureCorrect ? 'CORRECT FORM' : 'ADJUST FORM'} ({formScore}%)
-          </span>
+          <span>{statusChip.label}</span>
         </div>
       </div>
 
-      {/* Main Video Viewport & Canvas Overlay */}
       <div className="posture-video-container">
         {showStartScreen && (
           <div className="camera-start-overlay">
@@ -701,10 +558,18 @@ export function PostureCamera({
             <p className="camera-start-title">{exerciseName}</p>
             <p className="camera-start-subtitle">{repCounterLabel(trackingMode, exerciseName)}</p>
             <p>{cameraStartHint}</p>
+            {sessionStopped && (
+              <p className="camera-start-subtitle">
+                Last session: {repsDone} validated reps in {formatRecTime(recSeconds)}
+              </p>
+            )}
             <button
               type="button"
               className="primary-button camera-start-btn"
-              onClick={() => setCameraStarted(true)}
+              onClick={() => {
+                setSessionStopped(false)
+                setCameraStarted(true)
+              }}
             >
               <Play size={16} fill="currentColor" /> Start camera
             </button>
@@ -716,7 +581,7 @@ export function PostureCamera({
             <RefreshCw size={28} className="spin" />
             <p>
               {poseModelLoading
-                ? 'Loading pose model (MediaPipe Lite)…'
+                ? 'Loading pose model…'
                 : 'Starting camera…'}
             </p>
           </div>
@@ -754,9 +619,12 @@ export function PostureCamera({
               playsInline
               muted
               autoPlay
-              className="posture-video-feed"
+              className={`posture-video-feed${mirrored ? ' mirrored' : ''}`}
             />
-            <canvas ref={canvasRef} className="posture-canvas-overlay" />
+            <canvas
+              ref={canvasRef}
+              className={`posture-canvas-overlay${mirrored ? ' mirrored' : ''}`}
+            />
           </>
         )}
 
@@ -774,22 +642,28 @@ export function PostureCamera({
           </div>
         ) : null}
 
-        {/* Goal Completion Celebration Overlay */}
         {isGoalReached && (
           <div className="goal-complete-overlay">
             <div className="goal-trophy-badge">
               <Trophy size={38} className="bounce" />
             </div>
             <h3>{targetReps} {exerciseName} COMPLETED!</h3>
-            <p>Target Goal Achieved with Great Posture! 🎉</p>
+            <p>
+              {repsDone} validated reps in {formatRecTime(recSeconds)}
+              {inferenceMs != null ? ` · ${inferenceMs}ms/frame` : ''}
+            </p>
           </div>
         )}
 
-        {/* Live Posture Guidance Banner Overlay */}
         {!isGoalReached && cameraActive && poseModelReady && (
           <div className="posture-mobile-tip">
             <Camera size={14} />
-            <span>Mobile tip: rear camera, side view, full body in frame</span>
+            <span>
+              {phaseLabel(movementPhase, trackingMode)}
+              {' · '}
+              {trackingLabel(trackingStatus, analysisPaused)}
+              {inferenceMs != null ? ` · ${inferenceMs}ms` : ''}
+            </span>
           </div>
         )}
 
@@ -800,7 +674,6 @@ export function PostureCamera({
           </div>
         )}
 
-        {/* Camera Control Pills */}
         {cameraActive && (
         <div className="posture-camera-controls">
           <button
@@ -826,20 +699,44 @@ export function PostureCamera({
             type="button"
             className="camera-ctrl-pill"
             onClick={() => {
-              resetRepTracking()
-              stopCamera()
-              startCamera()
+              setAnalysisPaused((prev) => {
+                const next = !prev
+                analysisPausedRef.current = next
+                if (next) resetRepTracking()
+                return next
+              })
             }}
-            title="Recalibrate rep counter"
+            title={analysisPaused ? 'Resume counting' : 'Pause counting'}
+          >
+            {analysisPaused ? <Play size={14} /> : <Pause size={14} />}
+            <span>{analysisPaused ? 'Resume' : 'Pause'}</span>
+          </button>
+          <button
+            type="button"
+            className="camera-ctrl-pill"
+            onClick={resetSessionCount}
+            title="Reset validated rep count"
           >
             <RotateCcw size={14} />
-            <span>Recalibrate</span>
+            <span>Reset</span>
+          </button>
+          <button
+            type="button"
+            className="camera-ctrl-pill"
+            onClick={() => {
+              setSessionStopped(true)
+              setCameraStarted(false)
+              stopCamera()
+            }}
+            title="Stop camera session"
+          >
+            <Square size={14} />
+            <span>Stop</span>
           </button>
         </div>
         )}
       </div>
 
-      {/* Progress Bar Track */}
       {cameraStarted && (
       <div className="rep-progress-track">
         <div
@@ -849,12 +746,11 @@ export function PostureCamera({
       </div>
       )}
 
-      {/* Rep / Movement Counter Bar */}
       {cameraStarted && (
       <div className="posture-rep-tracker-bar">
         <div className="rep-count-label">
           <span className="rep-number">{repsDone}</span>
-          <span className="rep-target">/ {targetReps} Reps Tracked</span>
+          <span className="rep-target">/ {targetReps} Validated reps</span>
         </div>
 
         <div className="rep-increment-buttons">
@@ -881,4 +777,131 @@ export function PostureCamera({
       )}
     </div>
   )
+}
+
+function drawSkeleton(
+  ctx: CanvasRenderingContext2D,
+  keypoints: KeyPoint[],
+  goalReached: boolean,
+  formOk: boolean,
+) {
+  ctx.lineWidth = 4
+  ctx.strokeStyle = goalReached ? '#ffd447' : formOk ? '#b7e88f' : '#ff5964'
+  ctx.shadowColor = goalReached ? '#ffb703' : formOk ? '#27ae60' : '#d90429'
+  ctx.shadowBlur = 12
+
+  for (const [i1, i2] of SKELETON_CONNECTIONS) {
+    const kp1 = keypoints[i1]
+    const kp2 = keypoints[i2]
+    if (!visible(kp1) || !visible(kp2)) continue
+    ctx.beginPath()
+    ctx.moveTo(kp1.x, kp1.y)
+    ctx.lineTo(kp2.x, kp2.y)
+    ctx.stroke()
+  }
+
+  for (const kp of keypoints) {
+    if (!visible(kp)) continue
+    ctx.beginPath()
+    ctx.arc(kp.x, kp.y, 6, 0, 2 * Math.PI)
+    ctx.fillStyle = goalReached ? '#ffffff' : formOk ? '#ffd447' : '#ff2a2a'
+    ctx.shadowColor = '#ffffff'
+    ctx.shadowBlur = 8
+    ctx.fill()
+    ctx.lineWidth = 2
+    ctx.strokeStyle = '#183d59'
+    ctx.stroke()
+  }
+}
+
+function visible(kp: KeyPoint | undefined): kp is KeyPoint {
+  return !!kp && (kp.score ?? 0) >= DRAW_VISIBILITY_MIN
+}
+
+function phaseLabel(phase: CyclePhase, mode: ExerciseTrackingMode): string {
+  if (mode === 'bicep_curl') {
+    switch (phase) {
+      case 'ready':
+        return 'Arms extended'
+      case 'to_end':
+        return 'Curling'
+      case 'at_end':
+        return 'Top reached'
+      case 'to_start':
+        return 'Lowering'
+      default:
+        return 'Waiting for start'
+    }
+  }
+  if (mode === 'jumping_jack') {
+    switch (phase) {
+      case 'ready':
+        return 'Closed stance'
+      case 'to_end':
+        return 'Opening'
+      case 'at_end':
+        return 'Open position'
+      case 'to_start':
+        return 'Closing'
+      default:
+        return 'Waiting for start'
+    }
+  }
+  switch (phase) {
+    case 'ready':
+      return 'Ready'
+    case 'to_end':
+      return 'Descending'
+    case 'at_end':
+      return 'Depth reached'
+    case 'to_start':
+      return 'Ascending'
+    case 'completed':
+      return 'Rep completed'
+    default:
+      return 'Waiting for start'
+  }
+}
+
+function trackingLabel(status: TrackingStatus, paused: boolean): string {
+  if (paused) return 'Counting paused'
+  switch (status) {
+    case 'tracking':
+      return 'Tracking'
+    case 'ready':
+      return 'Ready'
+    case 'framing':
+      return 'Fix framing'
+    case 'unreliable':
+      return 'Unreliable pose'
+    case 'paused':
+      return 'Counting paused'
+    default:
+      return 'Searching'
+  }
+}
+
+function statusChipCopy(input: {
+  isGoalReached: boolean
+  analysisPaused: boolean
+  trackingStatus: TrackingStatus
+  movementPhase: CyclePhase
+  autoRepCountEnabled: boolean
+  trackingMode: ExerciseTrackingMode
+}): { tone: 'goal' | 'good' | 'warning' | 'paused'; label: string } {
+  if (input.isGoalReached) return { tone: 'goal', label: 'GOAL COMPLETED' }
+  if (input.analysisPaused) return { tone: 'paused', label: 'COUNTING PAUSED' }
+  if (!input.autoRepCountEnabled) {
+    return { tone: 'good', label: 'POSE OVERLAY · MANUAL COUNT' }
+  }
+  if (input.trackingStatus === 'framing' || input.trackingStatus === 'unreliable') {
+    return { tone: 'warning', label: trackingLabel(input.trackingStatus, false).toUpperCase() }
+  }
+  if (input.trackingStatus === 'searching' || input.trackingStatus === 'paused') {
+    return { tone: 'paused', label: trackingLabel(input.trackingStatus, false).toUpperCase() }
+  }
+  return {
+    tone: 'good',
+    label: `${phaseLabel(input.movementPhase, input.trackingMode).toUpperCase()}`,
+  }
 }

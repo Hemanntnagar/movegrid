@@ -21,6 +21,18 @@ Create an account from the app’s **Sign up** screen (or register via `POST /ap
 
 The frontend reads `NEXT_PUBLIC_API_URL` (default `http://localhost:8000/api/v1`).
 
+## Live camera exercise counting
+
+Pose overlay uses MediaPipe Pose Landmarker. Repetition counts come from exercise-specific state machines in `frontend/lib/pose/`, not from raw landmark motion.
+
+```bash
+pnpm --dir frontend test
+```
+
+Replay harness: `replayLandmarkSequence()` in `frontend/lib/pose/replay.ts`. Measured results and limitations: `frontend/lib/pose/VALIDATION.md`.
+
+Auto-count is on for squats, push-ups, biceps curls, jumping jacks, lunges, mountain climbers, and burpees. Other moves show the skeleton and use manual `+1`. Counting pauses when the required landmarks are lost; the accumulated count is kept.
+
 ## Mobile (Android)
 
 **Install APK:** [MOVEGRID Android APK release](https://github.com/Hemanntnagar/movegrid/releases/tag/v1.0.0-android) — direct download: [movegrid-release.apk](https://github.com/Hemanntnagar/movegrid/releases/download/v1.0.0-android/movegrid-release.apk). Sideload on device; rebuild if you need a different API base URL.

@@ -9,6 +9,7 @@ export type ExerciseTrackingMode =
   | 'mountain_climber'
   | 'plank_hold'
   | 'burpee'
+  | 'bicep_curl'
   | 'timed'
   | 'manual'
 
@@ -19,84 +20,61 @@ const REP_COUNTER_MODES: ExerciseTrackingMode[] = [
   'jumping_jack',
   'mountain_climber',
   'burpee',
+  'bicep_curl',
 ]
 
-function inferTrackingModeFromName(name: string): ExerciseTrackingMode | null {
+const KNOWN_MODES = new Set<string>([
+  'pushup',
+  'squat',
+  'lunge',
+  'jumping_jack',
+  'mountain_climber',
+  'plank_hold',
+  'burpee',
+  'bicep_curl',
+  'timed',
+  'manual',
+])
+
+/** Exact exercise families only. Unrelated lifts are not mapped to squat/push-up. */
+function inferStrictTrackingMode(name: string): ExerciseTrackingMode | null {
   const n = name.toLowerCase().trim()
   if (!n) return null
 
-  if (n.includes('push-up') || n.includes('push up') || n.includes('pushup')) return 'pushup'
-  if (n.includes('burpee')) return 'burpee'
   if (n.includes('jumping jack') || n.includes('jump jack')) return 'jumping_jack'
   if (n.includes('mountain climber')) return 'mountain_climber'
-  if (n.includes('plank') || n.includes('hollow hold') || n.includes('dead bug')) return 'plank_hold'
+  if (n.includes('burpee')) return 'burpee'
+  if (n.includes('bicep') || n.includes('curl')) return 'bicep_curl'
+  if (n.includes('lunge') || n.includes('split squat')) return 'lunge'
+  if (n.includes('push-up') || n.includes('push up') || n.includes('pushup')) return 'pushup'
+  if (n.includes('squat')) return 'squat'
+  if (n.includes('plank') || n.includes('hollow hold')) return 'plank_hold'
+  return null
+}
 
-  if (
-    n.includes('squat') ||
-    n.includes('leg press') ||
-    n.includes('lunge') ||
-    n.includes('split squat') ||
-    n.includes('step-up') ||
-    n.includes('step up') ||
-    n.includes('deadlift') ||
-    n.includes('rdl') ||
-    n.includes('hip thrust') ||
-    n.includes('glute bridge') ||
-    n.includes('calf raise')
-  ) {
-    return 'squat'
-  }
-
-  if (
-    n.includes('bench') ||
-    n.includes('press') ||
-    n.includes('fly') ||
-    n.includes('dip') ||
-    n.includes('triceps') ||
-    n.includes('tri extension') ||
-    n.includes('skull') ||
-    n.includes('shoulder') ||
-    n.includes('overhead') ||
-    n.includes('ohp') ||
-    n.includes('chest') ||
-    n.includes('push') ||
-    n.includes('row') ||
-    n.includes('pull') ||
-    n.includes('lat') ||
-    n.includes('curl') ||
-    n.includes('chin') ||
-    n.includes('bicep') ||
-    n.includes('extension')
-  ) {
-    return 'pushup'
-  }
-
-  if (
-    n.includes('core') ||
-    n.includes('crunch') ||
-    n.includes('sit-up') ||
-    n.includes('sit up') ||
-    n.includes('situp') ||
-    n.includes('ab ')
-  ) {
+function inferLooseTrackingMode(name: string): ExerciseTrackingMode | null {
+  const n = name.toLowerCase().trim()
+  if (!n) return null
+  if (n.includes('dead bug') || n.includes('v-up') || n.includes('v up') || n.includes('vup')) {
     return 'plank_hold'
   }
-
   if (n.includes('walk') || n.includes('run') || n.includes('cardio') || n === 'training') return 'timed'
-
-  if (n.includes('v-up') || n.includes('v up') || n.includes('vup')) return 'plank_hold'
   if (n.includes('hip circle') || n.includes('mobility') || n.includes('stretch') || n.includes('flow')) {
     return 'timed'
   }
-
   return null
 }
 
 function inferTrackingModeFromText(...parts: (string | undefined)[]): ExerciseTrackingMode | null {
   for (const part of parts) {
     if (!part?.trim()) continue
-    const hit = inferTrackingModeFromName(part)
-    if (hit) return hit
+    const strict = inferStrictTrackingMode(part)
+    if (strict) return strict
+  }
+  for (const part of parts) {
+    if (!part?.trim()) continue
+    const loose = inferLooseTrackingMode(part)
+    if (loose) return loose
   }
   return null
 }
@@ -117,8 +95,11 @@ export function resolveTrackingModeFromPlan(name: string, prescription = ''): Ex
 }
 
 export function resolveTrackingMode(exercise: ApiExercise): ExerciseTrackingMode {
+  const fromName = inferStrictTrackingMode(exercise.name)
+  if (fromName) return fromName
+
   const fromApi = exercise.tracking_mode?.trim().toLowerCase()
-  if (fromApi && fromApi !== 'manual') {
+  if (fromApi && fromApi !== 'manual' && KNOWN_MODES.has(fromApi)) {
     return fromApi as ExerciseTrackingMode
   }
 
@@ -207,21 +188,25 @@ export function planExerciseToApiExercise(item: PlanExerciseItem): ApiExercise {
 export function liveCameraStartHint(mode: ExerciseTrackingMode): string {
   switch (mode) {
     case 'pushup':
+      return 'Use rear camera, side view — full arms and torso in frame. Get into a plank before counting starts.'
     case 'burpee':
-      return 'Use rear camera, side view — show arms and torso (works for presses, rows, and curls)'
+      return 'Use rear camera, side view — stand, drop to plank, then stand again. Partial movements will not count.'
     case 'squat':
+      return 'Use rear camera, side view — frame hips to ankles. Only full-depth squats count.'
     case 'lunge':
-      return 'Use rear camera, side view — frame hips to ankles'
+      return 'Use rear camera, side view — frame hips to ankles. Step into a full lunge, then stand.'
     case 'jumping_jack':
-      return 'Step back so your full body fits in frame'
+      return 'Step back so your full body fits in frame. Feet and both arms must complete the movement.'
     case 'mountain_climber':
-      return 'Side view — show legs and hips for rep counting'
+      return 'Side view plank — drive one knee in, then fully extend it back. Standing knee lifts do not count.'
+    case 'bicep_curl':
+      return 'Side or 3/4 view — elbows at your sides. Only a full curl and lower counts.'
     case 'plank_hold':
       return 'Side view — hold steady; tap +1 or Complete when finished'
     case 'timed':
       return 'Keep moving — tap Complete when your timed set is done'
     case 'manual':
-      return 'Pose model tracks your form — tap +1 for each rep you complete'
+      return 'Pose overlay is on for form — tap +1 for each rep you complete. Auto-count is off for this exercise.'
     default:
       return 'Tap Start when you are ready to track form with the camera'
   }
@@ -229,10 +214,6 @@ export function liveCameraStartHint(mode: ExerciseTrackingMode): string {
 
 export function repCounterLabel(mode: ExerciseTrackingMode, exerciseName: string): string {
   switch (mode) {
-    case 'pushup':
-      return exerciseName
-    case 'squat':
-      return exerciseName
     case 'lunge':
       return 'Lunge'
     case 'jumping_jack':
@@ -241,6 +222,8 @@ export function repCounterLabel(mode: ExerciseTrackingMode, exerciseName: string
       return 'Mountain climber'
     case 'burpee':
       return 'Burpee'
+    case 'bicep_curl':
+      return exerciseName
     default:
       return exerciseName
   }
