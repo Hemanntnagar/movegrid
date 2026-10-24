@@ -161,7 +161,6 @@ export default function Page() {
   const [challengeState, setChallengeState] = useState<'idle' | 'active' | 'completed' | 'expired'>('idle')
   const [toast, setToast] = useState<string>('')
 
-  // Live step counter from phone accelerometer
   const { steps, goal: stepGoal, percent: stepPercent, startTracking, active: stepActive, pause: stopTracking } = useStepCounter()
 
   const token = getStoredToken()
@@ -171,7 +170,6 @@ export default function Page() {
   const dailyMissionId = dailyMission?.id
 
   const load = useCallback(async (authToken: string) => {
-    // Use login-seeded / coalesced /auth/me + prefetched board/missions when available.
     const cached = peekMeCache(authToken)
     if (cached) {
       setUser(cached)
@@ -200,7 +198,6 @@ export default function Page() {
     return () => window.clearInterval(id)
   }, [])
 
-  // Check saved challenge state for today
   useEffect(() => {
     const today = istDateKey()
     const savedState = localStorage.getItem(`movegrid_challenge_state_${today}`) as any
@@ -209,7 +206,6 @@ export default function Page() {
     }
   }, [])
 
-  // Activate tracking when challenge is active, stop when finished or expired
   useEffect(() => {
     if (challengeState === 'active' && !stepActive) {
       startTracking()
@@ -218,7 +214,6 @@ export default function Page() {
     }
   }, [challengeState, stepActive, startTracking, stopTracking])
 
-  // Auto-fetch completion when step goal is reached!
   useEffect(() => {
     if (steps >= stepGoal && challengeState !== 'completed') {
       const today = istDateKey()
@@ -259,7 +254,6 @@ export default function Page() {
   }, [steps, stepGoal, challengeState, dailyMissionId, challengeMove, token])
 
   const secondsRemaining = useMemo(() => {
-    void tick
     if (fitness?.expires_at) {
       return Math.max(0, Math.floor((new Date(fitness.expires_at).getTime() - Date.now()) / 1000))
     }
@@ -268,7 +262,6 @@ export default function Page() {
     return Math.max(0, Math.floor((end.getTime() - Date.now()) / 1000))
   }, [fitness?.expires_at, tick])
 
-  // Auto-expire when timer hits zero
   useEffect(() => {
     if (secondsRemaining === 0 && challengeState === 'active') {
       const today = istDateKey()
@@ -294,7 +287,6 @@ export default function Page() {
       <AppChrome />
 
       <main className="main-content dashboard-with-trail">
-        {/* Top Floating Notification Pop-up for Daily Challenge */}
         <div className="top-daily-challenge-banner">
           <DailyChallengeBar
             challengeState={challengeState}

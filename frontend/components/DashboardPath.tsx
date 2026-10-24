@@ -107,7 +107,6 @@ function ActiveExerciseModal({
 
   const handleGoalComplete = useCallback(() => {
     setGoalCompleted(true)
-    // Auto-complete after 1.8 seconds of celebration
     setTimeout(() => {
       onComplete(assignment.id, {
         reps_completed: repsDoneRef.current,
@@ -141,7 +140,6 @@ function ActiveExerciseModal({
           {exercise.description}
         </p>
 
-        {/* Live Camera & Posture Recording Stream */}
         <div className="exercise-runner-box posture-runner-box">
           <PostureCamera
             key={assignment.id}
@@ -488,8 +486,6 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   const [planWorkoutStartIndex, setPlanWorkoutStartIndex] = useState(0)
   const [syncingPlan, setSyncingPlan] = useState(false)
 
-  // Recompute from IST on every tick so midnight unlocks the new calendar day.
-  void tick
   const istToday = getIstParts()
   const todayDay = istToday.day
   const dayCount = daysInIstMonth()
@@ -569,7 +565,6 @@ export function DashboardPath({ onPointsChange, onFitnessChange }: DashboardPath
   }, [])
 
   const secondsRemaining = useMemo(() => {
-    void tick
     if (!today?.expires_at) return 0
     return Math.max(0, Math.floor((new Date(today.expires_at).getTime() - Date.now()) / 1000))
   }, [today?.expires_at, tick])

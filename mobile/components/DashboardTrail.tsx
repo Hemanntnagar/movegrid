@@ -129,7 +129,6 @@ export function DashboardTrail({
     return list
   }, [dayCount, monthProgress, todayDay])
 
-  void tick
   const secondsRemaining = useMemo(() => {
     if (!fitness?.expires_at) return 0
     return Math.max(0, Math.floor((new Date(fitness.expires_at).getTime() - Date.now()) / 1000))

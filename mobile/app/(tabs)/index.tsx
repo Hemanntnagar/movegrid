@@ -108,7 +108,6 @@ export default function TodayScreen() {
   const move = user?.total_points ?? plan?.total_points ?? 0
   const firstName = user?.name?.split(' ')[0] ?? 'Mover'
 
-  void tick
   const secondsRemaining = useMemo(() => {
     if (plan?.expires_at) {
       return Math.max(0, Math.floor((new Date(plan.expires_at).getTime() - Date.now()) / 1000))
@@ -135,7 +134,6 @@ export default function TodayScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} />
       }>
-      {/* Daily quest banner — matches web DailyChallengeBar (mobile compact) */}
       <View style={[styles.questBanner, inkShadow]}>
         <View style={styles.questHeader}>
           <View style={styles.questBadge}>
@@ -184,7 +182,6 @@ export default function TodayScreen() {
         ) : null}
       </View>
 
-      {/* Hero */}
       <View style={styles.speech}>
         <Text style={styles.speechText}>⚡ POWER UP YOUR DAY!</Text>
       </View>
@@ -193,7 +190,6 @@ export default function TodayScreen() {
         Keep moving, <Text style={styles.greetingAccent}>{firstName}</Text>!
       </Text>
 
-      {/* 4 stat chips — web mobile dashboard-stat-row */}
       <View style={styles.statsRow}>
         {stats.map((stat) => {
           const inner = (
@@ -225,7 +221,6 @@ export default function TodayScreen() {
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      {/* Level trail — same as web mobile PenguinPathMap */}
       <DashboardTrail
         token={token}
         fitness={plan}

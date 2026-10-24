@@ -42,8 +42,6 @@ function formatCountdown(totalSeconds: number) {
   return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':')
 }
 
-// ─── 24-Hour Daily Gyro Challenge Widget ────────────────────────────────────
-
 function DailyGyroChallengeWidget() {
   const { steps, goal, percent, active, startTracking } = useStepCounter()
   const [secondsRemaining, setSecondsRemaining] = useState<number>(0)
@@ -412,7 +410,6 @@ export default function ChallengesPage() {
           </div>
         </div>
 
-        {/* 24-Hour Daily Gyro Challenge Banner */}
         <DailyGyroChallengeWidget />
 
         <div className="section-heading compact">

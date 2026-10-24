@@ -157,7 +157,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Stats Section */}
         <div className="profile-stats-grid">
           <div className="profile-stat-box">
             <div className="stat-box-icon lime">
@@ -204,9 +203,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile Content Sections */}
         <div className="profile-details-grid">
-          {/* Account Details Card */}
           <div className="profile-card">
             <div className="profile-card-header">
               <User size={20} className="card-header-icon" />
@@ -240,7 +237,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Fitness Plan Card */}
           <div className="profile-card">
             <div className="profile-card-header">
               <Target size={20} className="card-header-icon" />
@@ -281,7 +277,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Login & Sign Up Options / Session Card */}
         <div className="profile-card full-width-card" style={{ marginTop: '24px' }}>
           <div className="profile-card-header">
             <ShieldCheck size={20} className="card-header-icon" />
