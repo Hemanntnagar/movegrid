@@ -356,7 +356,64 @@ export type ApiCoachChatResult = {
   reply: string
 }
 
+export type ApiTerritoryCell = {
+  x: number
+  y: number
+  owner_id: number
+}
+
+export type ApiTerritoryPlayer = {
+  id: number
+  name: string
+  initials: string
+  color: string
+  latitude: number
+  longitude: number
+  cell_count: number
+  area_m2: number
+  is_you: boolean
+}
+
+export type ApiTerritoryState = {
+  cell_deg: number
+  cell_m: number
+  latitude: number
+  longitude: number
+  radius_m: number
+  players: ApiTerritoryPlayer[]
+  cells: ApiTerritoryCell[]
+  me: ApiTerritoryPlayer | null
+  captured: number
+  stolen: number
+  points_awarded: number
+  total_points: number
+}
+
+export type ApiTerritoryClaimPayload = {
+  latitude: number
+  longitude: number
+  trail?: { latitude: number; longitude: number }[]
+  is_playing?: boolean
+}
+
 export type MovegridApiClient = ReturnType<typeof createMovegridApi>
+
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+/** True only for expired/invalid session — not login mistakes or network failures. */
+export function isAuthFailure(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err)
+  if (/invalid email or password/i.test(message)) return false
+  if (err instanceof ApiError && err.status === 401) return true
+  return /unauthor|invalid authentication|not authenticated|credentials/i.test(message)
+}
 
 function connectionHint(apiUrl: string): string {
   if (apiUrl.includes('10.0.2.2')) {
@@ -423,7 +480,7 @@ export function createMovegridApi(baseUrl?: string) {
         })
         errorMsg = messages.join('. ')
       }
-      throw new Error(errorMsg)
+      throw new ApiError(errorMsg, response.status)
     }
     return response.json()
   }
@@ -573,6 +630,17 @@ export function createMovegridApi(baseUrl?: string) {
         `/presence/nearby?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
         { headers: token ? authHeaders(token) : undefined },
       ),
+    territoryState: (latitude: number, longitude: number, token?: string | null, radiusM = 900) =>
+      request<ApiTerritoryState>(
+        `/territory/state?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&radius_m=${radiusM}`,
+        { headers: token ? authHeaders(token) : undefined },
+      ),
+    claimTerritory: (token: string, payload: ApiTerritoryClaimPayload) =>
+      request<ApiTerritoryState>('/territory/claim', {
+        method: 'POST',
+        headers: authHeaders(token),
+        body: JSON.stringify(payload),
+      }),
     listBuddies: (token: string) => request<ApiBuddy[]>('/buddies', { headers: authHeaders(token) }),
     buddyInvitesIncoming: (token: string) =>
       request<ApiBuddyInvite[]>('/buddies/invites/incoming', { headers: authHeaders(token) }),

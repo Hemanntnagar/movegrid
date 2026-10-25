@@ -21,7 +21,7 @@ import {
   UserPlus,
   Zap,
 } from 'lucide-react'
-import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi, peekMeCache } from '../../lib/api'
+import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, dropSessionIfUnauthorized, getStoredToken, movegridApi, peekMeCache } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { getStoredPlan, goalLabel } from '../../lib/fitnessPlan'
 
@@ -53,9 +53,8 @@ export default function ProfilePage() {
     movegridApi
       .me(token, { force })
       .then(setUser)
-      .catch(() => {
-        clearToken()
-        setUser(null)
+      .catch((err) => {
+        if (dropSessionIfUnauthorized(err, token)) setUser(null)
       })
       .finally(() => setLoading(false))
   }

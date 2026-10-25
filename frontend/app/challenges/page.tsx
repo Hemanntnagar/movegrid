@@ -18,7 +18,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { ApiUser, clearToken, getStoredToken, movegridApi, notifyUserUpdated } from '../../lib/api'
+import { ApiUser, dropSessionIfUnauthorized, getStoredToken, movegridApi, notifyUserUpdated } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 import { MobileBottomNav } from '../../components/MobileBottomNav'
 import { useStepCounter } from '../../hooks/useStepCounter'
@@ -351,7 +351,7 @@ export default function ChallengesPage() {
       movegridApi
         .me(token)
         .then(setUser)
-        .catch(() => clearToken())
+        .catch((err) => dropSessionIfUnauthorized(err, token))
     }
 
     movegridApi

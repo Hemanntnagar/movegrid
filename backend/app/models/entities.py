@@ -261,3 +261,13 @@ class BuddyConnection(Base):
     user_a_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     user_b_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     connected_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class TerritoryCell(Base):
+    __tablename__ = "territory_cells"
+    __table_args__ = (UniqueConstraint("cell_x", "cell_y", name="uq_territory_cell"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cell_x: Mapped[int] = mapped_column(Integer, index=True)
+    cell_y: Mapped[int] = mapped_column(Integer, index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    claimed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

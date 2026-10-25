@@ -42,6 +42,8 @@ from app.schemas.common import (
     StartMissionPayload,
     StepSyncRequest,
     StepSyncResponse,
+    TerritoryClaimRequest,
+    TerritoryStateResponse,
     TodayFitnessResponse,
     Token,
     UserCreate,
@@ -58,6 +60,7 @@ from app.services.mission_service import list_missions, verify_and_complete
 from app.services.coach_chat_service import coach_chat
 from app.services.plan_generation_service import generate_fitness_plan
 from app.services.presence_service import list_nearby, upsert_presence
+from app.services.territory_service import claim_and_state, get_territory_state
 from app.services.progress_service import record_activity_progress
 from app.services.reward_service import get_reward, list_redemption_history, list_rewards, redeem_reward
 from app.services.buddy_service import accept_invite, decline_invite, list_buddies, list_incoming_invites, send_invite
@@ -285,6 +288,32 @@ async def nearby_presence(
         radius_m=radius_m,
         current_user=user,
     )
+
+
+@api_router.get("/territory/state", response_model=TerritoryStateResponse)
+async def territory_state(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_m: float = Query(900, ge=80, le=4000),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_territory_state(
+        db,
+        latitude=latitude,
+        longitude=longitude,
+        radius_m=radius_m,
+        current_user=user,
+    )
+
+
+@api_router.post("/territory/claim", response_model=TerritoryStateResponse)
+async def territory_claim(
+    payload: TerritoryClaimRequest,
+    user: User = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await claim_and_state(db, user, payload)
 
 
 @api_router.get("/buddies", response_model=list[BuddyUserRead])

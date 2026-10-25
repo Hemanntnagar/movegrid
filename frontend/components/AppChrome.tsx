@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  Crosshair,
   Flame,
   Gift,
   LayoutDashboard,
@@ -15,12 +16,13 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { ApiUser, MOVEGRID_USER_UPDATED, clearToken, getStoredToken, movegridApi, peekMeCache } from '../lib/api'
+import { ApiUser, MOVEGRID_USER_UPDATED, dropSessionIfUnauthorized, getStoredToken, movegridApi, peekMeCache } from '../lib/api'
 import { ExerciseReminderBell } from './ExerciseReminderBell'
 
 export type MenuAction =
   | 'dashboard'
   | 'challenges'
+  | 'territory'
   | 'buddies'
   | 'competitions'
   | 'reward-hub'
@@ -35,6 +37,7 @@ const MENU_ITEMS: {
   secondary?: boolean
 }[] = [
   { id: 'dashboard', label: 'Dashboard Trail', icon: LayoutDashboard, tone: 'lime', href: '/' },
+  { id: 'territory', label: 'Grid Claim', icon: Crosshair, tone: 'orange', href: '/territory' },
   { id: 'challenges', label: 'Challenges', icon: Target, tone: 'mint', href: '/challenges' },
   { id: 'leaderboard', label: 'Leaderboards', icon: Flame, tone: 'orange', href: '/leaderboard', secondary: true },
   { id: 'competitions', label: 'Competitions', icon: Swords, tone: 'orange', href: '/competitions' },
@@ -67,12 +70,7 @@ export function AppChrome({ onMenuAction, rightSlot, brandHref = '/' }: AppChrom
         .me(token, { force })
         .then(setUser)
         .catch((err) => {
-          const message = err instanceof Error ? err.message : String(err)
-          // Only drop the session on real auth failures — network blips must not log users out.
-          if (/unauthor|invalid authentication|not authenticated|credentials/i.test(message)) {
-            clearToken()
-            setUser(null)
-          }
+          if (dropSessionIfUnauthorized(err, token)) setUser(null)
         })
     }
     loadUser()

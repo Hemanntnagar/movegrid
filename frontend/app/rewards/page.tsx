@@ -24,6 +24,7 @@ import {
   ApiRewardRedemption,
   ApiUser,
   clearToken,
+  dropSessionIfUnauthorized,
   getStoredToken,
   movegridApi,
   notifyUserUpdated,
@@ -90,11 +91,6 @@ function formatWhen(value: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-function isAuthFailure(err: unknown) {
-  const message = err instanceof Error ? err.message : String(err)
-  return /unauthor|invalid authentication|not authenticated|credentials/i.test(message)
 }
 
 function historyItems(redemptions: ApiRewardHistory | ApiRewardRedemption[] | null | undefined): ApiRewardRedemption[] {
@@ -187,8 +183,7 @@ export default function RewardsPage() {
         if (cancelled) return
         const message = err instanceof Error ? err.message : 'Could not load rewards'
         setError(message)
-        if (isAuthFailure(err)) {
-          clearToken()
+        if (dropSessionIfUnauthorized(err, stored)) {
           setUser(null)
           router.replace('/login?next=%2Frewards')
         }
@@ -227,8 +222,7 @@ export default function RewardsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not redeem reward')
       setConfirmReward(null)
-      if (isAuthFailure(err)) {
-        clearToken()
+      if (dropSessionIfUnauthorized(err, token)) {
         setUser(null)
         router.replace('/login?next=%2Frewards')
       }
@@ -254,8 +248,7 @@ export default function RewardsPage() {
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Could not load rewards'
         setError(message)
-        if (isAuthFailure(err)) {
-          clearToken()
+        if (dropSessionIfUnauthorized(err, stored)) {
           setUser(null)
           router.replace('/login?next=%2Frewards')
         }

@@ -4903,4 +4903,140 @@ h1 { font-size: clamp(34px, 5vw, 62px); text-shadow: 4px 4px 0 #fffdf0; }
   min-height: 32px;
 }
 
+.grid-claim-card {
+  display: grid;
+  grid-template-columns: 1fr 132px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 3.5px solid #0f172a;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fde68a 45%, #bbf7d0 100%);
+  box-shadow: 0 7px 0 #0f172a;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.grid-claim-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 0 #0f172a;
+}
+.grid-claim-card-copy h2 {
+  margin: 6px 0 6px;
+  font-size: 22px;
+  letter-spacing: -0.8px;
+}
+.grid-claim-card-copy p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #183d59;
+}
+.grid-claim-badge {
+  display: inline-flex;
+  background: #0f172a;
+  color: #fde047;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.grid-claim-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+.grid-claim-card-art {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.grid-claim-tile {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px solid #0f172a;
+}
+.grid-claim-tile.you { background: #f472b6; }
+.grid-claim-tile.rival { background: #38bdf8; }
+.grid-claim-tile.steal { background: #a3e635; }
+
+.territory-page { max-width: 1100px; }
+.territory-hero { align-items: flex-end; }
+.territory-hero-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+.territory-signin-hint,
+.territory-live-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 3px solid #0f172a;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.territory-live-banner {
+  background: #d9f99d;
+}
+.territory-signin-hint {
+  background: #fff7ed;
+}
+.territory-map-stage .territory-leaflet,
+.territory-leaflet {
+  height: min(72vh, 680px);
+}
+.territory-hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  background: #fffdf0;
+  border-top: 3px solid #183d59;
+}
+.territory-hud div {
+  padding: 12px 14px;
+  border-right: 2px solid rgba(24, 61, 89, 0.12);
+}
+.territory-hud div:last-child { border-right: 0; }
+.territory-hud small {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #2e6177;
+}
+.territory-hud strong {
+  font-size: 16px;
+  letter-spacing: -0.4px;
+}
+
+@media (max-width: 720px) {
+  .grid-claim-card {
+    grid-template-columns: 1fr;
+  }
+  .grid-claim-card-art {
+    max-width: 160px;
+  }
+  .territory-hero-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+  .territory-hud {
+    grid-template-columns: 1fr;
+  }
+  .territory-hud div {
+    border-right: 0;
+    border-bottom: 2px solid rgba(24, 61, 89, 0.12);
+  }
+}
+
 

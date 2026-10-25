@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  Bell, CheckCircle2, Flame, Footprints,
+  Bell, CheckCircle2, Crosshair, Flame, Footprints,
   Play, Sparkles, Trophy, Zap
 } from 'lucide-react'
 import {
   ApiMission,
   ApiTodayFitness,
   ApiUser,
-  clearToken,
+  dropSessionIfUnauthorized,
   getStoredToken,
   movegridApi,
   notifyUserUpdated,
@@ -190,7 +190,7 @@ export default function Page() {
 
   useEffect(() => {
     if (!token) return
-    load(token).catch(() => clearToken())
+    load(token).catch((err) => dropSessionIfUnauthorized(err, token))
   }, [token, load])
 
   useEffect(() => {
@@ -365,6 +365,27 @@ export default function Page() {
           </aside>
 
           <div className="dashboard-main-content">
+            <Link href="/territory" className="grid-claim-card">
+              <div className="grid-claim-card-copy">
+                <span className="grid-claim-badge">NEW GAME</span>
+                <h2>Grid Claim</h2>
+                <p>
+                  Live map preview. Cover streets to make them yours. If another mover overlaps your patch, that slice
+                  becomes theirs.
+                </p>
+                <span className="grid-claim-cta">
+                  <Crosshair size={14} /> Play live turf
+                </span>
+              </div>
+              <div className="grid-claim-card-art" aria-hidden>
+                <span className="grid-claim-tile you" />
+                <span className="grid-claim-tile rival" />
+                <span className="grid-claim-tile you" />
+                <span className="grid-claim-tile steal" />
+                <span className="grid-claim-tile you" />
+                <span className="grid-claim-tile rival" />
+              </div>
+            </Link>
             <DashboardPath onPointsChange={setMove} onFitnessChange={setFitness} />
           </div>
         </div>

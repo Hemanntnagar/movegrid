@@ -25,6 +25,7 @@ import {
   ApiCompetition,
   ApiUser,
   clearToken,
+  dropSessionIfUnauthorized,
   getStoredToken,
   movegridApi,
 } from '../../lib/api'
@@ -262,9 +263,10 @@ export default function CompetitionsPage() {
     load(stored)
       .then(() => setError(''))
       .catch((err) => {
-        clearToken()
         setError(err instanceof Error ? err.message : 'Could not load competitions')
-        router.replace('/login')
+        if (dropSessionIfUnauthorized(err, stored)) {
+          router.replace('/login')
+        }
       })
       .finally(() => setLoading(false))
   }, [load, router])
@@ -368,11 +370,22 @@ export default function CompetitionsPage() {
     router.push('/login')
   }
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="app-shell fitness-loading">
         <LoaderCircle className="spin" size={28} />
         <p>Loading competitions…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="app-shell fitness-loading">
+        <p>{error || 'Could not load competitions'}</p>
+        <button type="button" className="primary-button" onClick={() => window.location.reload()}>
+          Retry
+        </button>
       </div>
     )
   }

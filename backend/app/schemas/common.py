@@ -388,3 +388,48 @@ class CoachChatRequest(BaseModel):
 
 class CoachChatResponse(BaseModel):
     reply: str
+
+
+class TerritoryPoint(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
+class TerritoryClaimRequest(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    trail: list[TerritoryPoint] = Field(default_factory=list, max_length=12)
+    is_playing: bool = True
+
+
+class TerritoryCellRead(BaseModel):
+    x: int
+    y: int
+    owner_id: int
+
+
+class TerritoryPlayerRead(BaseModel):
+    id: int
+    name: str
+    initials: str
+    color: str
+    latitude: float
+    longitude: float
+    cell_count: int
+    area_m2: int
+    is_you: bool = False
+
+
+class TerritoryStateResponse(BaseModel):
+    cell_deg: float
+    cell_m: float
+    latitude: float
+    longitude: float
+    radius_m: float
+    players: list[TerritoryPlayerRead]
+    cells: list[TerritoryCellRead]
+    me: TerritoryPlayerRead | None = None
+    captured: int = 0
+    stolen: int = 0
+    points_awarded: int = 0
+    total_points: int = 0

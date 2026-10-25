@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { clearMeCache, movegridApi, seedMeCache, type ApiUser } from '@movegrid/api-client'
+import { clearMeCache, isAuthFailure, movegridApi, seedMeCache, type ApiUser } from '@movegrid/api-client'
 import {
   clearToken,
   getStoredToken,
@@ -66,11 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(me)
           await storeUser(me, stored)
         }
-      } catch {
-        await clearToken()
-        if (!cancelled) {
-          setToken(null)
-          setUser(null)
+      } catch (err) {
+        if (isAuthFailure(err)) {
+          await clearToken()
+          if (!cancelled) {
+            setToken(null)
+            setUser(null)
+          }
         }
       } finally {
         if (!cancelled) setBootstrapping(false)

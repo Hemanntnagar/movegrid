@@ -1,6 +1,6 @@
 export * from '@movegrid/api-client'
 
-import { clearMeCache } from '@movegrid/api-client'
+import { clearMeCache, isAuthFailure } from '@movegrid/api-client'
 import { clearDashboardBootstrap } from './dashboardBootstrap'
 
 export const MOVEGRID_USER_UPDATED = 'movegrid:user-updated'
@@ -26,4 +26,13 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
   clearMeCache()
   clearDashboardBootstrap()
+}
+
+/** Drop the browser session only on a real 401 for this token — keep same-browser login otherwise. */
+export function dropSessionIfUnauthorized(err: unknown, tokenUsed?: string | null): boolean {
+  if (!isAuthFailure(err)) return false
+  const current = getStoredToken()
+  if (tokenUsed && current && current !== tokenUsed) return false
+  clearToken()
+  return true
 }
