@@ -372,6 +372,7 @@ export type ApiTerritoryPlayer = {
   cell_count: number
   area_m2: number
   is_you: boolean
+  trail?: { latitude: number; longitude: number }[]
 }
 
 export type ApiTerritoryState = {
@@ -382,6 +383,8 @@ export type ApiTerritoryState = {
   radius_m: number
   players: ApiTerritoryPlayer[]
   cells: ApiTerritoryCell[]
+  trail?: { latitude: number; longitude: number }[]
+  closed?: boolean
   me: ApiTerritoryPlayer | null
   captured: number
   stolen: number
@@ -534,6 +537,10 @@ export function createMovegridApi(baseUrl?: string) {
       }),
     leaderboardCompetition: (token?: string | null, limit = 20, offset = 0) =>
       request<ApiLeaderboard>(`/leaderboard/competition?limit=${limit}&offset=${offset}`, {
+        headers: token ? authHeaders(token) : undefined,
+      }),
+    leaderboardTerritory: (token?: string | null, limit = 20, offset = 0) =>
+      request<ApiLeaderboard>(`/leaderboard/territory?limit=${limit}&offset=${offset}`, {
         headers: token ? authHeaders(token) : undefined,
       }),
     competitions: (token?: string | null) =>

@@ -55,6 +55,7 @@ from app.services.leaderboard_service import (
     get_competition_leaderboard,
     get_move_leaderboard,
     get_streak_leaderboard,
+    get_territory_leaderboard,
 )
 from app.services.mission_service import list_missions, verify_and_complete
 from app.services.coach_chat_service import coach_chat
@@ -403,6 +404,17 @@ async def competition_leaderboard(
     db: AsyncSession = Depends(get_db),
 ):
     return await get_competition_leaderboard(db, current_user=user, limit=limit, offset=offset)
+
+
+@api_router.get("/leaderboard/territory", response_model=LeaderboardResponse)
+@api_router.get("/leaderboard/area", response_model=LeaderboardResponse)
+async def territory_leaderboard(
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
+    user: User | None = Depends(optional_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_territory_leaderboard(db, current_user=user, limit=limit, offset=offset)
 
 @api_router.get("/leaderboard/class")
 async def class_leaderboard(user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):

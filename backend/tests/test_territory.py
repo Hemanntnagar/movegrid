@@ -7,8 +7,8 @@ from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.main import app
 from app.models.entities import User
-from app.services.territory_service import brush_cells, to_cell
-from app.schemas.common import TerritoryPoint
+from app.services.territory_service import CELL_DEG, cell_center, to_cell
+from app.services.territory_shape import append_cells, fill_loop, find_closed_loop
 
 
 @pytest_asyncio.fixture
@@ -58,56 +58,114 @@ async def _login(http: AsyncClient, email: str) -> str:
     return response.json()["access_token"]
 
 
+def _square_points(origin_lat=12.9716, origin_lng=77.5946, size=4):
+    ox, oy = to_cell(origin_lat, origin_lng)
+    corners = [
+        (ox, oy),
+        (ox + size, oy),
+        (ox + size, oy + size),
+        (ox, oy + size),
+        (ox, oy),
+    ]
+    return [{"latitude": cell_center(x, y)[0], "longitude": cell_center(x, y)[1]} for x, y in corners]
+
+
 def test_to_cell_is_stable():
     first = to_cell(12.9716, 77.5946)
     second = to_cell(12.9716, 77.5946)
-    nearby = to_cell(12.9718, 77.5948)
     assert first == second
-    assert nearby != first or nearby == first
+    assert CELL_DEG > 0
 
 
-def test_brush_covers_origin_cell():
-    cells = brush_cells([TerritoryPoint(latitude=40.7128, longitude=-74.006)])
-    origin = to_cell(40.7128, -74.006)
-    assert origin in cells
-    assert 5 <= len(cells) <= 13
+def test_closed_square_fills_interior():
+    ring = [(0, 0), (4, 0), (4, 4), (0, 4), (0, 0)]
+    trail = append_cells([], ring)
+    closed = find_closed_loop(trail)
+    assert closed is not None
+    filled = fill_loop(closed)
+    assert (2, 2) in filled
+    assert (0, 0) in filled
+    assert len(filled) >= 16
+
+
+def test_open_path_does_not_close():
+    trail = append_cells([], [(0, 0), (4, 0), (4, 4)])
+    assert find_closed_loop(trail) is None
 
 
 @pytest.mark.asyncio
-async def test_claim_then_overlap_steals_cells(territory_client):
+async def test_open_walk_does_not_claim(territory_client):
+    http = territory_client
+    token = await _login(http, "alpha@example.com")
+    lat, lng = 12.9716, 77.5946
+    response = await http.post(
+        "/api/v1/territory/claim",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"latitude": lat, "longitude": lng, "is_playing": True},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["closed"] is False
+    assert body["captured"] == 0
+    assert body["trail"]
+
+
+@pytest.mark.asyncio
+async def test_closing_a_shape_claims_the_inside(territory_client):
+    http = territory_client
+    token = await _login(http, "alpha@example.com")
+    points = _square_points()
+    response = await http.post(
+        "/api/v1/territory/claim",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "latitude": points[-1]["latitude"],
+            "longitude": points[-1]["longitude"],
+            "trail": points[:-1],
+            "is_playing": True,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["closed"] is True
+    assert body["captured"] >= 16
+    assert body["me"]["cell_count"] >= 16
+
+
+@pytest.mark.asyncio
+async def test_closed_overlap_steals_interior(territory_client):
     http = territory_client
     alpha = await _login(http, "alpha@example.com")
     bravo = await _login(http, "bravo@example.com")
-    lat, lng = 12.9716, 77.5946
+    points = _square_points()
 
     first = await http.post(
         "/api/v1/territory/claim",
         headers={"Authorization": f"Bearer {alpha}"},
-        json={"latitude": lat, "longitude": lng, "is_playing": True},
+        json={
+            "latitude": points[-1]["latitude"],
+            "longitude": points[-1]["longitude"],
+            "trail": points[:-1],
+            "is_playing": True,
+        },
     )
-    assert first.status_code == 200
-    first_body = first.json()
-    assert first_body["captured"] >= 1
-    assert first_body["me"]["cell_count"] >= 1
-    alpha_cells = {(cell["x"], cell["y"]) for cell in first_body["cells"] if cell["owner_id"] == first_body["me"]["id"]}
-    assert alpha_cells
+    assert first.json()["closed"] is True
+    alpha_id = first.json()["me"]["id"]
+    alpha_cells = {(cell["x"], cell["y"]) for cell in first.json()["cells"] if cell["owner_id"] == alpha_id}
 
     steal = await http.post(
         "/api/v1/territory/claim",
         headers={"Authorization": f"Bearer {bravo}"},
-        json={"latitude": lat, "longitude": lng, "is_playing": True},
+        json={
+            "latitude": points[-1]["latitude"],
+            "longitude": points[-1]["longitude"],
+            "trail": points[:-1],
+            "is_playing": True,
+        },
     )
-    assert steal.status_code == 200
     steal_body = steal.json()
+    assert steal_body["closed"] is True
     assert steal_body["stolen"] >= 1
     bravo_id = steal_body["me"]["id"]
-    stolen_cells = {(cell["x"], cell["y"]) for cell in steal_body["cells"] if cell["owner_id"] == bravo_id}
-    assert stolen_cells & alpha_cells
-
-    preview = await http.get(
-        f"/api/v1/territory/state?latitude={lat}&longitude={lng}",
-        headers={"Authorization": f"Bearer {alpha}"},
-    )
-    assert preview.status_code == 200
-    preview_body = preview.json()
-    assert any(player["id"] == bravo_id for player in preview_body["players"])
+    stolen = {(cell["x"], cell["y"]) for cell in steal_body["cells"] if cell["owner_id"] == bravo_id}
+    assert stolen & alpha_cells

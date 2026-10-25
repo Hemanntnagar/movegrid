@@ -6,13 +6,13 @@ import {
   ArrowDown,
   ArrowUp,
   Award,
+  Crosshair,
   Crown,
   Flame,
   Medal,
   Minus,
   Search,
   Trophy,
-  Zap,
 } from 'lucide-react'
 import {
   ApiLeaderboard,
@@ -23,7 +23,31 @@ import {
 } from '../../lib/api'
 import { AppChrome } from '../../components/AppChrome'
 
-type TabType = 'move' | 'streak'
+type TabType = 'move' | 'streak' | 'territory'
+
+function formatArea(m2: number) {
+  if (m2 >= 1_000_000) return `${(m2 / 1_000_000).toFixed(2)} km²`
+  if (m2 >= 10_000) return `${(m2 / 1_000).toFixed(1)}k m²`
+  return `${m2.toLocaleString()} m²`
+}
+
+function scoreLabel(tab: TabType, points: number) {
+  if (tab === 'move') return `${points.toLocaleString()} MOVE`
+  if (tab === 'streak') return `${points} Days 🔥`
+  return formatArea(points)
+}
+
+function scoreShort(tab: TabType, points: number) {
+  if (tab === 'move') return points.toLocaleString()
+  if (tab === 'streak') return `${points} d`
+  return formatArea(points)
+}
+
+function scoreUnit(tab: TabType) {
+  if (tab === 'move') return 'MOVE'
+  if (tab === 'streak') return 'STREAK'
+  return 'AREA'
+}
 
 function AvatarCircle({ avatar, name }: { avatar: string; name: string }) {
   if (avatar?.startsWith('initials:')) {
@@ -72,6 +96,7 @@ export default function StandingsPage() {
   const [tab, setTab] = useState<TabType>('move')
   const [moveData, setMoveData] = useState<ApiLeaderboard | null>(null)
   const [streakData, setStreakData] = useState<ApiLeaderboard | null>(null)
+  const [territoryData, setTerritoryData] = useState<ApiLeaderboard | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<ApiUser | null>(null)
@@ -84,12 +109,14 @@ export default function StandingsPage() {
       if (token) {
         movegridApi.me(token).then(setCurrentUser).catch(() => null)
       }
-      const [moveRes, streakRes] = await Promise.all([
+      const [moveRes, streakRes, territoryRes] = await Promise.all([
         movegridApi.leaderboardMove(token, 50),
         movegridApi.leaderboardStreak(token, 50),
+        movegridApi.leaderboardTerritory(token, 50),
       ])
       setMoveData(moveRes)
       setStreakData(streakRes)
+      setTerritoryData(territoryRes)
     } catch (err) {
       console.error('Failed to load standings data', err)
     } finally {
@@ -101,7 +128,7 @@ export default function StandingsPage() {
     fetchStandings()
   }, [fetchStandings])
 
-  const activeData = tab === 'move' ? moveData : streakData
+  const activeData = tab === 'move' ? moveData : tab === 'streak' ? streakData : territoryData
 
   const filteredEntries = (activeData?.entries || []).filter((entry) =>
     entry.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
@@ -121,7 +148,7 @@ export default function StandingsPage() {
               Community <span>Leaderboard.</span>
             </h1>
             <p className="subhead">
-              Track global MOVE points accumulated and daily movement streak rankings across the MOVEGRID network.
+              Track MOVE points, streaks, and Grid Claim area — largest turf first.
             </p>
           </div>
 
@@ -139,6 +166,13 @@ export default function StandingsPage() {
               onClick={() => setTab('streak')}
             >
               <Flame size={16} /> Streak Ranking
+            </button>
+            <button
+              type="button"
+              className={`lb-tab ${tab === 'territory' ? 'active' : ''}`}
+              onClick={() => setTab('territory')}
+            >
+              <Crosshair size={16} /> Area Ranking
             </button>
           </div>
         </div>
@@ -208,7 +242,7 @@ export default function StandingsPage() {
                   )}
                 </strong>
                 <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', marginTop: '4px' }}>
-                  {tab === 'move' ? `${topThree[1].points.toLocaleString()} MOVE` : `${topThree[1].points} Days 🔥`}
+                  {scoreLabel(tab, topThree[1].points)}
                 </span>
                 <MovementBadge delta={topThree[1].movement} />
               </div>
@@ -270,7 +304,7 @@ export default function StandingsPage() {
                   )}
                 </strong>
                 <span style={{ fontSize: '22px', fontWeight: 900, color: '#78350f', marginTop: '4px' }}>
-                  {tab === 'move' ? `${topThree[0].points.toLocaleString()} MOVE` : `${topThree[0].points} Days 🔥`}
+                  {scoreLabel(tab, topThree[0].points)}
                 </span>
                 <MovementBadge delta={topThree[0].movement} />
               </div>
@@ -331,7 +365,7 @@ export default function StandingsPage() {
                   )}
                 </strong>
                 <span style={{ fontSize: '18px', fontWeight: 900, color: '#7c2d12', marginTop: '4px' }}>
-                  {tab === 'move' ? `${topThree[2].points.toLocaleString()} MOVE` : `${topThree[2].points} Days 🔥`}
+                  {scoreLabel(tab, topThree[2].points)}
                 </span>
                 <MovementBadge delta={topThree[2].movement} />
               </div>
@@ -344,9 +378,20 @@ export default function StandingsPage() {
           <div className="lb-panel-head">
             <div>
               <p className="eyebrow" style={{ margin: '0 0 4px' }}>
-                {tab === 'move' ? 'GLOBAL MOVE RANKINGS' : 'STREAK LEADERBOARD'}
+                {tab === 'move'
+                  ? 'GLOBAL MOVE RANKINGS'
+                  : tab === 'streak'
+                    ? 'STREAK LEADERBOARD'
+                    : 'GRID CLAIM AREA'}
               </p>
-              <h2>{activeData?.title || (tab === 'move' ? 'Top MOVE Performers' : 'Top Streak Keepers')}</h2>
+              <h2>
+                {activeData?.title ||
+                  (tab === 'move'
+                    ? 'Top MOVE Performers'
+                    : tab === 'streak'
+                      ? 'Top Streak Keepers'
+                      : 'Largest turf first')}
+              </h2>
             </div>
 
             <div
@@ -435,19 +480,17 @@ export default function StandingsPage() {
                       <small>
                         {tab === 'move'
                           ? `Streak: ${entry.meta?.streak ?? 0} days 🔥`
-                          : `Total: ${entry.points} streak days`}
+                          : tab === 'streak'
+                            ? `Total: ${entry.points} streak days`
+                            : `${Number(entry.meta?.cell_count ?? 0).toLocaleString()} cells claimed`}
                       </small>
                     </div>
 
                     <MovementBadge delta={entry.movement} />
 
                     <div className="lb-points">
-                      <strong>
-                        {tab === 'move'
-                          ? entry.points.toLocaleString()
-                          : `${entry.points} d`}
-                      </strong>
-                      <span>{tab === 'move' ? 'MOVE' : 'STREAK'}</span>
+                      <strong>{scoreShort(tab, entry.points)}</strong>
+                      <span>{scoreUnit(tab)}</span>
                     </div>
                   </div>
                 )
@@ -462,16 +505,13 @@ export default function StandingsPage() {
             <div>
               <p className="eyebrow">YOUR CURRENT STANDING</p>
               <h3>
-                {activeData.me.name} — #{activeData.me.rank} on {tab === 'move' ? 'Global Board' : 'Streak Board'}
+                {activeData.me.name} — #{activeData.me.rank} on{' '}
+                {tab === 'move' ? 'Global Board' : tab === 'streak' ? 'Streak Board' : 'Area Board'}
               </h3>
             </div>
 
             <div className="lb-points" style={{ textAlign: 'right' }}>
-              <strong>
-                {tab === 'move'
-                  ? `${activeData.me.points.toLocaleString()} MOVE`
-                  : `${activeData.me.points} Days 🔥`}
-              </strong>
+              <strong>{scoreLabel(tab, activeData.me.points)}</strong>
               <span>RANK #{activeData.me.rank} OF {activeData.total_participants}</span>
             </div>
 

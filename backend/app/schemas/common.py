@@ -398,7 +398,7 @@ class TerritoryPoint(BaseModel):
 class TerritoryClaimRequest(BaseModel):
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
-    trail: list[TerritoryPoint] = Field(default_factory=list, max_length=12)
+    trail: list[TerritoryPoint] = Field(default_factory=list, max_length=80)
     is_playing: bool = True
 
 
@@ -418,6 +418,7 @@ class TerritoryPlayerRead(BaseModel):
     cell_count: int
     area_m2: int
     is_you: bool = False
+    trail: list[TerritoryPoint] = Field(default_factory=list)
 
 
 class TerritoryStateResponse(BaseModel):
@@ -428,6 +429,8 @@ class TerritoryStateResponse(BaseModel):
     radius_m: float
     players: list[TerritoryPlayerRead]
     cells: list[TerritoryCellRead]
+    trail: list[TerritoryPoint] = Field(default_factory=list)
+    closed: bool = False
     me: TerritoryPlayerRead | None = None
     captured: int = 0
     stolen: int = 0

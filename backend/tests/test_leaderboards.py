@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.main import app
-from app.models.entities import Competition, Team, User
+from app.models.entities import Competition, Team, TerritoryCell, User
 from app.services.leaderboard_service import refresh_all_leaderboard_ranks
 from app.services.progress_service import record_activity_progress
 
@@ -216,3 +216,36 @@ async def test_activity_updates_rankings_and_team_points(lb_client):
     legends = competition.json()["entries"][0]
     assert legends["name"] == "Late Night Legends"
     assert legends["points"] == 1500
+
+
+@pytest.mark.asyncio
+async def test_territory_leaderboard_orders_by_largest_area(lb_client):
+    http, session_factory = lb_client
+    async with session_factory() as session:
+        from sqlalchemy import select
+
+        maya = (await session.execute(select(User).where(User.email == "maya.chen@example.com"))).scalar_one()
+        sam = (await session.execute(select(User).where(User.email == "sam.rivera@example.com"))).scalar_one()
+        alex = (await session.execute(select(User).where(User.email == "alex.morgan@example.com"))).scalar_one()
+        session.add_all(
+            [TerritoryCell(cell_x=i, cell_y=0, owner_id=maya.id) for i in range(10)]
+            + [TerritoryCell(cell_x=i, cell_y=1, owner_id=sam.id) for i in range(4)]
+            + [TerritoryCell(cell_x=0, cell_y=2, owner_id=alex.id)]
+        )
+        await refresh_all_leaderboard_ranks(session)
+        await session.commit()
+
+    token = await _login(http)
+    response = await http.get("/api/v1/leaderboard/territory", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["board"] == "territory"
+    assert body["metric_label"] == "AREA"
+    names = [entry["name"] for entry in body["entries"]]
+    assert names[:3] == ["Maya Chen", "Sam Rivera", "Alex Morgan"]
+    assert body["entries"][0]["points"] > body["entries"][1]["points"] > body["entries"][2]["points"]
+    assert body["entries"][0]["meta"]["cell_count"] == 10
+    assert body["entries"][1]["meta"]["cell_count"] == 4
+    assert body["me"]["name"] == "Alex Morgan"
+    assert body["me"]["rank"] == 3
+    assert body["me"]["meta"]["cell_count"] == 1

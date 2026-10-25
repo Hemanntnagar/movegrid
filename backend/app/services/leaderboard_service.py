@@ -8,7 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.demo_accounts import LEGACY_DEMO_EMAIL_SUFFIX, LEGACY_DEMO_TEAM_NAMES
 from app.core.paging import clamp_limit, clamp_offset, paging_meta
-from app.models.entities import LeaderboardRank, Team, User
+from app.models.entities import LeaderboardRank, Team, TerritoryCell, User
+
+TERRITORY_CELL_M = 18.0
+TERRITORY_CELL_AREA_M2 = int(TERRITORY_CELL_M * TERRITORY_CELL_M)
 
 _LEGACY_DEMO_TEAM_NAMES = frozenset(LEGACY_DEMO_TEAM_NAMES)
 
@@ -42,6 +45,7 @@ def _utcnow() -> datetime:
 BOARD_MOVE = "move"
 BOARD_STREAK = "streak"
 BOARD_COMPETITION = "competition"
+BOARD_TERRITORY = "territory"
 SUBJECT_USER = "user"
 SUBJECT_TEAM = "team"
 
@@ -137,6 +141,14 @@ async def refresh_all_leaderboard_ranks(db: AsyncSession) -> None:
         ordered_ids_and_points=[(team.id, team.competition_points) for team in teams],
     )
 
+    territory_rows = await _territory_area_rows(db)
+    await refresh_board_ranks(
+        db,
+        board=BOARD_TERRITORY,
+        subject_type=SUBJECT_USER,
+        ordered_ids_and_points=[(user_id, area_m2) for user_id, _cells, area_m2 in territory_rows],
+    )
+
 
 def _movement(rank: int, previous_rank: int | None) -> int:
     if previous_rank is None:
@@ -182,6 +194,37 @@ def _user_entry(
         "is_current_user": bool(current_user and current_user.id == user.id),
         "meta": meta,
     }
+
+
+def _area_m2(cell_count: int) -> int:
+    return int(cell_count) * TERRITORY_CELL_AREA_M2
+
+
+async def _territory_area_rows(db: AsyncSession) -> list[tuple[int, int, int]]:
+    """All ranked members as (user_id, cell_count, area_m2), largest area first."""
+    count_subq = (
+        select(TerritoryCell.owner_id, func.count().label("cell_count"))
+        .group_by(TerritoryCell.owner_id)
+        .subquery()
+    )
+    rows = (
+        await db.execute(
+            select(User.id, func.coalesce(count_subq.c.cell_count, 0))
+            .outerjoin(count_subq, count_subq.c.owner_id == User.id)
+            .where(*_ranked_member_filters())
+            .order_by(func.coalesce(count_subq.c.cell_count, 0).desc(), User.id.asc())
+        )
+    ).all()
+    return [(user_id, int(cells), _area_m2(int(cells))) for user_id, cells in rows]
+
+
+async def _user_territory_stats(db: AsyncSession, user: User) -> tuple[int, int, int]:
+    """Return (rank, cell_count, area_m2) for one ranked member."""
+    rows = await _territory_area_rows(db)
+    for index, (user_id, cells, area_m2) in enumerate(rows, start=1):
+        if user_id == user.id:
+            return index, cells, area_m2
+    return 1, 0, 0
 
 
 async def _user_rank_by_points(db: AsyncSession, user: User, *, score_attr: str) -> int:
@@ -432,6 +475,89 @@ async def get_competition_leaderboard(
         "board": BOARD_COMPETITION,
         "title": "Competition leaderboard",
         "metric_label": "TEAM POINTS",
+        "limit": limit,
+        "offset": meta["offset"],
+        "page": meta["page"],
+        "page_size": meta["page_size"],
+        "total": meta["total"],
+        "has_more": meta["has_more"],
+        "total_participants": total,
+        "entries": entries,
+        "me": me_entry,
+    }
+
+
+async def get_territory_leaderboard(
+    db: AsyncSession,
+    *,
+    current_user: User | None,
+    limit: int = 20,
+    offset: int = 0,
+) -> dict:
+    limit = clamp_limit(limit)
+    offset = clamp_offset(offset)
+    filters = _ranked_member_filters()
+
+    total = (
+        await db.execute(select(func.count()).select_from(User).where(*filters))
+    ).scalar_one()
+
+    count_subq = (
+        select(TerritoryCell.owner_id, func.count().label("cell_count"))
+        .group_by(TerritoryCell.owner_id)
+        .subquery()
+    )
+    cell_count_col = func.coalesce(count_subq.c.cell_count, 0)
+    page_rows = (
+        await db.execute(
+            select(User, cell_count_col)
+            .outerjoin(count_subq, count_subq.c.owner_id == User.id)
+            .where(*filters)
+            .order_by(cell_count_col.desc(), User.id.asc())
+            .offset(offset)
+            .limit(limit)
+        )
+    ).all()
+
+    lookup_ids = [user.id for user, _cells in page_rows]
+    if current_user and current_user.id not in lookup_ids:
+        lookup_ids.append(current_user.id)
+    ranks = await _rank_lookup(db, BOARD_TERRITORY, SUBJECT_USER, subject_ids=lookup_ids)
+
+    entries = []
+    me_entry = None
+    for index, (user, cells) in enumerate(page_rows, start=offset + 1):
+        cell_count = int(cells)
+        area_m2 = _area_m2(cell_count)
+        entry = _user_entry(
+            user,
+            rank=index,
+            points=area_m2,
+            rank_row=ranks.get(user.id),
+            current_user=current_user,
+            meta={"cell_count": cell_count, "area_m2": area_m2},
+        )
+        entries.append(entry)
+        if entry["is_current_user"]:
+            me_entry = entry
+
+    if current_user and me_entry is None and current_user.role == "member":
+        if not current_user.email.lower().endswith(LEGACY_DEMO_EMAIL_SUFFIX):
+            rank, cell_count, area_m2 = await _user_territory_stats(db, current_user)
+            me_entry = _user_entry(
+                current_user,
+                rank=rank,
+                points=area_m2,
+                rank_row=ranks.get(current_user.id),
+                current_user=current_user,
+                meta={"cell_count": cell_count, "area_m2": area_m2},
+            )
+
+    meta = paging_meta(total=total, limit=limit, offset=offset)
+    return {
+        "board": BOARD_TERRITORY,
+        "title": "Area leaderboard",
+        "metric_label": "AREA",
         "limit": limit,
         "offset": meta["offset"],
         "page": meta["page"],

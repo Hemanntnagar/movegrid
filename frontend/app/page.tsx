@@ -370,8 +370,8 @@ export default function Page() {
                 <span className="grid-claim-badge">NEW GAME</span>
                 <h2>Grid Claim</h2>
                 <p>
-                  Live map preview. Cover streets to make them yours. If another mover overlaps your patch, that slice
-                  becomes theirs.
+                  Walk a snake trail on the live map. Close a circle, square, or any shape and that area is yours. If
+                  another mover closes over your turf, they take the overlap.
                 </p>
                 <span className="grid-claim-cta">
                   <Crosshair size={14} /> Play live turf

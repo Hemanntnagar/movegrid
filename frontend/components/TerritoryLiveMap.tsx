@@ -98,7 +98,7 @@ export function TerritoryLiveMap({ token, playing, onState }: TerritoryLiveMapPr
       if (!authToken || !playingRef.current || claimingRef.current) return
       claimingRef.current = true
       try {
-        const trail = trailRef.current.slice(-8)
+        const trail = trailRef.current.slice(-40)
         const data = await movegridApi.claimTerritory(authToken, {
           latitude: lat,
           longitude: lng,
@@ -194,6 +194,18 @@ export function TerritoryLiveMap({ token, playing, onState }: TerritoryLiveMapPr
         fillOpacity: 0.38,
       }).addTo(layer)
     }
+    for (const player of state.players) {
+      const snake = player.trail ?? []
+      if (snake.length < 2) continue
+      L.polyline(
+        snake.map((point) => [point.latitude, point.longitude] as [number, number]),
+        {
+          color: player.color,
+          weight: player.is_you ? 5 : 3,
+          opacity: 0.95,
+        },
+      ).addTo(layer)
+    }
 
     const nextIds = new Set<number | 'me'>()
     const upsert = (key: number | 'me', player: ApiTerritoryPlayer) => {
@@ -275,7 +287,7 @@ export function TerritoryLiveMap({ token, playing, onState }: TerritoryLiveMapPr
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         }
-        trailRef.current = [...trailRef.current.slice(-10), next]
+        trailRef.current = [...trailRef.current.slice(-80), next]
         setOrigin(next)
         setStatus('live')
         if (playingRef.current) void claimHere(next.latitude, next.longitude)
@@ -347,17 +359,21 @@ export function TerritoryLiveMap({ token, playing, onState }: TerritoryLiveMapPr
           <strong>{me?.cell_count ?? 0}</strong>
         </div>
         <div>
-          <small>Just taken</small>
+          <small>Loop</small>
           <strong>
-            +{state?.captured ?? 0}
-            {state && state.stolen > 0 ? ` · ${state.stolen} stolen` : ''}
+            {state?.closed
+              ? `Closed +${state.captured}`
+              : `${state?.trail?.length ?? 0} snake`}
           </strong>
         </div>
       </div>
 
       <div className="nearby-map-footer">
         <span>
-          <Navigation size={14} /> {status === 'live' ? 'Painting from your live GPS' : 'Centered on a preview city'}
+          <Navigation size={14} />{' '}
+          {status === 'live'
+            ? 'Snake trail from live GPS — close any shape to claim the inside'
+            : 'Centered on a preview city'}
         </span>
         <button
           type="button"
@@ -378,7 +394,9 @@ export function TerritoryLiveMap({ token, playing, onState }: TerritoryLiveMapPr
           <strong>Who owns what</strong>
         </div>
         {error && <p className="nearby-error">{error}</p>}
-        {!state?.players.length && !error && <p className="nearby-empty">Walk to stamp the first cells on this map.</p>}
+        {!state?.players.length && !error && (
+          <p className="nearby-empty">Walk a loop. When the snake closes, the inside becomes yours.</p>
+        )}
         <ul className="nearby-people-list">
           {state?.players.map((player) => (
             <li key={player.id} className={player.is_you ? 'is-you' : ''}>
@@ -399,7 +417,7 @@ export function TerritoryLiveMap({ token, playing, onState }: TerritoryLiveMapPr
           ))}
         </ul>
         <p className="nearby-hint">
-          <Swords size={12} /> Cover ground to claim it. Walk over someone else’s patch and that slice flips to you.
+          <Swords size={12} /> Close a circle, square, or any shape to take that area. Overlap a rival loop and that slice flips to you.
         </p>
         {!authToken && <p className="nearby-hint">Sign in to start claiming live turf.</p>}
       </div>

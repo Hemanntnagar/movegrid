@@ -29,7 +29,8 @@ export default function TerritoryPage() {
               Grid Claim <span>the streets.</span>
             </h1>
             <p className="subhead">
-              Full live map. Walk to paint turf as yours. If another mover overlaps your patch, that slice flips to them.
+              Walk like a snake. Finish a circle, square, or any closed shape and the inside becomes yours. Overlap a
+              rival’s loop and that slice flips to you.
             </p>
           </div>
           <div className="territory-hero-actions">
@@ -54,7 +55,7 @@ export default function TerritoryPage() {
 
         {playing && (
           <div className="territory-live-banner">
-            <Crosshair size={14} /> Claiming is live — keep moving. Overlap a rival and take their ground.
+            <Crosshair size={14} /> Snake is live — close a loop to capture the area inside.
           </div>
         )}
 

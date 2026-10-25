@@ -271,3 +271,11 @@ class TerritoryCell(Base):
     cell_y: Mapped[int] = mapped_column(Integer, index=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     claimed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class TerritoryTrail(Base):
+    __tablename__ = "territory_trails"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+    cells_json: Mapped[str] = mapped_column(Text, default="[]")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

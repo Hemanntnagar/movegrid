@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -7,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.entities import TerritoryCell, User, UserPresence
+from app.models.entities import TerritoryCell, TerritoryTrail, User, UserPresence
 from app.schemas.common import (
     PresenceUpdate,
     TerritoryCellRead,
@@ -18,12 +19,11 @@ from app.schemas.common import (
 )
 from app.services.presence_service import haversine_m, initials_from_name, upsert_presence
 from app.services.progress_service import record_activity_progress
+from app.services.territory_shape import append_cells, fill_loop, find_closed_loop
 
 CELL_DEG = 0.00016  # ~18 m
 CELL_M = 18.0
-BRUSH_RADIUS = 1  # 3x3 disk around each GPS sample
-MAX_CELLS_PER_CLAIM = 48
-MAX_MOVE_PER_CLAIM = 12
+MAX_MOVE_PER_CLAIM = 40
 VIEW_PAD_CELLS = 4
 LIVE_WINDOW = timedelta(minutes=20)
 
@@ -57,17 +57,47 @@ def player_color(user_id: int, is_you: bool = False) -> str:
     return PLAYER_COLORS[user_id % len(PLAYER_COLORS)]
 
 
-def brush_cells(points: list[TerritoryPoint]) -> set[tuple[int, int]]:
-    claimed: set[tuple[int, int]] = set()
-    for point in points:
-        origin_x, origin_y = to_cell(point.latitude, point.longitude)
-        for dx in range(-BRUSH_RADIUS, BRUSH_RADIUS + 1):
-            for dy in range(-BRUSH_RADIUS, BRUSH_RADIUS + 1):
-                if dx * dx + dy * dy <= BRUSH_RADIUS * BRUSH_RADIUS + 1:
-                    claimed.add((origin_x + dx, origin_y + dy))
-                if len(claimed) >= MAX_CELLS_PER_CLAIM:
-                    return claimed
-    return claimed
+def _decode_cells(raw: str) -> list[tuple[int, int]]:
+    try:
+        parsed = json.loads(raw or "[]")
+    except json.JSONDecodeError:
+        return []
+    cells: list[tuple[int, int]] = []
+    for item in parsed:
+        if isinstance(item, (list, tuple)) and len(item) == 2:
+            cells.append((int(item[0]), int(item[1])))
+    return cells
+
+
+def _encode_cells(cells: list[tuple[int, int]]) -> str:
+    return json.dumps([[x, y] for x, y in cells])
+
+
+def _trail_points(cells: list[tuple[int, int]]) -> list[TerritoryPoint]:
+    points: list[TerritoryPoint] = []
+    for cell_x, cell_y in cells:
+        lat, lng = cell_center(cell_x, cell_y)
+        points.append(TerritoryPoint(latitude=lat, longitude=lng))
+    return points
+
+
+async def _load_trail(db: AsyncSession, user_id: int) -> tuple[TerritoryTrail | None, list[tuple[int, int]]]:
+    row = (
+        await db.execute(select(TerritoryTrail).where(TerritoryTrail.user_id == user_id))
+    ).scalar_one_or_none()
+    if not row:
+        return None, []
+    return row, _decode_cells(row.cells_json)
+
+
+async def _save_trail(db: AsyncSession, user_id: int, cells: list[tuple[int, int]], row: TerritoryTrail | None) -> None:
+    payload = _encode_cells(cells)
+    now = datetime.utcnow()
+    if row:
+        row.cells_json = payload
+        row.updated_at = now
+        return
+    db.add(TerritoryTrail(user_id=user_id, cells_json=payload, updated_at=now))
 
 
 def _viewport_cells(latitude: float, longitude: float, radius_m: float) -> tuple[int, int, int, int]:
@@ -89,6 +119,7 @@ def _player_read(
     cell_count: int,
     *,
     is_you: bool,
+    trail: list[TerritoryPoint] | None = None,
 ) -> TerritoryPlayerRead:
     return TerritoryPlayerRead(
         id=user.id,
@@ -100,6 +131,7 @@ def _player_read(
         cell_count=cell_count,
         area_m2=int(round(cell_count * CELL_M * CELL_M)),
         is_you=is_you,
+        trail=trail or [],
     )
 
 
@@ -131,12 +163,22 @@ async def claim_and_state(
     captured = 0
     stolen = 0
     points_awarded = 0
+    closed = False
 
     if payload.is_playing:
-        samples = [TerritoryPoint(latitude=payload.latitude, longitude=payload.longitude), *payload.trail]
-        wanted = brush_cells(samples)
-        existing_rows = (
-            (
+        samples = [*payload.trail, TerritoryPoint(latitude=payload.latitude, longitude=payload.longitude)]
+        incoming = [to_cell(point.latitude, point.longitude) for point in samples]
+        trail_row, trail_cells = await _load_trail(db, user.id)
+        trail_cells = append_cells(trail_cells, incoming)
+        ring = find_closed_loop(trail_cells)
+        wanted: set[tuple[int, int]] = set()
+        if ring:
+            closed = True
+            wanted = fill_loop(ring)
+            trail_cells = [trail_cells[-1]]
+        await _save_trail(db, user.id, trail_cells, trail_row)
+        if wanted:
+            existing_rows = (
                 await db.execute(
                     select(TerritoryCell).where(
                         TerritoryCell.cell_x.in_({x for x, _ in wanted}),
@@ -144,26 +186,23 @@ async def claim_and_state(
                     )
                 )
             ).scalars().all()
-            if wanted
-            else []
-        )
-        by_xy = {(row.cell_x, row.cell_y): row for row in existing_rows}
-        now = datetime.utcnow()
-        for cell_x, cell_y in wanted:
-            row = by_xy.get((cell_x, cell_y))
-            if row is None:
-                db.add(TerritoryCell(cell_x=cell_x, cell_y=cell_y, owner_id=user.id, claimed_at=now))
+            by_xy = {(row.cell_x, row.cell_y): row for row in existing_rows}
+            now = datetime.utcnow()
+            for cell_x, cell_y in wanted:
+                row = by_xy.get((cell_x, cell_y))
+                if row is None:
+                    db.add(TerritoryCell(cell_x=cell_x, cell_y=cell_y, owner_id=user.id, claimed_at=now))
+                    captured += 1
+                    continue
+                if row.owner_id == user.id:
+                    continue
+                row.owner_id = user.id
+                row.claimed_at = now
                 captured += 1
-                continue
-            if row.owner_id == user.id:
-                continue
-            row.owner_id = user.id
-            row.claimed_at = now
-            captured += 1
-            stolen += 1
-        if captured:
-            points_awarded = min(MAX_MOVE_PER_CLAIM, captured)
-            await record_activity_progress(db, user, move_awarded=points_awarded)
+                stolen += 1
+            if captured:
+                points_awarded = min(MAX_MOVE_PER_CLAIM, max(1, captured // 4))
+                await record_activity_progress(db, user, move_awarded=points_awarded)
         await db.commit()
 
     return await get_territory_state(
@@ -175,6 +214,7 @@ async def claim_and_state(
         captured=captured,
         stolen=stolen,
         points_awarded=points_awarded,
+        closed=closed,
     )
 
 
@@ -188,6 +228,7 @@ async def get_territory_state(
     captured: int = 0,
     stolen: int = 0,
     points_awarded: int = 0,
+    closed: bool = False,
 ) -> TerritoryStateResponse:
     min_x, max_x, min_y, max_y = _viewport_cells(latitude, longitude, radius_m)
     rows = (
@@ -242,6 +283,18 @@ async def get_territory_state(
 
     counts = await _counts_for_owners(db, owner_ids)
 
+    trail_ids = set(nearby_ids)
+    if current_user:
+        trail_ids.add(current_user.id)
+    trail_rows = (
+        (
+            await db.execute(select(TerritoryTrail).where(TerritoryTrail.user_id.in_(trail_ids)))
+        ).scalars().all()
+        if trail_ids
+        else []
+    )
+    trails = {row.user_id: _trail_points(_decode_cells(row.cells_json)) for row in trail_rows}
+
     players: list[TerritoryPlayerRead] = []
     me: TerritoryPlayerRead | None = None
     if current_user:
@@ -251,6 +304,7 @@ async def get_territory_state(
             longitude,
             counts.get(current_user.id, 0),
             is_you=True,
+            trail=trails.get(current_user.id, []),
         )
         players.append(me)
 
@@ -259,7 +313,16 @@ async def get_territory_state(
         if not person:
             continue
         plat, plng = positions[user_id]
-        players.append(_player_read(person, plat, plng, counts.get(user_id, 0), is_you=False))
+        players.append(
+            _player_read(
+                person,
+                plat,
+                plng,
+                counts.get(user_id, 0),
+                is_you=False,
+                trail=trails.get(user_id, []),
+            )
+        )
 
     players.sort(key=lambda item: (-item.cell_count, item.name.lower()))
 
@@ -271,6 +334,8 @@ async def get_territory_state(
         radius_m=radius_m,
         players=players,
         cells=cells,
+        trail=me.trail if me else [],
+        closed=closed,
         me=me,
         captured=captured,
         stolen=stolen,
