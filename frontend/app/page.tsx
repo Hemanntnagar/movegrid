@@ -320,7 +320,7 @@ export default function Page() {
           <aside className="dashboard-sidebar-left">
             <div className="stats-vertical-stack dashboard-stat-row">
               <StatCard
-                icon={<Zap size={14} />}
+                icon={<Zap size={16} />}
                 label="MOVE points"
                 shortLabel="MOVE"
                 value={`${move.toLocaleString()}`}
@@ -333,7 +333,7 @@ export default function Page() {
                 badgeSymbol="⚡"
               />
               <StatCard
-                icon={<Flame size={14} />}
+                icon={<Flame size={16} />}
                 label="Current streak"
                 shortLabel="Streak"
                 value={String(user?.streak ?? 0)}
@@ -342,7 +342,7 @@ export default function Page() {
                 badgeSymbol="🔥"
               />
               <StatCard
-                icon={<Footprints size={14} />}
+                icon={<Footprints size={16} />}
                 label="Steps today"
                 shortLabel="Steps"
                 value={steps.toLocaleString()}
@@ -352,7 +352,7 @@ export default function Page() {
               />
               <Link className="dashboard-stat-link" href="/standings">
                 <StatCard
-                  icon={<Trophy size={14} />}
+                  icon={<Trophy size={16} />}
                   label="Global rank"
                   shortLabel="Rank"
                   value={rankLabel}
