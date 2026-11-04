@@ -368,11 +368,7 @@ export default function Page() {
             <Link href="/territory" className="grid-claim-card">
               <div className="grid-claim-card-copy">
                 <span className="grid-claim-badge">NEW GAME</span>
-                <h2>Grid Claim</h2>
-                <p>
-                  Walk a snake trail on the live map. Close a circle, square, or any shape and that area is yours. If
-                  another mover closes over your turf, they take the overlap.
-                </p>
+                <h2>Run and Conquer</h2>
                 <span className="grid-claim-cta">
                   <Crosshair size={14} /> Play live turf
                 </span>
